@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, Button, TextArea, Badge, Input } from '../Shared/UI';
+import { Card, Button, TextArea, Badge, Input, CardHeader } from '../Shared/UI';
 import { Icons } from '../Shared/Icons';
 import { ParserRule } from '../../types';
 
@@ -50,20 +50,17 @@ const ParsersView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h3 className="text-lg font-bold text-white">Log Parsers</h3>
-          <p className="text-xs text-slate-500">Regex extraction rules. Low performance patterns may induce ingestion lag.</p>
-        </div>
-        <Button onClick={() => alert("New Parser Wizard")} className="w-full md:w-auto">+ NEW PARSER</Button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
+    <Card className="p-0 overflow-hidden flex flex-col h-full">
+      <CardHeader 
+        title="Log Extraction Rules" 
+        action={<Button onClick={() => alert("New Parser Wizard")} className="text-[10px] py-1">+ NEW PARSER</Button>}
+      />
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {parsers.map(parser => (
-          <Card key={parser.id} className={`p-0 overflow-hidden border transition-all duration-300 ${expandedId === parser.id ? 'border-cyan-500 ring-1 ring-cyan-500/20' : 'border-slate-800'}`}>
+          <div key={parser.id} className={`border rounded-lg overflow-hidden transition-all duration-300 ${expandedId === parser.id ? 'border-cyan-500 ring-1 ring-cyan-500/20 bg-slate-900' : 'border-slate-800 bg-slate-950'}`}>
             <div 
-              className="p-4 bg-slate-950 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer hover:bg-slate-900/80"
+              className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer hover:bg-slate-900"
               onClick={() => setExpandedId(expandedId === parser.id ? null : parser.id)}
             >
               <div className="flex items-center gap-4 w-full md:w-auto">
@@ -88,7 +85,7 @@ const ParsersView: React.FC = () => {
             </div>
 
             {expandedId === parser.id && (
-              <div className="p-4 bg-slate-950/50 space-y-4 animate-in fade-in slide-in-from-top-2">
+              <div className="p-4 border-t border-slate-800 space-y-4 animate-in fade-in slide-in-from-top-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <div className="flex justify-between mb-1">
@@ -141,10 +138,10 @@ const ParsersView: React.FC = () => {
                 </div>
               </div>
             )}
-          </Card>
+          </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 };
 

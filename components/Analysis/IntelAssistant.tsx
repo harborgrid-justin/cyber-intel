@@ -4,7 +4,7 @@ import { createAnalysisChat } from '../../services/geminiService';
 import { Chat, GenerateContentResponse } from "@google/genai";
 import { threatData } from '../../services/dataLayer';
 import { StandardPage } from '../Shared/Layouts';
-import { Card, Button } from '../Shared/UI';
+import { Card, Button, CardHeader, Badge } from '../Shared/UI';
 import { CONFIG } from '../../config';
 import ChatInterface, { Message } from '../Shared/ChatInterface';
 import AttributionEngine from './AttributionEngine';
@@ -50,13 +50,17 @@ const IntelAssistant: React.FC = () => {
       onModuleChange={setActiveModule}
     >
       {activeModule === 'Chat' && (
-        <Card className="flex-1 flex flex-col min-h-0 p-0 border-slate-800 h-full">
+        <Card className="flex-1 flex flex-col min-h-0 p-0 border-slate-800 h-full overflow-hidden">
+          <CardHeader 
+            title="AI Analyst Session" 
+            action={<Badge color="purple" className="text-[10px]">GEMINI-2.5-FLASH</Badge>} 
+          />
           <ChatInterface 
             messages={messages}
             onSend={handleSend}
             isLoading={loading}
             placeholder="Query threat intelligence..."
-            className="flex-1 border-0 rounded-none h-full"
+            className="flex-1 border-0 rounded-none h-full bg-slate-900/50"
           />
         </Card>
       )}

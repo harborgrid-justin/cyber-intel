@@ -157,9 +157,9 @@ const Orchestrator: React.FC = () => {
                          <div className="text-xs text-slate-500">Files, Database Rows, AWS Keys</div>
                       </div>
                    </Card>
-                   <Card className="p-6">
-                      <h3 className="font-bold text-white mb-2 uppercase text-sm tracking-wider">Honeytoken Effectiveness</h3>
-                      <div className="space-y-4">
+                   <Card className="p-0 overflow-hidden">
+                      <CardHeader title="Honeytoken Effectiveness" />
+                      <div className="p-6 space-y-4">
                          <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>Trigger Rate</span><span>12%</span></div><ProgressBar value={12} /></div>
                          <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>False Positives</span><span>0.5%</span></div><ProgressBar value={1} color="green" /></div>
                       </div>

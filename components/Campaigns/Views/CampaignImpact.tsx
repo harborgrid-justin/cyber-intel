@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Campaign, Threat, Case } from '../../../types';
 import { RiskLogic } from '../../../services/logic/RiskLogic';
 import { threatData } from '../../../services/dataLayer';
-import { Card, Grid, ProgressBar } from '../../Shared/UI';
+import { Card, Grid, ProgressBar, CardHeader } from '../../Shared/UI';
 
 interface Props { campaign: Campaign; }
 
@@ -43,9 +43,9 @@ const CampaignImpact: React.FC<Props> = ({ campaign }) => {
 
       {/* Breakdown & Regulatory */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <Card className="p-6">
-            <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-widest">Loss Breakdown (Estimated)</h3>
-            <div className="space-y-4">
+         <Card className="p-0 overflow-hidden">
+            <CardHeader title="Loss Breakdown (Estimated)" />
+            <div className="p-6 space-y-4">
                <div>
                   <div className="flex justify-between text-xs text-slate-400 mb-1"><span>Data Breach & Liability</span><span>{currency.format(analysis.breakdown.dataBreachCost)}</span></div>
                   <ProgressBar value={(analysis.breakdown.dataBreachCost / analysis.exposure) * 100} color="red" />
@@ -61,9 +61,9 @@ const CampaignImpact: React.FC<Props> = ({ campaign }) => {
             </div>
          </Card>
 
-         <Card className="p-6">
-            <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Regulatory & Compliance Impact</h3>
-            <div className="space-y-3">
+         <Card className="p-0 overflow-hidden">
+            <CardHeader title="Regulatory & Compliance Impact" />
+            <div className="p-6 space-y-3">
                {analysis.regulatoryRisks.length > 0 ? analysis.regulatoryRisks.map(r => (
                   <div key={r} className="bg-red-900/10 border border-red-900/30 p-3 rounded flex items-center gap-3">
                      <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>

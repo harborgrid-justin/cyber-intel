@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Threat, Case, Severity } from '../../types';
-import { Button, Card, Badge, Grid } from '../Shared/UI';
+import { Button, Card, Badge, CardHeader } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import ChatInterface, { Message } from '../Shared/ChatInterface';
 import GeoMap from '../Dashboard/GeoMap';
@@ -115,37 +115,35 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
         
         {/* Left Column: Status Lists */}
         <div className={`md:w-1/4 bg-slate-900 border-r border-slate-800 flex flex-col transition-all ${activeTab === 'STATUS' ? 'flex' : 'hidden md:flex'} h-full overflow-hidden`}>
-           <div className="p-3 border-b border-slate-800 bg-slate-950 font-bold text-xs text-red-400 uppercase tracking-wider flex justify-between">
-             <span>Critical Targets</span>
-             <Badge color="red">{criticalThreats.length}</Badge>
-           </div>
-           <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
-             {criticalThreats.length === 0 && <div className="text-center text-slate-600 text-[10px] py-8">SECTOR CLEAR</div>}
-             {criticalThreats.map(t => (
-               <div key={t.id} className="p-3 bg-red-900/5 border border-red-900/20 rounded hover:bg-red-900/10 cursor-pointer transition-colors group">
-                 <div className="flex justify-between items-start mb-1">
-                   <span className="text-red-400 font-mono text-xs font-bold">{t.indicator}</span>
-                   <span className="text-[9px] text-red-500/70 group-hover:text-red-400">{t.score}</span>
+           <div className="flex-1 flex flex-col min-h-0">
+             <CardHeader title="Critical Targets" action={<Badge color="red">{criticalThreats.length}</Badge>} className="bg-slate-950" />
+             <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+               {criticalThreats.length === 0 && <div className="text-center text-slate-600 text-[10px] py-8">SECTOR CLEAR</div>}
+               {criticalThreats.map(t => (
+                 <div key={t.id} className="p-3 bg-red-900/5 border border-red-900/20 rounded hover:bg-red-900/10 cursor-pointer transition-colors group">
+                   <div className="flex justify-between items-start mb-1">
+                     <span className="text-red-400 font-mono text-xs font-bold">{t.indicator}</span>
+                     <span className="text-[9px] text-red-500/70 group-hover:text-red-400">{t.score}</span>
+                   </div>
+                   <div className="text-[10px] text-slate-400 truncate">{t.description}</div>
                  </div>
-                 <div className="text-[10px] text-slate-400 truncate">{t.description}</div>
-               </div>
-             ))}
+               ))}
+             </div>
            </div>
 
-           <div className="p-3 border-y border-slate-800 bg-slate-950 font-bold text-xs text-orange-400 uppercase tracking-wider flex justify-between">
-             <span>Active Ops</span>
-             <Badge color="orange">{criticalCases.length}</Badge>
-           </div>
-           <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar bg-slate-900/50">
-             {criticalCases.map(c => (
-               <div key={c.id} className="p-3 bg-slate-800/50 border border-slate-700 rounded hover:border-orange-500/50 transition-colors">
-                 <div className="text-xs font-bold text-white mb-1">{c.title}</div>
-                 <div className="flex justify-between text-[9px] text-slate-500 uppercase">
-                   <span>{c.assignee}</span>
-                   <span className="text-orange-400">{c.status}</span>
+           <div className="flex-1 flex flex-col min-h-0 border-t border-slate-800">
+             <CardHeader title="Active Ops" action={<Badge color="orange">{criticalCases.length}</Badge>} className="bg-slate-950" />
+             <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar bg-slate-900/50">
+               {criticalCases.map(c => (
+                 <div key={c.id} className="p-3 bg-slate-800/50 border border-slate-700 rounded hover:border-orange-500/50 transition-colors">
+                   <div className="text-xs font-bold text-white mb-1">{c.title}</div>
+                   <div className="flex justify-between text-[9px] text-slate-500 uppercase">
+                     <span>{c.assignee}</span>
+                     <span className="text-orange-400">{c.status}</span>
+                   </div>
                  </div>
-               </div>
-             ))}
+               ))}
+             </div>
            </div>
         </div>
 
@@ -174,9 +172,7 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
 
         {/* Right Column: Comms */}
         <div className={`md:w-1/4 bg-slate-900 border-l border-slate-800 flex flex-col ${activeTab === 'COMMS' ? 'flex' : 'hidden md:flex'} h-full`}>
-           <div className="p-3 border-b border-slate-800 bg-slate-950 font-bold text-xs text-slate-400 uppercase tracking-wider">
-             Command Channel
-           </div>
+           <CardHeader title="Command Channel" className="bg-slate-950" />
            <ChatInterface 
              messages={messages} 
              onSend={handleSendMessage} 

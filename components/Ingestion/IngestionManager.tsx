@@ -5,7 +5,7 @@ import { threatData } from '../../services/dataLayer';
 import { IoCFeed } from '../../types';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { StandardPage } from '../Shared/Layouts';
-import { Button, Card, Badge, Grid, EmptyState } from '../Shared/UI';
+import { Button, Card, Badge, Grid, CardHeader } from '../Shared/UI';
 import { CONFIG } from '../../config';
 import ParsersView from './ParsersView';
 import EnrichmentView from './EnrichmentView';
@@ -72,8 +72,8 @@ const IngestionManager: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <Card className="p-0 min-h-[400px] overflow-hidden">
-               <div className="p-4 border-b border-slate-800 font-bold text-white text-sm uppercase tracking-wider">Active Intelligence Feeds</div>
-                 <ResponsiveTable<IoCFeed> data={feeds} keyExtractor={f => f.id}
+               <CardHeader title="Active Intelligence Feeds" />
+               <ResponsiveTable<IoCFeed> data={feeds} keyExtractor={f => f.id}
                    columns={[
                       { header: 'Source', render: f => <div><div className="font-bold text-white">{f.name}</div><div className="text-[10px] text-slate-500">Last Sync: {f.lastSync}</div></div> },
                       { header: 'Type', render: f => <Badge>{f.type}</Badge> },
@@ -83,12 +83,33 @@ const IngestionManager: React.FC = () => {
                  />
             </Card>
           </div>
-          <Card className="p-6 h-fit"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Job History</h3><div className="space-y-3">{jobs.map(j => <div key={j.id} className="flex justify-between border-b border-slate-800 pb-2"><div><p className="text-slate-200 text-sm">{j.source}</p><p className="text-[10px] text-slate-500">{j.timestamp}</p></div><Badge color={j.status === 'COMPLETED' ? 'green' : 'yellow'}>{j.status}</Badge></div>)}</div></Card>
+          <Card className="p-0 h-fit overflow-hidden">
+             <CardHeader title="Job History" />
+             <div className="p-4 space-y-3">
+               {jobs.map(j => (
+                 <div key={j.id} className="flex justify-between border-b border-slate-800 pb-2 last:border-0 last:pb-0">
+                   <div><p className="text-slate-200 text-sm">{j.source}</p><p className="text-[10px] text-slate-500">{j.timestamp}</p></div>
+                   <Badge color={j.status === 'COMPLETED' ? 'green' : 'yellow'}>{j.status}</Badge>
+                 </div>
+               ))}
+             </div>
+          </Card>
         </div>
       )}
 
       {activeModule === 'Sources' && <Grid cols={3}>{['Splunk', 'Elastic', 'AWS GuardDuty', 'Azure Sentinel', 'CrowdStrike', 'Darktrace'].map(s => <Card key={s} className="p-6 flex flex-col justify-between h-40 hover:border-cyan-500 cursor-pointer transition-colors group"><div className="flex justify-between"><h3 className="font-bold text-white text-lg group-hover:text-cyan-400">{s}</h3><Badge color="blue">CONNECTOR</Badge></div><Button onClick={() => handleConnectSource(s)} variant="secondary" className="w-full">CONFIGURE</Button></Card>)}</Grid>}
-      {activeModule === 'Schedule' && <Card className="p-6"><h3 className="font-bold text-white mb-4">Ingestion Schedules</h3><table className="w-full text-left text-sm text-slate-400"><thead className="bg-slate-950 text-xs uppercase"><tr className="text-slate-500"><th>Job Name</th><th>Frequency</th><th>Last Run</th><th>Status</th></tr></thead><tbody className="divide-y divide-slate-800"><tr><td className="py-3 text-white">Full Threat Sync</td><td className="py-3">Every 1 Hour</td><td className="py-3">10 mins ago</td><td className="py-3 text-green-500">ACTIVE</td></tr></tbody></table></Card>}
+      
+      {activeModule === 'Schedule' && (
+        <Card className="p-0 overflow-hidden">
+           <CardHeader title="Ingestion Schedules" />
+           <div className="p-4">
+             <table className="w-full text-left text-sm text-slate-400">
+                <thead className="bg-slate-950 text-xs uppercase"><tr className="text-slate-500"><th>Job Name</th><th>Frequency</th><th>Last Run</th><th>Status</th></tr></thead>
+                <tbody className="divide-y divide-slate-800"><tr><td className="py-3 text-white">Full Threat Sync</td><td className="py-3">Every 1 Hour</td><td className="py-3">10 mins ago</td><td className="py-3 text-green-500">ACTIVE</td></tr></tbody>
+             </table>
+           </div>
+        </Card>
+      )}
       
       {/* New Modules */}
       {activeModule === 'Parsers' && <ParsersView />}

@@ -158,20 +158,23 @@ const BreachSimulator: React.FC = () => {
 
            {activeTab === 'BUILDER' && (
              <div className="flex h-full gap-6">
-                <div className="w-1/3 bg-slate-900 border border-slate-800 rounded p-4 overflow-y-auto">
-                   <h3 className="font-bold text-white text-xs uppercase mb-4">TTP Library</h3>
-                   <div className="space-y-2">
+                <Card className="w-1/3 p-0 overflow-hidden flex flex-col">
+                   <CardHeader title="TTP Library" />
+                   <div className="p-4 space-y-2 overflow-y-auto flex-1 custom-scrollbar">
                       {['Phishing', 'Brute Force', 'Exploit Public App', 'OS Credential Dump', 'SMB Lateral', 'Data Encrypted'].map(t => (
                          <div key={t} className="p-2 bg-slate-950 border border-slate-700 rounded text-xs text-slate-300 cursor-grab active:cursor-grabbing hover:border-cyan-500">
                             {t}
                          </div>
                       ))}
                    </div>
-                </div>
-                <div className="flex-1 bg-slate-950 border-2 border-dashed border-slate-800 rounded flex flex-col items-center justify-center text-slate-600">
-                   <Icons.Tool className="w-12 h-12 mb-2 opacity-50" />
-                   <div className="text-sm font-bold uppercase tracking-widest">Drag TTPs here to build custom campaign</div>
-                </div>
+                </Card>
+                <Card className="flex-1 p-0 overflow-hidden border-dashed border-2 flex flex-col">
+                   <CardHeader title="Campaign Canvas" />
+                   <div className="flex-1 flex flex-col items-center justify-center text-slate-600 bg-slate-950/50">
+                      <Icons.Tool className="w-12 h-12 mb-2 opacity-50" />
+                      <div className="text-sm font-bold uppercase tracking-widest">Drag TTPs here to build custom campaign</div>
+                   </div>
+                </Card>
              </div>
            )}
 

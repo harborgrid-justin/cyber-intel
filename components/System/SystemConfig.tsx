@@ -58,28 +58,34 @@ const SystemConfig: React.FC = () => {
       {activeModule === 'Compliance Ops' && (
         <div className="space-y-6">
            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="p-6">
-                 <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">ATO Status</h3>
-                 <div className="text-4xl font-bold text-white mb-2">ATO-C</div>
-                 <div className="text-xs text-slate-500">Authority to Operate (Conditional)</div>
-                 <div className="mt-4 flex gap-2">
-                    <Badge color="green">FedRAMP MOD</Badge>
-                    <Badge color="blue">IL-4</Badge>
+              <Card className="p-0 overflow-hidden">
+                 <CardHeader title="ATO Status" />
+                 <div className="p-6">
+                    <div className="text-4xl font-bold text-white mb-2">ATO-C</div>
+                    <div className="text-xs text-slate-500">Authority to Operate (Conditional)</div>
+                    <div className="mt-4 flex gap-2">
+                        <Badge color="green">FedRAMP MOD</Badge>
+                        <Badge color="blue">IL-4</Badge>
+                    </div>
                  </div>
               </Card>
-              <Card className="p-6">
-                 <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">NIST 800-53 Readiness</h3>
-                 <div className="text-4xl font-bold text-cyan-500 mb-2">{compliance.score}%</div>
-                 <ProgressBar value={compliance.score} color={compliance.score > 90 ? 'green' : 'orange'} />
-                 <div className="text-xs text-slate-500 mt-2">{MOCK_NIST_CONTROLS.length} Controls Monitored</div>
+              <Card className="p-0 overflow-hidden">
+                 <CardHeader title="NIST 800-53 Readiness" />
+                 <div className="p-6">
+                    <div className="text-4xl font-bold text-cyan-500 mb-2">{compliance.score}%</div>
+                    <ProgressBar value={compliance.score} color={compliance.score > 90 ? 'green' : 'orange'} />
+                    <div className="text-xs text-slate-500 mt-2">{MOCK_NIST_CONTROLS.length} Controls Monitored</div>
+                 </div>
               </Card>
-              <Card className="p-6">
-                 <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Critical Gaps</h3>
-                 <ul className="space-y-2">
-                    {compliance.criticalGaps.length > 0 ? compliance.criticalGaps.map(g => (
-                       <li key={g} className="flex items-center gap-2 text-red-400 text-sm font-mono"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>{g}</li>
-                    )) : <li className="text-green-500 text-sm">No Critical Gaps</li>}
-                 </ul>
+              <Card className="p-0 overflow-hidden">
+                 <CardHeader title="Critical Gaps" />
+                 <div className="p-6">
+                    <ul className="space-y-2">
+                        {compliance.criticalGaps.length > 0 ? compliance.criticalGaps.map(g => (
+                        <li key={g} className="flex items-center gap-2 text-red-400 text-sm font-mono"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>{g}</li>
+                        )) : <li className="text-green-500 text-sm">No Critical Gaps</li>}
+                    </ul>
+                 </div>
               </Card>
            </div>
            

@@ -1,25 +1,28 @@
 
 import React from 'react';
-import { Case, Threat, Playbook } from '../../types';
-import { Card, Badge, Button } from '../Shared/UI';
+import { Case } from '../../types';
+import { Card, Badge, Button, CardHeader } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { threatData } from '../../services/dataLayer';
 
 export const IncidentTimeline = ({ cases }: { cases: Case[] }) => {
   const events = cases.flatMap(c => c.timeline.map(e => ({ ...e, caseTitle: c.title }))).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   return (
-    <div className="space-y-4 max-w-4xl">
-      {events.map((e, i) => (
-        <div key={i} className="flex gap-4 group">
-          <div className="w-32 text-right text-xs text-slate-500 font-mono py-1">{e.date}</div>
-          <div className="relative flex-1 pb-6 border-l border-slate-800 pl-6 before:absolute before:left-[-5px] before:top-1.5 before:w-2.5 before:h-2.5 before:rounded-full before:transition-colors before:bg-slate-700 group-hover:before:bg-cyan-500">
-             <div className="text-sm text-white font-bold">{e.title}</div>
-             <div className="text-xs text-slate-400">{e.caseTitle} • <span className={`font-bold ${e.type === 'ALERT' ? 'text-red-400' : e.type === 'ACTION' ? 'text-cyan-500' : 'text-slate-500'}`}>{e.type}</span></div>
+    <Card className="p-0 overflow-hidden max-w-4xl mx-auto">
+      <CardHeader title="Incident Chronology" action={<Badge>{events.length} Events</Badge>} />
+      <div className="p-6 space-y-4">
+        {events.map((e, i) => (
+          <div key={i} className="flex gap-4 group">
+            <div className="w-32 text-right text-xs text-slate-500 font-mono py-1">{e.date}</div>
+            <div className="relative flex-1 pb-6 border-l border-slate-800 pl-6 before:absolute before:left-[-5px] before:top-1.5 before:w-2.5 before:h-2.5 before:rounded-full before:transition-colors before:bg-slate-700 group-hover:before:bg-cyan-500">
+               <div className="text-sm text-white font-bold">{e.title}</div>
+               <div className="text-xs text-slate-400">{e.caseTitle} • <span className={`font-bold ${e.type === 'ALERT' ? 'text-red-400' : e.type === 'ACTION' ? 'text-cyan-500' : 'text-slate-500'}`}>{e.type}</span></div>
+            </div>
           </div>
-        </div>
-      ))}
-      {events.length === 0 && <div className="text-slate-500 italic p-4">No timeline events generated yet.</div>}
-    </div>
+        ))}
+        {events.length === 0 && <div className="text-slate-500 italic p-4 text-center">No timeline events generated yet.</div>}
+      </div>
+    </Card>
   );
 };
 
@@ -109,14 +112,17 @@ export const IncidentPlaybooks = () => {
 export const IncidentEvidence = ({ cases }: { cases: Case[] }) => {
   const artifacts = cases.flatMap(c => c.artifacts.map(a => ({...a, caseTitle: c.title})));
   return (
-    <ResponsiveTable data={artifacts} keyExtractor={a => a.id}
-      columns={[
-        { header: 'File Name', render: a => <span className="text-white font-mono text-xs font-bold">{a.name}</span> },
-        { header: 'Related Case', render: a => <span className="text-slate-400 text-xs truncate max-w-[150px]">{a.caseTitle}</span> },
-        { header: 'Hash (MD5)', render: a => <span className="text-cyan-600 font-mono text-[10px] truncate max-w-[100px]">{a.hash}</span> },
-        { header: 'Type', render: a => <Badge color={a.type === 'MALWARE' || a.type === 'BINARY' ? 'red' : 'slate'}>{a.type}</Badge> }
-      ]}
-      renderMobileCard={a => <div><div className="font-bold text-white">{a.name}</div><div className="text-xs text-slate-500">{a.caseTitle}</div></div>}
-    />
+    <Card className="p-0 overflow-hidden">
+      <CardHeader title="Case Evidence Locker" action={<Badge>{artifacts.length} Items</Badge>} />
+      <ResponsiveTable data={artifacts} keyExtractor={a => a.id}
+        columns={[
+          { header: 'File Name', render: a => <span className="text-white font-mono text-xs font-bold">{a.name}</span> },
+          { header: 'Related Case', render: a => <span className="text-slate-400 text-xs truncate max-w-[150px]">{a.caseTitle}</span> },
+          { header: 'Hash (MD5)', render: a => <span className="text-cyan-600 font-mono text-[10px] truncate max-w-[100px]">{a.hash}</span> },
+          { header: 'Type', render: a => <Badge color={a.type === 'MALWARE' || a.type === 'BINARY' ? 'red' : 'slate'}>{a.type}</Badge> }
+        ]}
+        renderMobileCard={a => <div><div className="font-bold text-white">{a.name}</div><div className="text-xs text-slate-500">{a.caseTitle}</div></div>}
+      />
+    </Card>
   );
 };

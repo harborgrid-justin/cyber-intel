@@ -54,24 +54,27 @@ const IoCManagement: React.FC = () => {
         </div>
       </Card>
 
-      <ResponsiveTable<Threat> 
-        data={data}
-        keyExtractor={i => i.id}
-        columns={[
-          { header: 'Indicator', render: i => <span className="text-white font-mono">{i.indicator}</span> },
-          { header: 'Type', render: i => <span className="text-xs text-slate-400">{i.type}</span> },
-          { header: 'Action', render: i => <Button onClick={() => handleDelete(i.id)} variant="danger" className="py-1 px-2 text-xs">DELETE</Button> }
-        ]}
-        renderMobileCard={i => (
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="text-white font-mono font-bold">{i.indicator}</div>
-              <div className="text-xs text-slate-500">{i.type}</div>
+      <Card className="p-0 overflow-hidden">
+        <CardHeader title="Indicator Database" />
+        <ResponsiveTable<Threat> 
+          data={data}
+          keyExtractor={i => i.id}
+          columns={[
+            { header: 'Indicator', render: i => <span className="text-white font-mono">{i.indicator}</span> },
+            { header: 'Type', render: i => <span className="text-xs text-slate-400">{i.type}</span> },
+            { header: 'Action', render: i => <Button onClick={() => handleDelete(i.id)} variant="danger" className="py-1 px-2 text-xs">DELETE</Button> }
+          ]}
+          renderMobileCard={i => (
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-white font-mono font-bold">{i.indicator}</div>
+                <div className="text-xs text-slate-500">{i.type}</div>
+              </div>
+              <Button onClick={() => handleDelete(i.id)} variant="danger" className="py-1 px-2 text-xs">DELETE</Button>
             </div>
-            <Button onClick={() => handleDelete(i.id)} variant="danger" className="py-1 px-2 text-xs">DELETE</Button>
-          </div>
-        )}
-      />
+          )}
+        />
+      </Card>
     </div>
   );
 };
