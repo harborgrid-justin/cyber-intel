@@ -28,6 +28,48 @@ import { threatData } from './services-frontend/dataLayer';
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [viewParams, setViewParams] = useState<{ id?: string }>({});
+  const [backendConnected, setBackendConnected] = useState(false);
+
+  // 🟢 AGENT-2: Initialize backend connection on app mount
+  useEffect(() => {
+    const initBackend = async () => {
+      const useMock = import.meta.env.VITE_ENABLE_MOCK === 'true';
+      
+      if (!useMock) {
+        console.log('🔌 Connecting to backend API...');
+        const connected = await threatData.useHttpAdapter({
+          host: import.meta.env.VITE_API_URL?.replace(/:\d+$/, '') || 'http://localhost',
+          port: parseInt(import.meta.env.VITE_API_URL?.match(/:(\d+)$/)?.[1] || '3001'),
+        });
+        
+        if (connected) {
+          console.log('✅ Backend connected - fetching initial data...');
+          setBackendConnected(true);
+          
+          // Fetch initial data for all stores
+          await Promise.all([
+            threatData.threatStore.fetch(),
+            threatData.caseStore.fetch(),
+            threatData.actorStore.fetch(),
+            threatData.campaignStore.fetch(),
+            threatData.vulnStore.fetch(),
+            threatData.nodeStore.fetch(),
+            threatData.userStore.fetch(),
+          ]).catch(err => console.error('Error fetching initial data:', err));
+          
+          console.log('✅ Initial data loaded from backend');
+        } else {
+          console.warn('⚠️  Backend connection failed - using mock data');
+          threatData.useMockAdapter();
+        }
+      } else {
+        console.log('🎭 Using mock data (VITE_ENABLE_MOCK=true)');
+        threatData.useMockAdapter();
+      }
+    };
+    
+    initBackend();
+  }, []);
 
   useEffect(() => {
     // Intelligent Pre-fetching when view changes

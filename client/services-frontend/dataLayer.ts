@@ -1,5 +1,6 @@
 
 import { MockAdapter, DatabaseAdapter } from './dbAdapter';
+import { HttpAdapter } from './httpAdapter';
 import { ThreatStore } from './stores/threatStore';
 import { CaseStore } from './stores/caseStore';
 import { ActorStore } from './stores/actorStore';
@@ -320,5 +321,31 @@ export class DataLayer {
   sync(action: 'CREATE' | 'UPDATE' | 'DELETE', collection: string, data: any) { 
     this.adapter.execute(action, collection, data);
   }
+
+  // Switch between Mock and HTTP adapters
+  async useHttpAdapter(config?: { host?: string; port?: number }) {
+    const httpAdapter = new HttpAdapter();
+    const success = await httpAdapter.connect({
+      host: config?.host || 'http://localhost',
+      port: config?.port || 3001,
+    });
+    
+    if (success) {
+      this.setProvider(httpAdapter);
+      console.log('✅ Switched to HTTP API backend');
+    } else {
+      console.error('❌ Failed to connect to HTTP backend, staying with current adapter');
+    }
+    
+    return success;
+  }
+
+  useMockAdapter() {
+    this.setProvider(new MockAdapter());
+    console.log('✅ Switched to Mock adapter');
+  }
 }
+
+// Export adapters for direct use
+export { HttpAdapter, MockAdapter };
 export const threatData = new DataLayer();

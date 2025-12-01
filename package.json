@@ -5,15 +5,18 @@
   "private": true,
   "scripts": {
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
-    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev": "concurrently --names \"CLIENT,SERVER\" --prefix-colors \"cyan.bold,green.bold\" \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "cd client && npm run dev",
-    "dev:server": "cd server && npm run dev",
+    "dev:server": "cd server && npm run start:dev",
+    "dev:backend-only": "cd server && npm run start:dev",
+    "dev:frontend-only": "cd client && npm run dev",
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
     "build:server": "cd server && npm run build",
-    "start": "concurrently \"npm run start:client\" \"npm run start:server\"",
+    "start": "concurrently --names \"CLIENT,SERVER\" --prefix-colors \"cyan.bold,green.bold\" \"npm run start:client\" \"npm run start:server\"",
     "start:client": "cd client && npm run preview",
-    "start:server": "cd server && npm run start:prod"
+    "start:server": "cd server && npm run start:prod",
+    "test:integration": "./test-integration.sh"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
