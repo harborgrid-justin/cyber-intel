@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, FilterGroup, Select, CardHeader, Label } from '../Shared/UI';
+import { DetailViewHeader } from '../Shared/Layouts';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { threatData } from '../../services/dataLayer';
 import { REPORT_BOILERPLATE, MOCK_TEMPLATES } from '../../constants';
@@ -80,64 +81,64 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ onCancel, onSave }) => {
   };
 
   return (
-    <div className="flex flex-col h-full gap-4">
-      {/* Top Controls */}
-      <Card className="flex flex-col md:flex-row gap-6 p-6 shrink-0 bg-slate-900 border-slate-800">
-         <div className="flex-1">
+    <div className="flex flex-col h-full bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+      <DetailViewHeader 
+        title={title || "Untitled Report"}
+        subtitle="New Intelligence Product"
+        onBack={onCancel}
+        actions={<Button onClick={handlePublish} variant="primary" className="text-[10px] py-1">PUBLISH REPORT</Button>}
+      />
+
+      <div className="p-4 bg-slate-900 border-b border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div>
             <Label>Report Title</Label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Operation Deep Dive Summary" />
+            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Operation Deep Dive Summary" autoFocus />
          </div>
-         <div className="w-full md:w-64">
-            <Label>Agency Template</Label>
+         <div>
+            <Label>Template Basis</Label>
             <Select value={templateId} onChange={e => setTemplateId(e.target.value)}>
                 {MOCK_TEMPLATES.map(t => <option key={t.id} value={t.id}>{t.icon} {t.name}</option>)}
             </Select>
          </div>
-         <div className="flex items-end gap-2">
-            <Button onClick={handlePublish} variant="primary">PUBLISH</Button>
-            <Button onClick={onCancel} variant="text">CANCEL</Button>
-         </div>
-      </Card>
+      </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
          {/* Data Picker */}
-         <Card className="lg:w-1/3 flex flex-col p-0 overflow-hidden h-64 lg:h-auto shrink-0">
-            <CardHeader 
-                title="Intelligence Assets" 
-                className="py-3"
-            />
-            <div className="p-2 border-b border-slate-800 bg-slate-900/50">
+         <div className="lg:w-1/3 flex flex-col border-r border-slate-800 bg-slate-900/50">
+            <div className="p-3 border-b border-slate-800 flex justify-between items-center">
+               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Assets</span>
                <FilterGroup value={dataTab} onChange={setDataTab} options={[{ label: 'Threats', value: 'Threats' }, { label: 'Cases', value: 'Cases' }, { label: 'Actors', value: 'Actors' }]} />
             </div>
+            
             <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
                 {dataTab === 'Threats' && (
                     <ResponsiveTable<Threat> data={threats} keyExtractor={t => t.id}
-                        columns={[{ header: 'Indicator', render: t => <span className="font-mono text-xs">{t.indicator}</span> }, { header: '+', render: t => <Button onClick={() => handleAddToReport(t, 'THREAT')} variant="secondary" className="px-2 py-0.5 text-[10px]">+</Button> }]}
+                        columns={[{ header: 'Indicator', render: t => <span className="font-mono text-xs text-white">{t.indicator}</span> }, { header: '+', render: t => <Button onClick={() => handleAddToReport(t, 'THREAT')} variant="secondary" className="px-2 py-0.5 text-[10px]">+</Button> }]}
                         renderMobileCard={t => <div className="flex justify-between"><span>{t.indicator}</span><Button onClick={() => handleAddToReport(t, 'THREAT')} variant="secondary">+</Button></div>}
                     />
                 )}
                 {dataTab === 'Cases' && (
                     <ResponsiveTable<Case> data={cases} keyExtractor={c => c.id}
-                        columns={[{ header: 'Case', render: c => <span className="text-xs font-bold">{c.title}</span> }, { header: '+', render: c => <Button onClick={() => handleAddToReport(c, 'CASE')} variant="secondary" className="px-2 py-0.5 text-[10px]">+</Button> }]}
+                        columns={[{ header: 'Case', render: c => <span className="text-xs font-bold text-white">{c.title}</span> }, { header: '+', render: c => <Button onClick={() => handleAddToReport(c, 'CASE')} variant="secondary" className="px-2 py-0.5 text-[10px]">+</Button> }]}
                         renderMobileCard={c => <div className="flex justify-between"><span>{c.title}</span><Button onClick={() => handleAddToReport(c, 'CASE')} variant="secondary">+</Button></div>}
                     />
                 )}
                 {dataTab === 'Actors' && (
                     <ResponsiveTable<ThreatActor> data={actors} keyExtractor={a => a.id}
-                        columns={[{ header: 'Name', render: a => <span className="text-xs font-bold">{a.name}</span> }, { header: '+', render: a => <Button onClick={() => handleAddToReport(a, 'ACTOR')} variant="secondary" className="px-2 py-0.5 text-[10px]">+</Button> }]}
+                        columns={[{ header: 'Name', render: a => <span className="text-xs font-bold text-white">{a.name}</span> }, { header: '+', render: a => <Button onClick={() => handleAddToReport(a, 'ACTOR')} variant="secondary" className="px-2 py-0.5 text-[10px]">+</Button> }]}
                         renderMobileCard={a => <div className="flex justify-between"><span>{a.name}</span><Button onClick={() => handleAddToReport(a, 'ACTOR')} variant="secondary">+</Button></div>}
                     />
                 )}
             </div>
-         </Card>
+         </div>
 
          {/* Live Editor */}
-         <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col relative">
-            <CardHeader 
-                title="Section Manager" 
-                action={<span className="text-xs text-cyan-500 font-mono">{sections.length} SECTIONS</span>}
-            />
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-950/30">
+         <div className="flex-1 flex flex-col bg-slate-900/20">
+            <div className="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Section Editor</span>
+               <span className="text-xs text-cyan-500 font-mono">{sections.length} BLOCKS</span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                 <ReportSectionList 
                     sections={sections} 
                     onReorder={setSections} 

@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Case, Threat, Artifact, IncidentReport } from '../../types';
+import React, { useState, useMemo } from 'react';
+import { Case, Threat, Artifact, IncidentReport, View } from '../../types';
 import SubModuleNav from '../Shared/SubModuleNav';
 import FeedItem from '../Feed/FeedItem';
 import NetworkGraph from '../Shared/NetworkGraph';
@@ -24,7 +24,16 @@ const CONSOLIDATED_TABS = ['Workbench', 'Intelligence', 'Response', 'Evidence'];
 const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBack, onUpdate }) => {
   const [activeTab, setActiveTab] = useState(CONSOLIDATED_TABS[0]);
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
-  const auditLogs = threatData.getAuditLogs();
+  
+  // Filter audit logs relevant to this case
+  const caseLogs = useMemo(() => {
+    return threatData.getAuditLogs().filter(l => 
+        l.details.includes(activeCase.id) || 
+        l.details.includes(activeCase.title) || 
+        l.action.includes('CASE') ||
+        activeCase.artifacts.some(a => l.details.includes(a.name))
+    );
+  }, [activeCase]);
 
   const handleTransfer = (agency: string) => { threatData.transferCase(activeCase.id, agency); onUpdate(); };
   const handleShare = (agency: string) => { threatData.shareCase(activeCase.id, agency); onUpdate(); };
@@ -71,17 +80,17 @@ const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBa
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex flex-col gap-6">
                         <KillChainView threats={linkedThreats} />
-                        <Card className="flex-1 p-0 overflow-hidden">
+                        <Card className="flex-1 p-0 overflow-hidden min-h-[300px]">
                             <CardHeader title="Relationship Graph" />
-                            <div className="p-4 flex items-center justify-center bg-slate-950/50">
+                            <div className="p-4 flex items-center justify-center bg-slate-950/50 h-full">
                                 <NetworkGraph threats={linkedThreats} />
                             </div>
                         </Card>
                     </div>
-                    <Card className="p-0 overflow-hidden flex flex-col h-full">
-                        <CardHeader title="Linked Intelligence" action={<Badge color="red">{linkedThreats.length} IoCs</Badge>} />
+                    <Card className="p-0 overflow-hidden flex flex-col h-full max-h-[800px]">
+                        <CardHeader title="Linked Indicators (IoCs)" action={<Badge color="red">{linkedThreats.length} Items</Badge>} />
                         <div className="p-4 flex-1 overflow-y-auto custom-scrollbar space-y-2 bg-slate-900/30">
-                            {linkedThreats.length > 0 ? linkedThreats.map(t => <FeedItem key={t.id} threat={t} />) : <div className="p-8 text-center border-2 border-dashed border-slate-800 rounded-lg text-slate-500">No threats currently linked to this case.</div>}
+                            {linkedThreats.length > 0 ? linkedThreats.map(t => <FeedItem key={t.id} threat={t} />) : <div className="p-12 text-center border-2 border-dashed border-slate-800 rounded-lg text-slate-500">No threats currently linked to this case.<br/><span className="text-xs">Use "Add Artifact" or link from Feed.</span></div>}
                         </div>
                     </Card>
                 </div>
@@ -103,14 +112,18 @@ const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBa
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <EvidenceManager artifacts={activeCase.artifacts} onAdd={handleAddArtifact} onDelete={handleDeleteArtifact} />
                     <Card className="p-0 overflow-hidden">
-                        <CardHeader title="Audit Log (Chain of Custody)" />
+                        <CardHeader title="Case Audit Trail" action={<Badge color="slate">{caseLogs.length} Events</Badge>} />
                         <div className="p-4 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                            {auditLogs.slice(0, 10).map(l => (
-                                <div key={l.id} className="bg-slate-950 p-3 rounded border border-slate-800 flex justify-between items-center">
-                                    <div className="text-xs text-cyan-500 font-mono mb-0.5">{l.timestamp} - {l.user}</div>
-                                    <div className="text-sm text-slate-300 font-bold">{l.action}</div>
+                            {caseLogs.length > 0 ? caseLogs.slice(0, 15).map(l => (
+                                <div key={l.id} className="bg-slate-950 p-3 rounded border border-slate-800 flex justify-between items-center group hover:border-slate-700 transition-colors">
+                                    <div className="flex gap-3 items-center">
+                                        <div className="text-[10px] text-slate-500 font-mono">{l.timestamp}</div>
+                                        <div className="text-xs text-cyan-500 font-bold">{l.action}</div>
+                                    </div>
+                                    <div className="text-xs text-slate-400 group-hover:text-white max-w-md truncate">{l.details}</div>
+                                    <div className="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-slate-500">{l.user}</div>
                                 </div>
-                            ))}
+                            )) : <div className="text-center text-slate-500 italic py-4">No audit logs recorded for this case yet.</div>}
                         </div>
                     </Card>
                 </div>
