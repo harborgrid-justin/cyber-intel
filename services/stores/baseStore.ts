@@ -1,16 +1,19 @@
 
 import { DatabaseAdapter } from '../dbAdapter';
 import { ScratchPad } from '../scratchPad';
+import { DataMapper, IdentityMapper } from '../dataMapper';
 
 export class BaseStore<T extends { id: string }> {
   protected items: T[] = [];
   protected key: string;
   protected adapter: DatabaseAdapter;
+  protected mapper: DataMapper<T>;
   private debounceTimer: any = null;
 
-  constructor(key: string, initialData: T[], adapter: DatabaseAdapter) {
+  constructor(key: string, initialData: T[], adapter: DatabaseAdapter, mapper?: DataMapper<T>) {
     this.key = key;
     this.adapter = adapter;
+    this.mapper = mapper || new IdentityMapper<T>();
     this.items = ScratchPad.load(key) || initialData;
   }
 
@@ -18,6 +21,19 @@ export class BaseStore<T extends { id: string }> {
   
   getById(id: string): T | undefined { 
     return this.items.find(i => i.id === id); 
+  }
+
+  // Pull data from the configured adapter
+  async fetch(): Promise<void> {
+    try {
+      const raw = await this.adapter.query(this.key);
+      if (raw && Array.isArray(raw)) {
+        this.items = raw.map(item => this.mapper.toDomain(item));
+        this.notify();
+      }
+    } catch (e) {
+      console.error(`Store Fetch Error (${this.key}):`, e);
+    }
   }
 
   add(item: T): void {
@@ -36,17 +52,21 @@ export class BaseStore<T extends { id: string }> {
   }
 
   protected sync(action: 'CREATE' | 'UPDATE' | 'DELETE', data: any) {
-    this.adapter.execute(action, this.key.toLowerCase(), data);
+    const persistenceData = action === 'DELETE' ? data : this.mapper.toPersistence(data);
+    this.adapter.execute(action, this.key.toLowerCase(), persistenceData);
     
-    // Enterprise Performance: Debounce expensive serialization
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
         ScratchPad.save(this.key, this.items);
-        window.dispatchEvent(new Event('data-update'));
+        this.notify();
     }, 250);
   }
 
   setAdapter(adapter: DatabaseAdapter) {
     this.adapter = adapter;
+  }
+
+  protected notify() {
+    window.dispatchEvent(new Event('data-update'));
   }
 }

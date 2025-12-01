@@ -95,14 +95,14 @@ export interface IncidentReport { id: string; title: string; type: 'Executive' |
 export interface ReportSection { id: string; title: string; content: string; }
 
 export interface MitreItem { id: string; name: string; description: string; url?: string; parent?: string; type?: string; aliases?: string[]; tactic?: string; }
-export interface OsintDomain { domain: string; registrar: string; created: string; expires: string; dns: string; status: string; subdomains: string[]; ssl: string; }
-export interface OsintBreach { email: string; breach: string; date: string; data: string; hash: string; source: string; }
-export interface OsintSocial { handle: string; platform: string; status: string; followers: number; lastPost: string; sentiment: string; bio: string; priorityScore?: number; } 
-export interface OsintGeo { ip: string; city: string; country: string; isp: string; asn: string; coords: string; ports: number[]; threatScore: number; }
+export interface OsintDomain { id: string; domain: string; registrar: string; created: string; expires: string; dns: string; status: string; subdomains: string[]; ssl: string; }
+export interface OsintBreach { id: string; email: string; breach: string; date: string; data: string; hash: string; source: string; }
+export interface OsintSocial { id: string; handle: string; platform: string; status: string; followers: number; lastPost: string; sentiment: string; bio: string; priorityScore?: number; } 
+export interface OsintGeo { id: string; ip: string; city: string; country: string; isp: string; asn: string; coords: string; ports: number[]; threatScore: number; }
 export interface SystemUser { id: string; name: string; role: string; clearance: string; status: 'Online' | 'Offline' | 'Busy' | 'LOCKED' | 'FATIGUED'; lastLogin?: string; casesResolved24h?: number; email?: string; isVIP?: boolean; }
-export interface Integration { name: string; status: 'Connected' | 'Disconnected' | 'Limited'; type: string; }
+export interface Integration { id: string; name: string; status: 'Connected' | 'Disconnected' | 'Limited'; type: string; }
 
-export interface PatchStatus { system: string; total: number; patched: number; compliance: number; criticalPending: number; }
+export interface PatchStatus { id: string; system: string; total: number; patched: number; compliance: number; criticalPending: number; }
 export interface ScannerStatus { id: string; name: string; status: string; lastScan: string; coverage: string; findings: number; healthScore?: number; licenseExpiry?: string; }
 export interface VendorFeedItem { id: string; vendor: string; date: string; title: string; severity: string; matchedAssets?: number; cveIds?: string[]; }
 

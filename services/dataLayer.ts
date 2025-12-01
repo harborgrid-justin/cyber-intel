@@ -2,8 +2,15 @@
 import { MockAdapter, DatabaseAdapter } from './dbAdapter';
 import { ThreatStore } from './stores/threatStore';
 import { CaseStore } from './stores/caseStore';
-import { BaseStore } from './stores/baseStore';
+import { ActorStore } from './stores/actorStore';
 import { CampaignStore } from './stores/campaignStore';
+import { FeedStore } from './stores/feedStore';
+import { LogStore } from './stores/logStore';
+import { VulnerabilityStore } from './stores/vulnerabilityStore';
+import { SystemNodeStore } from './stores/systemNodeStore';
+import { ReportStore } from './stores/reportStore';
+import { UserStore } from './stores/userStore';
+import { BaseStore } from './stores/baseStore';
 import { startBackgroundJobs } from './jobs';
 import { 
   MOCK_THREATS, MOCK_CASES, MOCK_FEEDS, MOCK_ACTORS, MOCK_PLAYBOOKS, 
@@ -13,36 +20,58 @@ import {
   MOCK_DOMAIN, MOCK_BREACH, MOCK_GEO, MOCK_DARKWEB, MOCK_META, MOCK_SOCIAL, MOCK_INTEGRATIONS, MOCK_CAMPAIGNS,
   SYSTEM_NODES, MOCK_PATCH_STATUS, MOCK_SCANNERS, MOCK_VENDOR_FEEDS, MOCK_TEMPLATES
 } from '../constants';
-import { IncidentStatus, Threat, Case, IoCFeed, ThreatActor, Playbook, Artifact, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, AuditLog, SystemUser, IncidentReport, Campaign, SystemNode, ChartDataPoint, VendorFeedItem, ScannerStatus } from '../types';
+import { IncidentStatus, Threat, Case, ThreatActor, Playbook, Artifact, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, SystemUser, IncidentReport, Campaign, SystemNode, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus } from '../types';
 
 export class DataLayer {
   public adapter: DatabaseAdapter = new MockAdapter();
   
+  // Domain Specific Stores
   public threatStore: ThreatStore;
   public caseStore: CaseStore;
-  public feedStore: BaseStore<IoCFeed>;
-  public actorStore: BaseStore<ThreatActor>;
+  public actorStore: ActorStore;
   public campaignStore: CampaignStore;
+  public feedStore: FeedStore;
+  public logStore: LogStore;
+  public vulnStore: VulnerabilityStore;
+  public nodeStore: SystemNodeStore;
+  public reportStore: ReportStore;
+  public userStore: UserStore;
+  
+  // Generic Stores
   public playbookStore: BaseStore<Playbook>;
   public chainStore: BaseStore<ChainEvent>;
   public malwareStore: BaseStore<Malware>;
   public jobStore: BaseStore<ForensicJob>;
   public deviceStore: BaseStore<Device>;
   public pcapStore: BaseStore<Pcap>;
-  public vulnStore: BaseStore<Vulnerability>;
-  public logStore: BaseStore<AuditLog>;
-  public userStore: BaseStore<SystemUser>;
-  public reportStore: BaseStore<IncidentReport>;
-  public nodeStore: BaseStore<SystemNode>;
   public vendorFeedStore: BaseStore<VendorFeedItem>;
   public scannerStore: BaseStore<ScannerStatus>;
+  
+  // Knowledge Base Stores
+  public mitreTacticStore: BaseStore<MitreItem>;
+  public mitreTechniqueStore: BaseStore<MitreItem>;
+  public mitreSubStore: BaseStore<MitreItem>;
+  public mitreGroupStore: BaseStore<MitreItem>;
+  public mitreSoftwareStore: BaseStore<MitreItem>;
+  public mitreMitigationStore: BaseStore<MitreItem>;
 
+  // OSINT Stores
+  public osintDomainStore: BaseStore<OsintDomain>;
+  public osintBreachStore: BaseStore<OsintBreach>;
+  public osintGeoStore: BaseStore<OsintGeo>;
+  public osintSocialStore: BaseStore<OsintSocial>;
+  
+  // Config Stores
+  public integrationStore: BaseStore<Integration>;
+  public patchStatusStore: BaseStore<PatchStatus>;
+
+  // Legacy Getters/Setters for compatibility
   get threats() { return this.threatStore.getAll(); }
-  set threats(val: Threat[]) { /* No-op, managed by store */ }
+  set threats(val: Threat[]) { /* No-op */ }
   get cases() { return this.caseStore.getAll(); }
   set cases(val: Case[]) { /* No-op */ }
   get feeds() { return this.feedStore.getAll(); }
-  set feeds(v: IoCFeed[]) { /* No-op */ }
+  set feeds(v: any[]) { /* No-op */ }
   get systemUsers() { return this.userStore.getAll(); }
   set systemUsers(v: SystemUser[]) { /* No-op */ }
   get devices() { return this.deviceStore.getAll(); }
@@ -51,35 +80,68 @@ export class DataLayer {
   constructor() {
     this.threatStore = new ThreatStore('THREATS', MOCK_THREATS, this.adapter);
     this.caseStore = new CaseStore('CASES', MOCK_CASES, this.adapter);
-    this.feedStore = new BaseStore('FEEDS', MOCK_FEEDS, this.adapter);
-    this.actorStore = new BaseStore('ACTORS', MOCK_ACTORS, this.adapter);
+    this.actorStore = new ActorStore('ACTORS', MOCK_ACTORS, this.adapter);
     this.campaignStore = new CampaignStore('CAMPAIGNS', MOCK_CAMPAIGNS, this.adapter);
+    this.feedStore = new FeedStore('FEEDS', MOCK_FEEDS, this.adapter);
+    this.logStore = new LogStore('LOGS', MOCK_AUDIT_LOGS, this.adapter);
+    this.vulnStore = new VulnerabilityStore('VULNS', MOCK_VULNERABILITIES, this.adapter);
+    this.nodeStore = new SystemNodeStore('NODES', SYSTEM_NODES, this.adapter);
+    this.reportStore = new ReportStore('REPORTS', MOCK_INCIDENT_REPORTS, this.adapter);
+    this.userStore = new UserStore('USERS', MOCK_USERS, this.adapter);
+    
+    // Initialize Generic Stores
     this.playbookStore = new BaseStore('PLAYBOOKS', MOCK_PLAYBOOKS, this.adapter);
     this.chainStore = new BaseStore('CHAIN', MOCK_CHAIN, this.adapter);
     this.malwareStore = new BaseStore('MALWARE', MOCK_MALWARE, this.adapter);
     this.jobStore = new BaseStore('JOBS', MOCK_LAB_JOBS, this.adapter);
     this.deviceStore = new BaseStore('DEVICES', MOCK_DEVICES, this.adapter);
     this.pcapStore = new BaseStore('PCAPS', MOCK_PCAPS, this.adapter);
-    this.vulnStore = new BaseStore('VULNS', MOCK_VULNERABILITIES, this.adapter);
-    this.logStore = new BaseStore('LOGS', MOCK_AUDIT_LOGS, this.adapter);
-    this.userStore = new BaseStore('USERS', MOCK_USERS, this.adapter);
-    this.reportStore = new BaseStore('REPORTS', MOCK_INCIDENT_REPORTS, this.adapter);
-    this.nodeStore = new BaseStore('NODES', SYSTEM_NODES, this.adapter);
     this.vendorFeedStore = new BaseStore('VENDOR_FEEDS', MOCK_VENDOR_FEEDS, this.adapter);
     this.scannerStore = new BaseStore('SCANNERS', MOCK_SCANNERS, this.adapter);
+
+    // Knowledge Base Stores
+    this.mitreTacticStore = new BaseStore('MITRE_TACTICS', MOCK_TACTICS, this.adapter);
+    this.mitreTechniqueStore = new BaseStore('MITRE_TECHNIQUES', MOCK_TECHNIQUES, this.adapter);
+    this.mitreSubStore = new BaseStore('MITRE_SUB_TECHNIQUES', MOCK_SUB_TECHNIQUES, this.adapter);
+    this.mitreGroupStore = new BaseStore('MITRE_GROUPS', MOCK_GROUPS, this.adapter);
+    this.mitreSoftwareStore = new BaseStore('MITRE_SOFTWARE', MOCK_SOFTWARE, this.adapter);
+    this.mitreMitigationStore = new BaseStore('MITRE_MITIGATIONS', MOCK_MITIGATIONS, this.adapter);
+
+    // OSINT Stores
+    this.osintDomainStore = new BaseStore('OSINT_DOMAINS', MOCK_DOMAIN, this.adapter);
+    this.osintBreachStore = new BaseStore('OSINT_BREACHES', MOCK_BREACH, this.adapter);
+    this.osintGeoStore = new BaseStore('OSINT_GEO', MOCK_GEO, this.adapter);
+    this.osintSocialStore = new BaseStore('OSINT_SOCIAL', MOCK_SOCIAL, this.adapter);
+
+    // Config Stores
+    this.integrationStore = new BaseStore('INTEGRATIONS', MOCK_INTEGRATIONS, this.adapter);
+    this.patchStatusStore = new BaseStore('PATCH_STATUS', MOCK_PATCH_STATUS, this.adapter);
     
     startBackgroundJobs(this);
   }
 
   setProvider(adapter: DatabaseAdapter) {
     this.adapter = adapter;
-    [this.threatStore, this.caseStore, this.feedStore, this.actorStore, this.campaignStore, this.playbookStore, this.chainStore, this.malwareStore, this.jobStore, this.deviceStore, this.pcapStore, this.vulnStore, this.logStore, this.userStore, this.reportStore, this.nodeStore, this.vendorFeedStore, this.scannerStore].forEach(s => s.setAdapter(adapter));
+    const stores = [
+      this.threatStore, this.caseStore, this.actorStore, this.campaignStore,
+      this.feedStore, this.logStore, this.vulnStore, this.nodeStore, this.reportStore, this.userStore,
+      this.playbookStore, this.chainStore, this.malwareStore, this.jobStore, 
+      this.deviceStore, this.pcapStore,
+      this.vendorFeedStore, this.scannerStore,
+      this.mitreTacticStore, this.mitreTechniqueStore, this.mitreSubStore, this.mitreGroupStore, this.mitreSoftwareStore, this.mitreMitigationStore,
+      this.osintDomainStore, this.osintBreachStore, this.osintGeoStore, this.osintSocialStore,
+      this.integrationStore, this.patchStatusStore
+    ];
+    stores.forEach(s => {
+        s.setAdapter(adapter);
+        s.fetch(); // Auto-fetch on provider switch
+    });
     window.dispatchEvent(new Event('db-adapter-changed'));
   }
 
   getAdapterInfo() { return { name: this.adapter.name, type: this.adapter.type }; }
   
-  // Facades
+  // --- Threat Management ---
   getThreats(sort = true) { return this.threatStore.getThreats(sort); }
   getThreatsByActor(name: string) { return this.threatStore.getByActor(name); }
   addThreat(t: Threat) { this.threatStore.addThreat(t, this.actorStore.getAll(), this.caseStore.getAll(), (c) => this.addCase(c)); }
@@ -88,14 +150,29 @@ export class DataLayer {
   updateThreat(t: Threat) { this.threatStore.update(t); }
   linkThreatToActor(tid: string, name: string) { const t = this.threatStore.getById(tid); if(t) { t.threatActor = name; this.threatStore.update(t); } }
 
+  // --- Case Management ---
   getCases() { return this.caseStore.getCases(); }
   getCase(id: string) { return this.caseStore.getById(id); }
   addCase(c: Case) { this.caseStore.addCase(c, this.playbookStore.getAll(), (id, n) => this.caseStore.addNote(id, n)); }
   deleteCase(id: string) { this.caseStore.delete(id); }
   updateCase(c: Case) { this.caseStore.update(c); }
   addTask(cid: string, t: any) { this.caseStore.addTask(cid, t); }
-  toggleTask(cid: string, tid: string) { const c = this.getCase(cid); const task = c?.tasks.find(t => t.id === tid); if(c && task) { task.status = task.status === 'DONE' ? 'PENDING' : 'DONE'; this.caseStore.update(c); } }
-  applyPlaybook(cid: string, pid: string) { const pb = this.playbookStore.getById(pid); if(pb) { this.caseStore.applyPlaybook(cid, pb, (id, n) => this.caseStore.addNote(id, n)); pb.usageCount = (pb.usageCount || 0) + 1; this.playbookStore.update(pb); } }
+  toggleTask(cid: string, tid: string) { 
+    const c = this.getCase(cid); 
+    const task = c?.tasks.find(t => t.id === tid); 
+    if(c && task) { 
+        task.status = task.status === 'DONE' ? 'PENDING' : 'DONE'; 
+        this.caseStore.update(c); 
+    } 
+  }
+  applyPlaybook(cid: string, pid: string) { 
+    const pb = this.playbookStore.getById(pid); 
+    if(pb) { 
+        this.caseStore.applyPlaybook(cid, pb, (id, n) => this.caseStore.addNote(id, n)); 
+        pb.usageCount = (pb.usageCount || 0) + 1; 
+        this.playbookStore.update(pb); 
+    } 
+  }
   addNote(cid: string, n: string) { this.caseStore.addNote(cid, n); }
   addArtifact(cid: string, a: Artifact) { const c = this.getCase(cid); if(c) { c.artifacts.push(a); this.caseStore.update(c); } }
   deleteArtifact(cid: string, aid: string) { const c = this.getCase(cid); if(c) { c.artifacts = c.artifacts.filter(x => x.id !== aid); this.caseStore.update(c); } }
@@ -103,29 +180,38 @@ export class DataLayer {
   transferCase(cid: string, agency: string) { const c = this.getCase(cid); if(c) { c.agency = agency; this.caseStore.update(c); } }
   shareCase(cid: string, agency: string) { const c = this.getCase(cid); if(c) { c.sharedWith.push(agency); this.caseStore.update(c); } }
 
+  // --- Campaign Management ---
   getCampaigns() { return this.campaignStore.getAll(); }
-  addCampaign(arg1: Campaign | string, arg2?: string): void { if (typeof arg1 === 'string' && typeof arg2 === 'string') { this.addCampaignToActor(arg1, arg2); } else { this.campaignStore.addCampaign(arg1 as Campaign); } }
+  addCampaign(arg1: Campaign | string, arg2?: string): void { 
+    if (typeof arg1 === 'string' && typeof arg2 === 'string') { this.actorStore.linkCampaign(arg1, arg2); } 
+    else { this.campaignStore.addCampaign(arg1 as Campaign); } 
+  }
   updateCampaign(c: Campaign) { this.campaignStore.updateCampaign(c); }
   deleteCampaign(id: string) { this.campaignStore.delete(id); }
 
+  // --- Actor Management ---
   getActors() { return this.actorStore.getAll(); }
   addActor(a: ThreatActor) { this.actorStore.add(a); }
   updateActor(a: ThreatActor) { this.actorStore.update(a); }
   deleteActor(id: string) { this.actorStore.delete(id); }
-  addCampaignToActor(aid: string, c: string) { const a = this.actorStore.getById(aid); if(a) { a.campaigns.push(c); this.actorStore.update(a); } }
-  addInfra(aid: string, i: any) { const a = this.actorStore.getById(aid); if(a) { a.infrastructure.push(i); this.actorStore.update(a); } }
-  addExploit(aid: string, e: string) { const a = this.actorStore.getById(aid); if(a) { a.exploits.push(e); this.actorStore.update(a); } }
-  addTarget(aid: string, t: string) { const a = this.actorStore.getById(aid); if(a) { a.targets.push(t); this.actorStore.update(a); } }
-  addTTP(aid: string, t: any) { const a = this.actorStore.getById(aid); if(a) { a.ttps.push(t); this.actorStore.update(a); } }
-  addReference(aid: string, r: string) { const a = this.actorStore.getById(aid); if(a) { a.references.push(r); this.actorStore.update(a); } }
-  deleteReference(aid: string, r: string) { const a = this.actorStore.getById(aid); if(a) { a.references = a.references.filter(x=>x!==r); this.actorStore.update(a); } }
-  addHistoryEvent(aid: string, e: any) { const a = this.actorStore.getById(aid); if(a) { a.history.unshift(e); this.actorStore.update(a); } }
+  addCampaignToActor(aid: string, c: string) { this.actorStore.linkCampaign(aid, c); }
+  addInfra(aid: string, i: any) { this.actorStore.addInfrastructure(aid, i); }
+  addExploit(aid: string, e: string) { this.actorStore.addExploit(aid, e); }
+  addTarget(aid: string, t: string) { this.actorStore.addTarget(aid, t); }
+  addTTP(aid: string, t: any) { this.actorStore.addTTP(aid, t); }
+  addReference(aid: string, r: string) { this.actorStore.addReference(aid, r); }
+  deleteReference(aid: string, r: string) { this.actorStore.removeReference(aid, r); }
+  addHistoryEvent(aid: string, e: any) { this.actorStore.addHistoryEvent(aid, e); }
 
+  // --- Feed & Ingestion ---
   getFeeds() { return this.feedStore.getAll(); }
-  addFeed(f: IoCFeed) { this.feedStore.add(f); }
+  addFeed(f: any) { this.feedStore.add(f); }
   deleteFeed(id: string) { this.feedStore.delete(id); }
-  toggleFeed(id: string) { const f = this.feedStore.getById(id); if(f) { f.status = f.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE'; this.feedStore.update(f); } }
+  toggleFeed(id: string) { this.feedStore.toggleStatus(id); }
+  getVendorFeedItems() { return this.vendorFeedStore.getAll(); }
+  addVendorFeedItem(i: VendorFeedItem) { this.vendorFeedStore.add(i); }
 
+  // --- System & Evidence ---
   getChainOfCustody() { return this.chainStore.getAll(); }
   addChainEvent(e: ChainEvent) { this.chainStore.add(e); }
   getMalwareSamples() { return this.malwareStore.getAll(); }
@@ -134,24 +220,22 @@ export class DataLayer {
   getDevices() { return this.deviceStore.getAll(); }
   getNetworkCaptures() { return this.pcapStore.getAll(); }
   getVulnerabilities() { return this.vulnStore.getAll(); }
-  updateVulnerabilityStatus(id: string, s: any) { const v = this.vulnStore.getById(id); if(v) { v.status = s; this.vulnStore.update(v); } }
+  updateVulnerabilityStatus(id: string, s: any) { this.vulnStore.updateStatus(id, s); }
   getAuditLogs() { return this.logStore.getAll(); }
   getSystemUsers() { return this.userStore.getAll(); }
-  getIntegrations() { return MOCK_INTEGRATIONS; }
+  getIntegrations() { return this.integrationStore.getAll(); }
   getReports() { return this.reportStore.getAll(); }
-  getReportsByCase(cid: string) { return this.reportStore.getAll().filter(r => r.relatedCaseId === cid); }
-  getReportsByActor(aid: string) { return this.reportStore.getAll().filter(r => r.relatedActorId === aid); }
+  getReportsByCase(cid: string) { return this.reportStore.getByCase(cid); }
+  getReportsByActor(aid: string) { return this.reportStore.getByActor(aid); }
   addReport(r: IncidentReport) { this.reportStore.add(r); }
   getReportTemplates() { return MOCK_TEMPLATES; }
   getPlaybooks() { return this.playbookStore.getAll(); }
   getSystemNodes() { return this.nodeStore.getAll(); }
-  getPatchStatus() { return MOCK_PATCH_STATUS; }
+  getPatchStatus() { return this.patchStatusStore.getAll(); }
   getScannerStatus() { return this.scannerStore.getAll(); }
   updateScannerStatus(s: ScannerStatus) { this.scannerStore.update(s); }
-  getVendorFeedItems() { return this.vendorFeedStore.getAll(); }
-  addVendorFeedItem(i: VendorFeedItem) { this.vendorFeedStore.add(i); }
 
-  // Dynamic Analytics
+  // --- Analytics & Helpers ---
   getThreatTrends(): ChartDataPoint[] {
     const total = this.threatStore.getAll().length;
     const base = Math.max(5, Math.floor(total / 6));
@@ -177,18 +261,19 @@ export class DataLayer {
     return Object.keys(counts).map(key => ({ name: key, value: counts[key], fullMark: maxVal * 1.2 })).slice(0, 6);
   }
 
-  getMitreTactics() { return MOCK_TACTICS; }
-  getMitreTechniques() { return MOCK_TECHNIQUES; }
-  getMitreSubTechniques() { return MOCK_SUB_TECHNIQUES; }
-  getMitreGroups() { return MOCK_GROUPS; }
-  getMitreSoftware() { return MOCK_SOFTWARE; }
-  getMitreMitigations() { return MOCK_MITIGATIONS; }
-  getOsintDomains() { return MOCK_DOMAIN; }
-  getOsintBreaches() { return MOCK_BREACH; }
-  getOsintGeo() { return MOCK_GEO; }
-  getOsintSocial() { return MOCK_SOCIAL; }
-  getOsintDarkWeb() { return MOCK_DARKWEB; }
-  getOsintMeta() { return MOCK_META; }
+  getMitreTactics() { return this.mitreTacticStore.getAll(); }
+  getMitreTechniques() { return this.mitreTechniqueStore.getAll(); }
+  getMitreSubTechniques() { return this.mitreSubStore.getAll(); }
+  getMitreGroups() { return this.mitreGroupStore.getAll(); }
+  getMitreSoftware() { return this.mitreSoftwareStore.getAll(); }
+  getMitreMitigations() { return this.mitreMitigationStore.getAll(); }
+  getOsintDomains() { return this.osintDomainStore.getAll(); }
+  getOsintBreaches() { return this.osintBreachStore.getAll(); }
+  getOsintGeo() { return this.osintGeoStore.getAll(); }
+  getOsintSocial() { return this.osintSocialStore.getAll(); }
+  getOsintDarkWeb() { return MOCK_DARKWEB; } // No store for unstructured darkweb yet
+  getOsintMeta() { return MOCK_META; } // No store for meta yet
+  
   sync(action: 'CREATE' | 'UPDATE' | 'DELETE', collection: string, data: any) { 
     this.adapter.execute(action, collection, data);
   }

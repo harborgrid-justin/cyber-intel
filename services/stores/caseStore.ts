@@ -2,8 +2,14 @@
 import { Case, Playbook, Task } from '../../types';
 import { BaseStore } from './baseStore';
 import { LogicEngine } from '../logicEngine';
+import { DatabaseAdapter } from '../dbAdapter';
+import { DataMapper } from '../dataMapper';
 
 export class CaseStore extends BaseStore<Case> {
+  constructor(key: string, initialData: Case[], adapter: DatabaseAdapter, mapper?: DataMapper<Case>) {
+    super(key, initialData, adapter, mapper);
+  }
+
   getCases() { return this.items.map(c => LogicEngine.checkSLA(c)); }
 
   addCase(c: Case, playbooks: Playbook[], onNote: (id: string, note: string) => void) {
@@ -23,7 +29,7 @@ export class CaseStore extends BaseStore<Case> {
   applyPlaybook(caseId: string, pb: Playbook, onNote: (id: string, n: string) => void) {
     const c = this.getById(caseId);
     if (c && pb) {
-      pb.usageCount = (pb.usageCount || 0) + 1; // Needs playbook store update externally
+      pb.usageCount = (pb.usageCount || 0) + 1; 
       pb.tasks.forEach(t => c.tasks.push({ id: `t-${Date.now()}-${Math.random()}`, title: t, status: 'PENDING' }));
       onNote(caseId, `Applied ${pb.name}`);
       this.update(c);

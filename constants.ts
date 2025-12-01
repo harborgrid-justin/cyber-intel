@@ -93,10 +93,10 @@ export const MOCK_VULNERABILITIES: Vulnerability[] = [
 ];
 
 export const MOCK_PATCH_STATUS: PatchStatus[] = [
-  { system: 'Workstations (Windows)', total: 450, patched: 442, compliance: 98, criticalPending: 2 },
-  { system: 'Servers (Linux)', total: 120, patched: 110, compliance: 91, criticalPending: 3 },
-  { system: 'Database Clusters', total: 15, patched: 15, compliance: 100, criticalPending: 0 },
-  { system: 'Edge Devices', total: 60, patched: 45, compliance: 75, criticalPending: 5 },
+  { id: 'ps1', system: 'Workstations (Windows)', total: 450, patched: 442, compliance: 98, criticalPending: 2 },
+  { id: 'ps2', system: 'Servers (Linux)', total: 120, patched: 110, compliance: 91, criticalPending: 3 },
+  { id: 'ps3', system: 'Database Clusters', total: 15, patched: 15, compliance: 100, criticalPending: 0 },
+  { id: 'ps4', system: 'Edge Devices', total: 60, patched: 45, compliance: 75, criticalPending: 5 },
 ];
 
 export const MOCK_SCANNERS: ScannerStatus[] = [
@@ -148,14 +148,14 @@ export const MOCK_GROUPS: MitreItem[] = [{ id: 'G0007', name: 'APT28', aliases: 
 export const MOCK_SOFTWARE: MitreItem[] = [{ id: 'S0002', name: 'Mimikatz', type: 'Tool', description: 'Credential dumper.' }];
 export const MOCK_MITIGATIONS: MitreItem[] = [{ id: 'M1050', name: 'Exploit Protection', description: 'Use ASLR and DEP.' }];
 
-export const MOCK_DOMAIN: OsintDomain[] = [{ domain: 'evil.com', registrar: 'BadHost', created: '2023-10', expires: '2024-10', dns: '1.2.3.4', status: 'Active', subdomains: ['mail.'], ssl: 'Valid' }];
-export const MOCK_BREACH: OsintBreach[] = [{ email: 'ceo@target.com', breach: 'LinkedIn', date: '2016', data: 'Pass', hash: '5f4d...', source: 'Leak' }, { email: 'adm.s.connor@sentinel.co', breach: 'Canva', date: '2019', data: 'Hash', hash: '...', source: 'Leak' }];
-export const MOCK_SOCIAL: OsintSocial[] = [{ handle: '@threat', platform: 'Twitter', status: 'Active', followers: 1200, lastPost: '2h', sentiment: 'Neg', bio: 'Researcher' }, { handle: '@s_connor', platform: 'LinkedIn', status: 'Active', followers: 500, lastPost: '1d', sentiment: 'Neutral', bio: 'Sentinel Admin' }];
-export const MOCK_GEO: OsintGeo[] = [{ ip: '185.200.1.1', city: 'Moscow', country: 'RU', isp: 'Tel', asn: 'AS123', coords: '55,37', ports: [80], threatScore: 85 }];
+export const MOCK_DOMAIN: OsintDomain[] = [{ id: 'd1', domain: 'evil.com', registrar: 'BadHost', created: '2023-10', expires: '2024-10', dns: '1.2.3.4', status: 'Active', subdomains: ['mail.'], ssl: 'Valid' }];
+export const MOCK_BREACH: OsintBreach[] = [{ id: 'br1', email: 'ceo@target.com', breach: 'LinkedIn', date: '2016', data: 'Pass', hash: '5f4d...', source: 'Leak' }, { id: 'br2', email: 'adm.s.connor@sentinel.co', breach: 'Canva', date: '2019', data: 'Hash', hash: '...', source: 'Leak' }];
+export const MOCK_SOCIAL: OsintSocial[] = [{ id: 'soc1', handle: '@threat', platform: 'Twitter', status: 'Active', followers: 1200, lastPost: '2h', sentiment: 'Neg', bio: 'Researcher' }, { id: 'soc2', handle: '@s_connor', platform: 'LinkedIn', status: 'Active', followers: 500, lastPost: '1d', sentiment: 'Neutral', bio: 'Sentinel Admin' }];
+export const MOCK_GEO: OsintGeo[] = [{ id: 'geo1', ip: '185.200.1.1', city: 'Moscow', country: 'RU', isp: 'Tel', asn: 'AS123', coords: '55,37', ports: [80], threatScore: 85 }];
 export const MOCK_DARKWEB = [{ source: 'Raid', title: 'DB Leak', date: '2023', author: 'GodSpeed', status: 'Verified', price: '$500' }];
 export const MOCK_META = [{ name: 'inv.pdf', size: '1MB', type: 'PDF', author: 'Unknown', created: '2023', gps: 'None' }];
 export const MOCK_USERS: SystemUser[] = [{ id: 'U1', name: 'Adm. S. Connor', role: 'Admin', clearance: 'TS', status: 'Online', isVIP: true }, { id: 'U2', name: 'J. Doe', role: 'Analyst', clearance: 'Secret', status: 'Busy' }];
-export const MOCK_INTEGRATIONS: Integration[] = [{ name: 'CrowdStrike', status: 'Connected', type: 'EDR' }, { name: 'Splunk', status: 'Connected', type: 'SIEM' }];
+export const MOCK_INTEGRATIONS: Integration[] = [{ id: 'i1', name: 'CrowdStrike', status: 'Connected', type: 'EDR' }, { id: 'i2', name: 'Splunk', status: 'Connected', type: 'SIEM' }];
 
 // Enterprise Vendor Data
 export const MOCK_VENDORS: Vendor[] = [

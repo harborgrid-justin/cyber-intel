@@ -3,8 +3,14 @@ import { Threat, IncidentStatus, ThreatActor, Case } from '../../types';
 import { BaseStore } from './baseStore';
 import { LogicEngine } from '../logicEngine';
 import { CONFIG } from '../../config';
+import { DatabaseAdapter } from '../dbAdapter';
+import { DataMapper } from '../dataMapper';
 
 export class ThreatStore extends BaseStore<Threat> {
+  constructor(key: string, initialData: Threat[], adapter: DatabaseAdapter, mapper?: DataMapper<Threat>) {
+    super(key, initialData, adapter, mapper);
+  }
+
   getThreats(sortByScore = true): Threat[] {
     let safe = this.items.map(t => LogicEngine.enforceTLP(t, CONFIG.USER.CLEARANCE));
     safe = safe.map(t => LogicEngine.adjustThresholdsByDefcon(t, CONFIG.APP.THREAT_LEVEL));
