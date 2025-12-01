@@ -63,8 +63,15 @@ export const generateDailyBriefing = async (): Promise<string> => {
   } catch (error: any) {
     console.error("Briefing Error:", error);
     
-    // Handle Rate Limiting (429)
-    if (error?.status === 429 || error?.code === 429 || error?.message?.includes('429')) {
+    // Handle Rate Limiting (429) - Robust check for various error structures
+    if (
+      error?.status === 429 || 
+      error?.code === 429 || 
+      error?.message?.includes('429') ||
+      error?.message?.includes('quota') ||
+      error?.error?.code === 429 || // Nested error object check
+      error?.status === 'RESOURCE_EXHAUSTED'
+    ) {
       return "INTELLIGENCE FEED LIMITED: Global threat levels remain elevated. Rate limits prevent live update. Monitoring standard channels for Ransomware velocity and CVE exploitation.";
     }
 
