@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { threatData } from '../../services/dataLayer';
 import { Threat, Severity, IncidentStatus } from '../../types';
 import ResponsiveTable from '../Shared/ResponsiveTable';
-import { Input, Button, Card, Select } from '../Shared/UI';
+import { Input, Button, Card, Select, CardHeader } from '../Shared/UI';
 
 const IOC_TYPES = [
   'IP Address', 'Domain', 'File Hash', 'URL', 'Email Address', 'File Path', 'Registry Key', 'Manual'
@@ -35,20 +35,23 @@ const IoCManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-4 flex flex-col md:flex-row gap-4 bg-slate-900/50">
-        <Select
-          value={newType}
-          onChange={(e) => setNewType(e.target.value)}
-          className="w-full md:w-48"
-        >
-          {IOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-        </Select>
-        <Input 
-          value={newIoC} onChange={e => setNewIoC(e.target.value)} 
-          placeholder="Enter Indicator..." 
-          className="flex-1" 
-        />
-        <Button onClick={handleAdd} variant="primary" className="whitespace-nowrap">ADD IOC</Button>
+      <Card className="p-0 overflow-hidden">
+        <CardHeader title="Quick Add Indicator" />
+        <div className="p-4 flex flex-col md:flex-row gap-4 bg-slate-900/50">
+          <Select
+            value={newType}
+            onChange={(e) => setNewType(e.target.value)}
+            className="w-full md:w-48"
+          >
+            {IOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </Select>
+          <Input 
+            value={newIoC} onChange={e => setNewIoC(e.target.value)} 
+            placeholder="Enter Indicator..." 
+            className="flex-1" 
+          />
+          <Button onClick={handleAdd} variant="primary" className="whitespace-nowrap">ADD IOC</Button>
+        </div>
       </Card>
 
       <ResponsiveTable<Threat> 

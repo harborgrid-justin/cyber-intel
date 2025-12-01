@@ -22,20 +22,20 @@ const CampaignImpact: React.FC<Props> = ({ campaign }) => {
          <Card className="p-6 bg-slate-900 border-l-4 border-l-red-600 relative overflow-hidden">
             <div className="absolute right-0 top-0 p-4 opacity-10 text-9xl font-black text-red-500">$</div>
             <div className="relative z-10">
-               <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">Projected Financial Exposure</h3>
+               <h3 className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1">Projected Financial Exposure</h3>
                <div className="text-3xl font-mono text-white font-bold">{currency.format(analysis.exposure)}</div>
                <div className="text-[10px] text-slate-500 mt-2">Value at Risk (VaR) based on asset density</div>
             </div>
          </Card>
 
          <Card className="p-6 bg-slate-900 border-l-4 border-l-orange-500">
-            <h3 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-1">Brand Reputation Risk</h3>
+            <h3 className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">Brand Reputation Risk</h3>
             <div className="text-3xl font-mono text-white font-bold">{analysis.brandImpact}</div>
             <div className="text-[10px] text-slate-500 mt-2">Sentiment analysis of related sectors</div>
          </Card>
 
          <Card className="p-6 bg-slate-900 border-l-4 border-l-blue-500">
-            <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Active Containment</h3>
+            <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Active Containment</h3>
             <div className="text-3xl font-mono text-white font-bold">{(cases.filter(c => c.status === 'CLOSED').length / Math.max(1, cases.length) * 100).toFixed(0)}%</div>
             <div className="text-[10px] text-slate-500 mt-2">{cases.length} Total Incident Cases</div>
          </Card>

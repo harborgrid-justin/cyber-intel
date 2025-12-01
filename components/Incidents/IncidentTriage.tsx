@@ -2,7 +2,7 @@
 import React from 'react';
 import { Threat, IncidentStatus, Severity } from '../../types';
 import { threatData } from '../../services/dataLayer';
-import { Button, Badge, Card } from '../Shared/UI';
+import { Button, Badge, Card, CardHeader } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 
 interface Props { threats: Threat[]; onUpdate: () => void; }
@@ -22,12 +22,11 @@ const IncidentTriage: React.FC<Props> = ({ threats, onUpdate }) => {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 flex justify-between items-center">
-        <div>
-          <h3 className="text-white font-bold">Inbox / Triage</h3>
-          <p className="text-xs text-slate-500">{newThreats.length} items requiring attention</p>
-        </div>
-        <Button onClick={() => newThreats.forEach(t => handleDismiss(t.id))} variant="secondary">Clear All</Button>
+      <Card className="p-0 overflow-hidden">
+        <CardHeader 
+          title={`Inbox / Triage (${newThreats.length})`}
+          action={<Button onClick={() => newThreats.forEach(t => handleDismiss(t.id))} variant="secondary" className="text-[10px] py-1">CLEAR ALL</Button>}
+        />
       </Card>
       
       <ResponsiveTable<Threat>

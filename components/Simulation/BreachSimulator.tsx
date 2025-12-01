@@ -1,6 +1,6 @@
 
-import React, { useState, useMemo } from 'react';
-import { Card, Button, Badge, Select, FilterGroup, ProgressBar, Grid } from '../Shared/UI';
+import React, { useState } from 'react';
+import { Card, Button, Badge, Select, FilterGroup, ProgressBar, Grid, CardHeader, Label } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import { DefenseLogic } from '../../services/logic/DefenseLogic';
 import { StandardPage } from '../Shared/Layouts';
@@ -37,18 +37,17 @@ const BreachSimulator: React.FC = () => {
     <StandardPage title="Breach Simulator 2.0" subtitle="Adversary Emulation & Impact Analysis" modules={[]} activeModule="" onModuleChange={() => {}}>
       <div className="flex flex-col h-full gap-6">
         
-        {/* Top Controls */}
         <Card className="p-6 shrink-0 bg-slate-900 border-cyan-900/30">
            <div className="flex flex-col md:flex-row gap-4 items-end">
               <div className="flex-1 w-full">
-                 <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Adversary Profile</label>
+                 <Label>Adversary Profile</Label>
                  <Select value={selectedActorId} onChange={e => setSelectedActorId(e.target.value)}>
                     <option value="">-- Select Threat Actor --</option>
                     {actors.map(a => <option key={a.id} value={a.id}>{a.name} ({a.origin}) - {a.sophistication}</option>)}
                  </Select>
               </div>
               <div className="flex-1 w-full">
-                 <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Simulation Scope</label>
+                 <Label>Simulation Scope</Label>
                  <FilterGroup value={activeTab} onChange={(v: any) => setActiveTab(v)} options={[
                     { label: 'Attack Path', value: 'PATH', icon: <Icons.Zap className="w-3 h-3" /> },
                     { label: 'Evasion Matrix', value: 'EVASION', icon: <Icons.Shield className="w-3 h-3" /> },
@@ -62,10 +61,8 @@ const BreachSimulator: React.FC = () => {
            </div>
         </Card>
 
-        {/* Dynamic Content Area */}
         <div className="flex-1 min-h-0 overflow-hidden">
            
-           {/* VIEW 1: ATTACK PATH GRAPH */}
            {activeTab === 'PATH' && (
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                 <div className="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden flex items-center justify-center">
@@ -90,7 +87,7 @@ const BreachSimulator: React.FC = () => {
                    ) : <div className="text-slate-600 font-bold uppercase tracking-widest text-sm">Awaiting Simulation</div>}
                 </div>
                 <Card className="flex flex-col overflow-hidden">
-                   <div className="p-4 border-b border-slate-800 font-bold text-slate-400 uppercase tracking-widest text-xs">Kill Chain Log</div>
+                   <CardHeader title="Kill Chain Log" />
                    <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar relative">
                       {simulationResult ? simulationResult.steps.map((step, i) => (
                          <div key={i} className="relative pl-6 border-l-2 border-red-900/50">
@@ -106,7 +103,6 @@ const BreachSimulator: React.FC = () => {
              </div>
            )}
 
-           {/* VIEW 2: EVASION MATRIX */}
            {activeTab === 'EVASION' && (
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full overflow-y-auto">
                <Card className="p-6">
@@ -139,7 +135,6 @@ const BreachSimulator: React.FC = () => {
              </div>
            )}
 
-           {/* VIEW 3: DATA EXFIL CALCULATOR */}
            {activeTab === 'EXFIL' && (
              <Card className="h-full p-6 overflow-y-auto">
                 <h3 className="font-bold text-white mb-6 uppercase tracking-widest text-sm">Data Loss Physics Engine</h3>
@@ -161,7 +156,6 @@ const BreachSimulator: React.FC = () => {
              </Card>
            )}
 
-           {/* VIEW 4: RED TEAM BUILDER */}
            {activeTab === 'BUILDER' && (
              <div className="flex h-full gap-6">
                 <div className="w-1/3 bg-slate-900 border border-slate-800 rounded p-4 overflow-y-auto">

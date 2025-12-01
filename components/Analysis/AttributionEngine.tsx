@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
-import { Card, TextArea, Button, Badge } from '../Shared/UI';
+import { Card, TextArea, Button, Badge, CardHeader } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
-import { LogicEngine } from '../../services/logicEngine';
 import { ThreatLogic } from '../../services/logic/ThreatLogic';
 
 const AttributionEngine: React.FC = () => {
@@ -26,33 +25,29 @@ const AttributionEngine: React.FC = () => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full min-h-[600px]">
-      {/* Input Section */}
-      <Card className="flex-1 flex flex-col p-6 border-cyan-500/20 shadow-lg shadow-cyan-900/10">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-            <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
-            Forensic Artifact Input
-          </h3>
-          <Button onClick={loadSample} variant="text" className="text-xs text-slate-500">Load Sample</Button>
-        </div>
-        <TextArea 
-          value={input} 
-          onChange={e => setInput(e.target.value)} 
-          placeholder="Paste Incident Logs, IoCs, or Intelligence Reports here for attribution analysis..." 
-          className="flex-1 bg-slate-950 border-slate-800 text-slate-300 font-mono text-sm p-4 rounded-lg resize-none focus:border-cyan-500 transition-colors"
+      <Card className="flex-1 flex flex-col p-0 border-cyan-500/20 shadow-lg shadow-cyan-900/10 overflow-hidden">
+        <CardHeader 
+          title={<><span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>Forensic Artifact Input</>} 
+          action={<Button onClick={loadSample} variant="text" className="text-xs text-slate-500">Load Sample</Button>}
         />
-        <div className="mt-4 flex justify-end">
-          <Button onClick={handleAnalyze} disabled={analyzing || !input} variant="primary" className="w-full md:w-auto">
-            {analyzing ? 'RUNNING PROBABILISTIC MODELS...' : 'CALCULATE ATTRIBUTION'}
-          </Button>
+        <div className="flex-1 p-4 flex flex-col">
+          <TextArea 
+            value={input} 
+            onChange={e => setInput(e.target.value)} 
+            placeholder="Paste Incident Logs, IoCs, or Intelligence Reports here for attribution analysis..." 
+            className="flex-1 bg-slate-950 border-slate-800 text-slate-300 font-mono text-sm p-4 rounded-lg resize-none focus:border-cyan-500 transition-colors"
+          />
+          <div className="mt-4 flex justify-end">
+            <Button onClick={handleAnalyze} disabled={analyzing || !input} variant="primary" className="w-full md:w-auto">
+              {analyzing ? 'RUNNING PROBABILISTIC MODELS...' : 'CALCULATE ATTRIBUTION'}
+            </Button>
+          </div>
         </div>
       </Card>
 
-      {/* Results Section */}
-      <Card className="flex-1 flex flex-col p-6 bg-slate-900/50">
-        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Attribution Probabilities</h3>
-        
-        <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2">
+      <Card className="flex-1 flex flex-col p-0 bg-slate-900/50 overflow-hidden">
+        <CardHeader title="Attribution Probabilities" />
+        <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar p-6">
           {analyzing ? (
              <div className="h-full flex items-center justify-center flex-col gap-4">
                <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
@@ -61,7 +56,6 @@ const AttributionEngine: React.FC = () => {
           ) : results.length > 0 ? (
             results.map((res, idx) => (
               <div key={res.actor.id} className="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden group hover:border-cyan-500/50 transition-all">
-                {/* Header */}
                 <div className="p-4 flex justify-between items-center bg-slate-900/50">
                   <div className="flex items-center gap-3">
                     <div className="text-xl font-bold text-white group-hover:text-cyan-400">{res.actor.name}</div>
@@ -75,7 +69,6 @@ const AttributionEngine: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Match Details */}
                 <div className="p-4 border-t border-slate-800 space-y-3">
                   <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mb-2">
                     <div className={`h-full ${res.score > 80 ? 'bg-red-500' : 'bg-cyan-500'}`} style={{ width: `${res.score}%` }}></div>
@@ -95,8 +88,7 @@ const AttributionEngine: React.FC = () => {
               </div>
             ))
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-600 border-2 border-dashed border-slate-800 rounded-lg">
-              <svg className="w-12 h-12 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-600 border-2 border-dashed border-slate-800 rounded-lg h-full">
               <span className="text-xs uppercase tracking-widest font-bold">Awaiting Input Data</span>
             </div>
           )}

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Case } from '../../../types';
-import { Button, Card, TextArea } from '../../Shared/UI';
+import { Button, Card, TextArea, CardHeader } from '../../Shared/UI';
 import TaskManager from '../TaskManager';
 
 interface CaseTicketViewProps {
@@ -18,15 +18,17 @@ const CaseTicketView: React.FC<CaseTicketViewProps> = ({
 }) => {
   return (
     <>
-      <Card className="p-5 shadow-sm">
-         <h3 className="text-xs font-bold text-slate-500 uppercase mb-3 tracking-widest">Description</h3>
-         <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{activeCase.description || 'No description provided.'}</p>
+      <Card className="p-0 overflow-hidden shadow-sm">
+         <CardHeader title="Incident Description" />
+         <div className="p-5">
+            <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{activeCase.description || 'No description provided.'}</p>
+         </div>
       </Card>
       
       <TaskManager tasks={activeCase.tasks || []} onAdd={onAddTask} onToggle={onToggleTask} />
 
       <div className="border-t border-slate-800 pt-6">
-         <h3 className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Activity Stream</h3>
+         <div className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest px-1">Activity Stream</div>
          <div className="flex gap-2 mb-6">
             <TextArea 
               value={comment} 

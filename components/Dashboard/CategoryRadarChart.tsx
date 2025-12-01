@@ -2,7 +2,7 @@
 import React from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { CONFIG } from '../../config';
-import { Card } from '../Shared/UI';
+import { Card, CardHeader } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 
 const CategoryRadarChart: React.FC = () => {
@@ -10,11 +10,11 @@ const CategoryRadarChart: React.FC = () => {
   const data = threatData.getThreatCategories();
 
   return (
-    <Card className="p-4 shadow-lg h-80">
-      <h3 className="text-sm font-semibold text-slate-300 mb-2">Threat Vector Analysis</h3>
-      <div className="h-64 w-full">
+    <Card className="shadow-lg h-80 p-0 overflow-hidden flex flex-col">
+      <CardHeader title="Threat Vector Analysis" />
+      <div className="flex-1 w-full min-h-0 p-2">
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
             <PolarGrid stroke={CHARTS.TOOLTIP_BORDER} />
             <PolarAngleAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 10 }} />
             <PolarRadiusAxis angle={30} domain={[0, 150]} tick={false} axisLine={false} />

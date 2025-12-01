@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, Button, Badge } from '../Shared/UI';
+import { Card, Button, Badge, CardHeader } from '../Shared/UI';
 import { Icons } from '../Shared/Icons';
 import { NormalizationRule } from '../../types';
 
@@ -40,18 +40,20 @@ const NormalizationView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h3 className="font-bold text-white flex items-center gap-2">
-            <span className="text-cyan-500">ECS</span> Schema Mapper
-          </h3>
-          <p className="text-xs text-slate-500">Normalize disparate field names to the Elastic Common Schema.</p>
+      <Card className="p-0 overflow-hidden">
+        <CardHeader 
+          title={<span className="flex items-center gap-2"><span className="text-cyan-500">ECS</span> Schema Mapper</span>} 
+          action={
+            <div className="flex gap-2">
+              <Button variant="secondary" className="text-[10px]">AUTO-MAP</Button>
+              <Button className="text-[10px]">VALIDATE ALL</Button>
+            </div>
+          }
+        />
+        <div className="p-4 text-xs text-slate-500 bg-slate-900/50">
+          Normalize disparate field names to the Elastic Common Schema.
         </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <Button variant="secondary" className="flex-1 md:flex-none text-[10px]">AUTO-MAP</Button>
-          <Button className="flex-1 md:flex-none text-[10px]">VALIDATE ALL</Button>
-        </div>
-      </div>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {mappings.map(rule => (
@@ -60,7 +62,7 @@ const NormalizationView: React.FC = () => {
             <div className={`absolute left-0 top-0 bottom-0 w-1 ${rule.validation === 'VALID' ? 'bg-green-500' : rule.validation === 'TYPE_MISMATCH' ? 'bg-orange-500' : 'bg-red-500'}`}></div>
             
             <div className="pl-2 flex flex-col gap-3">
-              {/* Responsive Flow Visual: Vertical on Mobile, Horizontal on Desktop if space permits (using Flex tricks) */}
+              {/* Responsive Flow Visual */}
               <div className="flex flex-col gap-2">
                 
                 {/* Source */}

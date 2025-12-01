@@ -3,16 +3,16 @@ import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { threatData } from '../../services/dataLayer';
 import { CONFIG } from '../../config';
-import { Card } from '../Shared/UI';
+import { Card, CardHeader } from '../Shared/UI';
 
 const ThreatChart: React.FC = () => {
   const { CHARTS } = CONFIG.THEME;
   const data = threatData.getThreatTrends();
 
   return (
-    <Card className="p-6 shadow-lg h-96">
-      <h3 className="text-lg font-semibold text-slate-200 mb-4">Global Threat Volume (24h)</h3>
-      <div className="h-80 w-full">
+    <Card className="shadow-lg h-96 p-0 overflow-hidden flex flex-col">
+      <CardHeader title="Global Threat Volume (24h)" />
+      <div className="flex-1 w-full min-h-0 p-4">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <defs>

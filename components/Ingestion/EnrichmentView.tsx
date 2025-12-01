@@ -35,7 +35,7 @@ const EnrichmentView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4 flex items-center justify-between border-l-4 border-l-blue-500">
           <div>
-            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Pipeline Latency</div>
+            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Pipeline Latency</div>
             <div className={`text-2xl font-bold font-mono ${projections.latency > 500 ? 'text-red-500' : projections.latency > 200 ? 'text-orange-500' : 'text-white'}`}>
               +{projections.latency}ms
             </div>
@@ -45,7 +45,7 @@ const EnrichmentView: React.FC = () => {
         
         <Card className="p-4 flex items-center justify-between border-l-4 border-l-green-500">
           <div>
-            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Est. Monthly Cost</div>
+            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Est. Monthly Cost</div>
             <div className="text-2xl font-bold font-mono text-white">
               ${projections.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
@@ -55,7 +55,7 @@ const EnrichmentView: React.FC = () => {
 
         <Card className="p-4 flex flex-col justify-center">
            <div className="flex justify-between items-center mb-2">
-             <label className="text-[10px] text-slate-500 uppercase font-bold">Volume (EPS)</label>
+             <label className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Volume (EPS)</label>
              <span className="text-xs font-mono text-cyan-400 font-bold">{estimatedEPS} EPS</span>
            </div>
            <input 

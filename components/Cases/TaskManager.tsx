@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Task } from '../../types';
-import { Button, Input, Badge, Card, Select } from '../Shared/UI';
+import { Button, Input, Badge, Card, Select, CardHeader, Label } from '../Shared/UI';
 import { CaseLogic } from '../../services/logic/CaseLogic';
 
 interface TaskManagerProps {
@@ -32,7 +32,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ tasks, onAdd, onToggle }) => 
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Workflow Progress</h3>
+          <Label className="mb-0">Workflow Progress</Label>
           <Badge color={progress === 100 ? 'green' : 'blue'}>{progress}% Complete</Badge>
         </div>
         <div className="w-full bg-slate-900 border border-slate-800 h-2 rounded-full overflow-hidden">
@@ -40,27 +40,30 @@ const TaskManager: React.FC<TaskManagerProps> = ({ tasks, onAdd, onToggle }) => 
         </div>
       </div>
 
-      <Card className="p-4 space-y-3 bg-slate-950/50">
-        <div className="text-xs font-bold text-slate-400 uppercase">Add New Task</div>
-        <div className="flex flex-col md:flex-row gap-2">
-          <Input 
-            value={newTask} 
-            onChange={(e) => setNewTask(e.target.value)} 
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            placeholder="Describe the task..." 
-            className="flex-1" 
-          />
-          {availableDependencies.length > 0 && (
-            <Select 
-              value={dependencyId} 
-              onChange={(e) => setDependencyId(e.target.value)}
-              className="md:w-64"
-            >
-              <option value="">-- No Dependency --</option>
-              {availableDependencies.map(t => <option key={t.id} value={t.id}>Blocked By: {t.title}</option>)}
-            </Select>
-          )}
-          <Button onClick={handleAdd} disabled={!newTask.trim()} variant="secondary">Add Task</Button>
+      <Card className="p-0 overflow-hidden bg-slate-950/50">
+        <CardHeader title="Task Management" />
+        <div className="p-4 space-y-3">
+            <Label>New Task Entry</Label>
+            <div className="flex flex-col md:flex-row gap-2">
+            <Input 
+                value={newTask} 
+                onChange={(e) => setNewTask(e.target.value)} 
+                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                placeholder="Describe the task..." 
+                className="flex-1" 
+            />
+            {availableDependencies.length > 0 && (
+                <Select 
+                value={dependencyId} 
+                onChange={(e) => setDependencyId(e.target.value)}
+                className="md:w-64"
+                >
+                <option value="">-- No Dependency --</option>
+                {availableDependencies.map(t => <option key={t.id} value={t.id}>Blocked By: {t.title}</option>)}
+                </Select>
+            )}
+            <Button onClick={handleAdd} disabled={!newTask.trim()} variant="secondary">Add</Button>
+            </div>
         </div>
       </Card>
 

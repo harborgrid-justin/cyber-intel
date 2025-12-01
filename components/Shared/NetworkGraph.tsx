@@ -68,7 +68,7 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ threats }) => {
 
   return (
     <div className="bg-slate-950 border border-slate-800 rounded-lg p-4 flex flex-col items-center">
-      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 w-full text-left">Relationship Graph</h4>
+      <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-2 w-full text-left">Relationship Graph</h4>
       <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="bg-slate-900/50 rounded border border-slate-800/50">
         <defs>
           <marker id="arrow" markerWidth="10" markerHeight="10" refX="15" refY="3" orient="auto" markerUnits="strokeWidth">

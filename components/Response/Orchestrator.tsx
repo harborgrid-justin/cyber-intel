@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Card, Button, Badge, Grid, ProgressBar, FilterGroup } from '../Shared/UI';
+import { Card, Button, Badge, Grid, ProgressBar, FilterGroup, CardHeader } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import { ResponseLogic } from '../../services/logic/ResponseLogic';
 import { DefenseLogic } from '../../services/logic/DefenseLogic';
@@ -68,14 +68,16 @@ const Orchestrator: React.FC = () => {
            {/* VIEW 1: RESPONSE TOPOLOGY */}
            {activeTab === 'RESPONSE' && (
              <div className="flex flex-col lg:flex-row gap-6 lg:h-full h-auto pb-6 lg:pb-0">
-                <Card className="flex-1 bg-slate-950 border-slate-800 relative overflow-hidden flex flex-col min-h-[450px]">
-                   <div className="p-4 border-b border-slate-800 flex justify-between items-center z-10 bg-slate-950/80 backdrop-blur shrink-0">
-                      <h3 className="font-bold text-white uppercase tracking-widest text-xs">Live Blast Radius</h3>
-                      <div className="flex gap-2 text-[10px] text-slate-400">
+                <Card className="flex-1 bg-slate-950 border-slate-800 relative overflow-hidden flex flex-col min-h-[450px] p-0">
+                   <CardHeader 
+                     title="Live Blast Radius"
+                     action={
+                       <div className="flex gap-2 text-[10px] text-slate-400">
                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span>Online</span>
                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span>Compromised</span>
-                      </div>
-                   </div>
+                       </div>
+                     }
+                   />
                    <div className="flex-1 relative flex items-center justify-center overflow-auto custom-scrollbar">
                       <div className="grid grid-cols-3 gap-4 md:gap-8 p-8 md:p-12 relative z-10">
                          {nodes.map(node => {
@@ -99,8 +101,14 @@ const Orchestrator: React.FC = () => {
                 </Card>
                 <div className="lg:w-96 flex flex-col gap-6 shrink-0 h-fit lg:h-full">
                    {selectedNodeId ? (
-                     <Card className="flex flex-col lg:h-full">
-                        <div className="p-4 border-b border-slate-800 shrink-0"><h3 className="font-bold text-white text-sm">Response Controls</h3><p className="text-xs text-slate-500 mt-1">Target: <span className="text-cyan-400 font-mono">{nodes.find(n => n.id === selectedNodeId)?.name}</span></p></div>
+                     <Card className="flex flex-col lg:h-full p-0 overflow-hidden">
+                        <CardHeader 
+                          title="Response Controls" 
+                          className="shrink-0"
+                        />
+                        <div className="p-4 border-b border-slate-800 bg-slate-900/50">
+                           <p className="text-xs text-slate-500">Target: <span className="text-cyan-400 font-mono font-bold">{nodes.find(n => n.id === selectedNodeId)?.name}</span></p>
+                        </div>
                         <div className="p-4 space-y-4 flex-1 lg:overflow-y-auto custom-scrollbar">
                            {!generatedPlan ? (
                               <div className="space-y-2">{playbooks.slice(0,3).map(pb => (<button key={pb.id} onClick={() => handleSimulate(pb.id)} className="w-full text-left p-3 rounded border border-slate-700 bg-slate-900 hover:border-cyan-500 hover:bg-slate-800 transition-all group"><div className="flex justify-between items-center mb-1"><span className="font-bold text-slate-200 text-xs group-hover:text-white">{pb.name}</span><Badge color={pb.riskLevel === 'HIGH' ? 'red' : 'blue'}>{pb.riskLevel || 'LOW'} RISK</Badge></div><div className="text-[10px] text-slate-500 truncate">{pb.description}</div></button>))}</div>
@@ -122,7 +130,7 @@ const Orchestrator: React.FC = () => {
            {activeTab === 'DECEPTION' && (
              <div className="lg:h-full grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6 lg:pb-0">
                 <Card className="p-0 overflow-hidden flex flex-col max-h-[500px] lg:max-h-full">
-                   <div className="p-4 border-b border-slate-800 bg-slate-950 font-bold text-white text-sm uppercase tracking-wider shrink-0">Active Honeytokens</div>
+                   <CardHeader title="Active Honeytokens" />
                    <div className="divide-y divide-slate-800 overflow-y-auto flex-1 custom-scrollbar">
                       {honeytokens.map(h => (
                          <div key={h.id} className="p-4 flex items-center justify-between hover:bg-slate-900/50">
@@ -150,7 +158,7 @@ const Orchestrator: React.FC = () => {
                       </div>
                    </Card>
                    <Card className="p-6">
-                      <h3 className="font-bold text-white mb-2">Honeytoken Effectiveness</h3>
+                      <h3 className="font-bold text-white mb-2 uppercase text-sm tracking-wider">Honeytoken Effectiveness</h3>
                       <div className="space-y-4">
                          <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>Trigger Rate</span><span>12%</span></div><ProgressBar value={12} /></div>
                          <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>False Positives</span><span>0.5%</span></div><ProgressBar value={1} color="green" /></div>
@@ -174,10 +182,10 @@ const Orchestrator: React.FC = () => {
            {/* VIEW 4: PATCH STRATEGY */}
            {activeTab === 'PATCH' && (
              <Card className="lg:h-full h-[500px] p-0 overflow-hidden flex flex-col">
-                <div className="p-4 border-b border-slate-800 bg-slate-950 font-bold text-white text-sm uppercase tracking-wider flex justify-between shrink-0">
-                   <span>Risk-Based Prioritization</span>
-                   <Badge color="red">{prioritizedPatches.length} Critical Actions</Badge>
-                </div>
+                <CardHeader 
+                  title="Risk-Based Prioritization"
+                  action={<Badge color="red">{prioritizedPatches.length} Critical Actions</Badge>}
+                />
                 <div className="overflow-y-auto flex-1 p-4 space-y-3 custom-scrollbar">
                    {prioritizedPatches.map((p, i) => (
                       <div key={i} className="flex items-center gap-4 p-4 bg-slate-900 border border-slate-800 rounded hover:border-cyan-500 transition-colors">

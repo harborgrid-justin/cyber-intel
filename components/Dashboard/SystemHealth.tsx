@@ -1,18 +1,18 @@
 
 import React from 'react';
 import { threatData } from '../../services/dataLayer';
-import { Card } from '../Shared/UI';
+import { Card, CardHeader } from '../Shared/UI';
 
 const SystemHealth: React.FC = () => {
   const nodes = threatData.getSystemNodes();
 
   return (
-    <Card className="p-6 shadow-sm">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest">Sensor Grid Status</h3>
-        <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-      </div>
-      <div className="space-y-4">
+    <Card className="shadow-sm p-0 overflow-hidden flex flex-col">
+      <CardHeader 
+        title="Sensor Grid Status" 
+        action={<span className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>}
+      />
+      <div className="p-6 space-y-4">
         {nodes.map((node) => (
           <div key={node.id} className="group">
             <div className="flex justify-between text-xs font-mono mb-1">

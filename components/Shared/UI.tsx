@@ -17,6 +17,17 @@ export const Card: React.FC<CardProps> = ({ children, className = '', onClick })
   </div>
 );
 
+export const CardHeader: React.FC<{ title: React.ReactNode; action?: React.ReactNode; className?: string }> = ({ title, action, className = '' }) => (
+  <div className={`p-4 border-b border-slate-800 bg-slate-950 flex justify-between items-center shrink-0 ${className}`}>
+    <div className="font-bold text-white text-sm uppercase tracking-wider flex items-center gap-2">{title}</div>
+    {action && <div className="flex gap-2 items-center">{action}</div>}
+  </div>
+);
+
+export const Label: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <label className={`text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-2 select-none ${className}`}>{children}</label>
+);
+
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'text' | 'outline';
 }

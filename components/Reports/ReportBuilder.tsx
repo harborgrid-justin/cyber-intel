@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, FilterGroup, Select } from '../Shared/UI';
+import { Card, Button, Input, FilterGroup, Select, CardHeader, Label } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { threatData } from '../../services/dataLayer';
 import { REPORT_BOILERPLATE, MOCK_TEMPLATES } from '../../constants';
@@ -82,14 +82,14 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ onCancel, onSave }) => {
   return (
     <div className="flex flex-col h-full gap-4">
       {/* Top Controls */}
-      <div className="flex flex-col md:flex-row gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl shrink-0">
+      <Card className="flex flex-col md:flex-row gap-6 p-6 shrink-0 bg-slate-900 border-slate-800">
          <div className="flex-1">
-            <label className="text-[10px] text-slate-500 uppercase font-bold">Report Title</label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Operation Deep Dive Summary" className="mt-1" />
+            <Label>Report Title</Label>
+            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Operation Deep Dive Summary" />
          </div>
          <div className="w-full md:w-64">
-            <label className="text-[10px] text-slate-500 uppercase font-bold">Agency Template</label>
-            <Select value={templateId} onChange={e => setTemplateId(e.target.value)} className="mt-1">
+            <Label>Agency Template</Label>
+            <Select value={templateId} onChange={e => setTemplateId(e.target.value)}>
                 {MOCK_TEMPLATES.map(t => <option key={t.id} value={t.id}>{t.icon} {t.name}</option>)}
             </Select>
          </div>
@@ -97,15 +97,19 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ onCancel, onSave }) => {
             <Button onClick={handlePublish} variant="primary">PUBLISH</Button>
             <Button onClick={onCancel} variant="text">CANCEL</Button>
          </div>
-      </div>
+      </Card>
 
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
          {/* Data Picker */}
          <Card className="lg:w-1/3 flex flex-col p-0 overflow-hidden h-64 lg:h-auto shrink-0">
-            <div className="p-2 border-b border-slate-800 bg-slate-950">
+            <CardHeader 
+                title="Intelligence Assets" 
+                className="py-3"
+            />
+            <div className="p-2 border-b border-slate-800 bg-slate-900/50">
                <FilterGroup value={dataTab} onChange={setDataTab} options={[{ label: 'Threats', value: 'Threats' }, { label: 'Cases', value: 'Cases' }, { label: 'Actors', value: 'Actors' }]} />
             </div>
-            <div className="flex-1 overflow-y-auto p-2 bg-slate-900/50 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
                 {dataTab === 'Threats' && (
                     <ResponsiveTable<Threat> data={threats} keyExtractor={t => t.id}
                         columns={[{ header: 'Indicator', render: t => <span className="font-mono text-xs">{t.indicator}</span> }, { header: '+', render: t => <Button onClick={() => handleAddToReport(t, 'THREAT')} variant="secondary" className="px-2 py-0.5 text-[10px]">+</Button> }]}
@@ -128,12 +132,12 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ onCancel, onSave }) => {
          </Card>
 
          {/* Live Editor */}
-         <div className="flex-1 bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden flex flex-col relative">
-            <div className="p-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center shrink-0">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Section Manager (Touch to Reorder)</span>
-                <span className="text-xs text-cyan-500">{sections.length} Sections</span>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+         <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col relative">
+            <CardHeader 
+                title="Section Manager" 
+                action={<span className="text-xs text-cyan-500 font-mono">{sections.length} SECTIONS</span>}
+            />
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-950/30">
                 <ReportSectionList 
                     sections={sections} 
                     onReorder={setSections} 

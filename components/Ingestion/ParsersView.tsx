@@ -63,7 +63,7 @@ const ParsersView: React.FC = () => {
         {parsers.map(parser => (
           <Card key={parser.id} className={`p-0 overflow-hidden border transition-all duration-300 ${expandedId === parser.id ? 'border-cyan-500 ring-1 ring-cyan-500/20' : 'border-slate-800'}`}>
             <div 
-              className="p-4 bg-slate-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer hover:bg-slate-800/50"
+              className="p-4 bg-slate-950 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer hover:bg-slate-900/80"
               onClick={() => setExpandedId(expandedId === parser.id ? null : parser.id)}
             >
               <div className="flex items-center gap-4 w-full md:w-auto">
@@ -88,7 +88,7 @@ const ParsersView: React.FC = () => {
             </div>
 
             {expandedId === parser.id && (
-              <div className="p-4 bg-slate-950 border-t border-slate-800 space-y-4 animate-in fade-in slide-in-from-top-2">
+              <div className="p-4 bg-slate-950/50 space-y-4 animate-in fade-in slide-in-from-top-2">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <div className="flex justify-between mb-1">

@@ -4,7 +4,7 @@ import { scanTextForIoCs } from '../../services/detectionEngine';
 import { Threat } from '../../types';
 import FeedItem from '../Feed/FeedItem';
 import { threatData } from '../../services/dataLayer';
-import { Card, Button, TextArea, Grid } from '../Shared/UI';
+import { Card, Button, TextArea, Grid, CardHeader } from '../Shared/UI';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 
@@ -51,12 +51,10 @@ const DetectionScanner: React.FC = () => {
       {activeModule === 'Scanner' && (
         <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0">
           <Card className="flex-1 flex flex-col p-0 overflow-hidden">
-            <div className="p-4 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
-              <h3 className="font-bold text-white text-sm uppercase tracking-wider">Log Analysis Sandbox</h3>
-              <Button onClick={handleScan} disabled={isScanning}>
-                {isScanning ? 'SCANNING...' : 'SCAN LOGS'}
-              </Button>
-            </div>
+            <CardHeader 
+              title="Log Analysis Sandbox" 
+              action={<Button onClick={handleScan} disabled={isScanning}>{isScanning ? 'SCANNING...' : 'SCAN LOGS'}</Button>} 
+            />
             <TextArea 
               value={logInput} 
               onChange={(e) => setLogInput(e.target.value)} 
@@ -66,13 +64,10 @@ const DetectionScanner: React.FC = () => {
           </Card>
           
           <Card className="lg:w-96 flex flex-col p-0 overflow-hidden h-96 lg:h-auto">
-            <div className="p-4 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
-              <div>
-                <h3 className="font-bold text-white text-sm uppercase tracking-wider">Results</h3>
-                <p className="text-xs text-slate-500 mt-0.5">{results.length} hits found</p>
-              </div>
-              {results.length > 0 && <Button onClick={handlePromoteAll} variant="secondary" className="px-2 py-1 text-[10px]">PROMOTE ALL</Button>}
-            </div>
+            <CardHeader 
+              title="Results" 
+              action={results.length > 0 && <Button onClick={handlePromoteAll} variant="secondary" className="px-2 py-1 text-[10px]">PROMOTE ALL</Button>} 
+            />
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-900/50 custom-scrollbar">
               {results.length === 0 ? (
                 <div className="text-center text-slate-500 text-xs mt-10">Run scan to see results.</div>
@@ -86,13 +81,10 @@ const DetectionScanner: React.FC = () => {
 
       {activeModule === 'YARA' && (
         <Card className="flex-1 p-0 flex flex-col overflow-hidden">
-           <div className="bg-slate-950 p-4 border-b border-slate-800 flex justify-between items-center">
-              <h3 className="font-bold text-white text-sm uppercase tracking-wider">YARA Rule Editor</h3>
-              <div className="flex gap-2">
-                 <Button variant="secondary">Validate</Button>
-                 <Button variant="primary">Save Rule</Button>
-              </div>
-           </div>
+           <CardHeader 
+             title="YARA Rule Editor" 
+             action={<div className="flex gap-2"><Button variant="secondary">Validate</Button><Button variant="primary">Save Rule</Button></div>}
+           />
            <TextArea 
              className="flex-1 bg-slate-900 text-green-400 font-mono p-4 focus:outline-none resize-none border-none" 
              value={yaraRule}

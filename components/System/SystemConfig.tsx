@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Badge, Grid, EmptyState, ProgressBar } from '../Shared/UI';
+import { Card, Button, Badge, Grid, EmptyState, ProgressBar, CardHeader } from '../Shared/UI';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 import DatabaseConnector from './DatabaseConnector';
@@ -28,6 +28,7 @@ const SystemConfig: React.FC = () => {
 
       {activeModule === 'Users' && (
         <Card className="overflow-hidden p-0">
+          <CardHeader title="System User Management" />
           <ResponsiveTable<SystemUser>
             data={users}
             keyExtractor={u => u.id}
@@ -58,7 +59,7 @@ const SystemConfig: React.FC = () => {
         <div className="space-y-6">
            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="p-6">
-                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">ATO Status</h3>
+                 <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">ATO Status</h3>
                  <div className="text-4xl font-bold text-white mb-2">ATO-C</div>
                  <div className="text-xs text-slate-500">Authority to Operate (Conditional)</div>
                  <div className="mt-4 flex gap-2">
@@ -67,13 +68,13 @@ const SystemConfig: React.FC = () => {
                  </div>
               </Card>
               <Card className="p-6">
-                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">NIST 800-53 Readiness</h3>
+                 <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">NIST 800-53 Readiness</h3>
                  <div className="text-4xl font-bold text-cyan-500 mb-2">{compliance.score}%</div>
                  <ProgressBar value={compliance.score} color={compliance.score > 90 ? 'green' : 'orange'} />
                  <div className="text-xs text-slate-500 mt-2">{MOCK_NIST_CONTROLS.length} Controls Monitored</div>
               </Card>
               <Card className="p-6">
-                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Critical Gaps</h3>
+                 <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Critical Gaps</h3>
                  <ul className="space-y-2">
                     {compliance.criticalGaps.length > 0 ? compliance.criticalGaps.map(g => (
                        <li key={g} className="flex items-center gap-2 text-red-400 text-sm font-mono"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>{g}</li>
@@ -83,7 +84,7 @@ const SystemConfig: React.FC = () => {
            </div>
            
            <Card className="p-0 overflow-hidden">
-              <div className="p-4 bg-slate-950 border-b border-slate-800 font-bold text-white text-sm uppercase">Control Implementation Matrix</div>
+              <CardHeader title="Control Implementation Matrix" />
               <ResponsiveTable data={MOCK_NIST_CONTROLS} keyExtractor={c => c.id} columns={[
                  { header: 'ID', render: c => <span className="font-mono text-cyan-500 font-bold">{c.id}</span> },
                  { header: 'Family', render: c => <span className="text-slate-400">{c.family}</span> },

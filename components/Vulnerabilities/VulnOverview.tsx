@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, Grid } from '../Shared/UI';
+import { Card, Grid, CardHeader } from '../Shared/UI';
 import { Vulnerability } from '../../types';
 import VulnTable from './VulnTable';
 
@@ -33,7 +33,7 @@ const VulnOverview: React.FC<VulnOverviewProps> = ({ vulns, criticalCves, zeroDa
          </Card>
       </Grid>
       <Card className="p-0 overflow-hidden">
-        <div className="p-4 border-b border-slate-800 bg-slate-950 font-bold text-slate-400 uppercase text-sm">Recent Vulnerabilities</div>
+        <CardHeader title="Recent Vulnerabilities" />
         <VulnTable data={vulns} onPatch={handlePatch} />
       </Card>
     </div>

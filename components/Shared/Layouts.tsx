@@ -62,13 +62,13 @@ export const MasterDetailLayout: React.FC<MasterDetailLayoutProps> = ({
       )}
       
       <div className={`flex-1 flex gap-6 relative overflow-hidden min-h-0 ${STYLES.page_padding}`}>
-        {/* List View - Hidden on mobile if detail is open */}
-        <div className={`w-full md:w-80 lg:w-96 flex flex-col h-full transition-all ${isDetailOpen ? 'hidden md:flex' : 'flex'}`}>
+        {/* List View - Fixed width on desktop, full on mobile if detail closed */}
+        <div className={`w-full md:w-80 lg:w-96 flex flex-col h-full shrink-0 transition-all ${isDetailOpen ? 'hidden md:flex' : 'flex'}`}>
           {listContent}
         </div>
         
         {/* Detail View - Full width on mobile, flexible on desktop */}
-        <div className={`w-full md:flex-1 h-full flex flex-col ${isDetailOpen ? 'flex' : 'hidden md:flex'}`}>
+        <div className={`w-full md:flex-1 h-full flex flex-col min-w-0 ${isDetailOpen ? 'flex' : 'hidden md:flex'}`}>
           {detailContent}
         </div>
       </div>
@@ -88,7 +88,7 @@ export const DetailViewHeader: React.FC<DetailViewHeaderProps> = ({
   title, subtitle, onBack, actions, tags
 }) => {
   return (
-    <div className="p-4 border-b border-slate-800 bg-slate-950 flex flex-col gap-3">
+    <div className="p-4 border-b border-slate-800 bg-slate-950 flex flex-col gap-3 shrink-0">
       <div className="flex justify-between items-start">
          <div className="flex items-center gap-3 overflow-hidden">
            <button onClick={onBack} className="md:hidden text-slate-400 hover:text-white p-1">

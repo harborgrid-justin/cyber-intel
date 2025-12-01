@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Threat, IncidentStatus } from '../../../types';
 import { RiskLogic } from '../../../services/logic/RiskLogic';
-import { Card, Badge } from '../../Shared/UI';
+import { Card, Badge, CardHeader } from '../../Shared/UI';
 
 interface KillChainViewProps {
   threats: Threat[];
@@ -14,16 +14,20 @@ const KillChainView: React.FC<KillChainViewProps> = ({ threats }) => {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <div className="flex justify-between items-center bg-slate-900 p-4 rounded border border-slate-800">
-         <div>
-            <h3 className="text-white font-bold uppercase tracking-widest">Cyber Kill Chain Reconstruction</h3>
-            <p className="text-xs text-slate-500">Mapping tactical indicators to attack lifecycle stages.</p>
+      <Card className="p-0">
+         <CardHeader 
+           title="Cyber Kill Chain Reconstruction" 
+           action={
+             <div className="flex gap-4">
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-[10px] text-slate-400 font-bold uppercase">Active</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-[10px] text-slate-400 font-bold uppercase">Blocked</span></div>
+             </div>
+           }
+         />
+         <div className="p-4 text-xs text-slate-500">
+            Mapping tactical indicators to attack lifecycle stages.
          </div>
-         <div className="flex gap-4">
-            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-xs text-slate-400">Active</span></div>
-            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-xs text-slate-400">Blocked</span></div>
-         </div>
-      </div>
+      </Card>
 
       <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
         <div className="flex gap-4 min-w-[1200px] h-full">
@@ -40,7 +44,6 @@ const KillChainView: React.FC<KillChainViewProps> = ({ threats }) => {
                   border-y border-l clip-chevron-container
                 `}>
                   {i + 1}. {stage}
-                  {/* CSS Triangle Hack for Chevron effect would go here, simplified with border for now */}
                 </div>
 
                 {/* Drop Zone / List */}
