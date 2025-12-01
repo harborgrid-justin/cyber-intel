@@ -5,10 +5,9 @@ import { Card, Badge, Grid, Button, CardHeader, ProgressBar } from '../Shared/UI
 import FeedItem from '../Feed/FeedItem';
 import { threatData } from '../../services/dataLayer';
 import { RiskLogic } from '../../services/logic/RiskLogic';
-import CampaignImpact from './Views/CampaignImpact'; // Reuse existing impact logic
+import CampaignImpact from './Views/CampaignImpact';
 
 export const CampaignBriefingView: React.FC<{ campaign: Campaign }> = ({ campaign }) => {
-    // We can reuse the visual logic from CampaignImpact here but laid out in a grid with the overview
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Stats */}
@@ -54,9 +53,9 @@ export const CampaignBriefingView: React.FC<{ campaign: Campaign }> = ({ campaig
                     </div>
                 </Card>
 
-                {/* Impact Side Panel */}
+                {/* Impact Side Panel - Using compact mode for correct scaling */}
                 <div className="flex flex-col gap-6">
-                    <CampaignImpact campaign={campaign} />
+                    <CampaignImpact campaign={campaign} compact={true} />
                 </div>
             </div>
         </div>

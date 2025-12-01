@@ -28,13 +28,24 @@ const CampaignDetail: React.FC<CampaignDetailProps> = ({ campaign, onBack, onUpd
     onBack();
   };
 
+  const StatusTag = () => (
+    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider ${
+      campaign.status === 'ACTIVE' 
+        ? 'bg-red-900/30 text-red-400 border-red-900/50' 
+        : 'bg-slate-800 text-slate-400 border-slate-700'
+    }`}>
+      {campaign.status === 'ACTIVE' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>}
+      {campaign.status}
+    </div>
+  );
+
   return (
     <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-full shadow-2xl">
       <DetailViewHeader 
         title={campaign.name} 
-        subtitle={`CAMPAIGN ID: ${campaign.id} • STATUS: ${campaign.status}`} 
+        subtitle={`CAMPAIGN ID: ${campaign.id} • ${campaign.objective}`} 
         onBack={onBack} 
-        tags={<><Badge color={campaign.status === 'ACTIVE' ? 'red' : 'slate'}>{campaign.status}</Badge><Badge color="blue">{campaign.objective}</Badge></>}
+        tags={<><StatusTag /><Badge color="blue">{campaign.objective}</Badge></>}
         actions={<Button onClick={handleDelete} variant="danger" className="text-[10px] py-1 border-red-900/50 hover:bg-red-900/20">DELETE CAMPAIGN</Button>} 
       />
       
