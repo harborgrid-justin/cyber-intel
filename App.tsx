@@ -1,0 +1,68 @@
+
+import React, { useState, useEffect } from 'react';
+import Layout from './components/Layout/Layout';
+import Dashboard from './components/Dashboard/Dashboard';
+import ThreatFeed from './components/Feed/ThreatFeed';
+import IntelAssistant from './components/Analysis/IntelAssistant';
+import IngestionManager from './components/Ingestion/IngestionManager';
+import DetectionScanner from './components/Detection/DetectionScanner';
+import IncidentManager from './components/Incidents/IncidentManager';
+import AuditLogViewer from './components/Admin/AuditLogViewer';
+import CaseBoard from './components/Cases/CaseBoard';
+import ActorLibrary from './components/Actors/ActorLibrary';
+import VulnerabilityManager from './components/Vulnerabilities/VulnerabilityManager';
+import MitreBrowser from './components/Knowledge/MitreBrowser';
+import OsintDashboard from './components/Osint/OsintDashboard';
+import EvidencePortal from './components/Evidence/EvidencePortal';
+import ReportsCenter from './components/Reports/ReportsCenter';
+import SystemConfig from './components/System/SystemConfig';
+import CampaignManager from './components/Campaigns/CampaignManager';
+import { View } from './types';
+
+const App: React.FC = () => {
+  const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
+  const [viewParams, setViewParams] = useState<{ id?: string }>({});
+
+  useEffect(() => {
+    const handleNavigation = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        const { view, ...params } = customEvent.detail;
+        setCurrentView(view);
+        setViewParams(params);
+      }
+    };
+
+    window.addEventListener('app-navigation', handleNavigation);
+    return () => window.removeEventListener('app-navigation', handleNavigation);
+  }, []);
+
+  const renderContent = () => {
+    switch (currentView) {
+      case View.DASHBOARD: return <Dashboard />;
+      case View.FEED: return <ThreatFeed />;
+      case View.ANALYSIS: return <IntelAssistant />;
+      case View.INGESTION: return <IngestionManager />;
+      case View.DETECTION: return <DetectionScanner />;
+      case View.INCIDENTS: return <IncidentManager />;
+      case View.CASES: return <CaseBoard initialId={viewParams.id} />;
+      case View.ACTORS: return <ActorLibrary initialId={viewParams.id} />;
+      case View.AUDIT: return <AuditLogViewer />;
+      case View.VULNERABILITIES: return <VulnerabilityManager />;
+      case View.MITRE: return <MitreBrowser />;
+      case View.OSINT: return <OsintDashboard />;
+      case View.EVIDENCE: return <EvidencePortal />;
+      case View.SYSTEM: return <SystemConfig />;
+      case View.REPORTS: return <ReportsCenter />;
+      case View.CAMPAIGNS: return <CampaignManager initialId={viewParams.id} />;
+      default: return <Dashboard />;
+    }
+  };
+
+  return (
+    <Layout currentView={currentView} onNavigate={setCurrentView}>
+      {renderContent()}
+    </Layout>
+  );
+};
+export default App;
