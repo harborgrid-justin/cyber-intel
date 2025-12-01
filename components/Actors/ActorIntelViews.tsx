@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { Threat, Malware, Infrastructure, Pcap } from '../../types';
-import { Badge, Card, Button, CardHeader } from '../Shared/UI';
+import { Threat, ThreatActor, Malware, Infrastructure, Pcap } from '../../types';
+import { Badge, Card, Button, CardHeader, Input } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import FeedItem from '../Feed/FeedItem';
+
+// --- Sub-Components ---
 
 export const ActorThreatFeeds = ({ actorName }: { actorName: string }) => {
   const feeds = [
@@ -11,77 +13,115 @@ export const ActorThreatFeeds = ({ actorName }: { actorName: string }) => {
     { name: 'CrowdStrike', status: 'Active', confidence: 'V. High', lastHit: '15m' },
   ];
   return (
-    <Card className="p-0 overflow-hidden">
-      <CardHeader title="Intelligence Sources" action={<span className="text-[10px] text-slate-500">Tracking: <span className="text-cyan-500 font-bold">{actorName}</span></span>} />
-      <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-3">
         {feeds.map((f, i) => (
-          <div key={i} className="p-4 border border-slate-800 bg-slate-900 rounded hover:border-cyan-500 transition-colors">
-            <div className="flex justify-between items-start mb-2"><h4 className="font-bold text-white">{f.name}</h4><Badge color="blue">{f.status}</Badge></div>
-            <div className="text-sm text-slate-400">Conf: {f.confidence} | Hit: {f.lastHit}</div>
+          <div key={i} className="p-3 border border-slate-800 bg-slate-900 rounded flex justify-between items-center">
+            <div><div className="font-bold text-white text-xs">{f.name}</div><div className="text-[10px] text-slate-500">Hit: {f.lastHit}</div></div>
+            <Badge color="blue">{f.confidence}</Badge>
           </div>
         ))}
-      </div>
-    </Card>
+    </div>
   );
 };
 
 export const ActorIoCAssociations = ({ threats }: { threats: Threat[] }) => (
-  <Card className="p-0 overflow-hidden">
-    <CardHeader title="Indicators of Compromise" action={<Badge color="red">{threats.length} IoCs</Badge>} />
-    <ResponsiveTable<Threat> data={threats} keyExtractor={t => t.id}
-      columns={[
-        { header: 'Indicator', render: t => <span className="font-mono text-cyan-400 font-bold">{t.indicator}</span> },
-        { header: 'Type', render: t => <span className="text-slate-300 text-xs">{t.type}</span> },
-        { header: 'Status', render: t => <Badge color={t.status === 'NEW' ? 'red' : 'green'}>{t.status}</Badge> }
-      ]}
-      renderMobileCard={t => <div className="flex justify-between"><span>{t.indicator}</span><Badge>{t.status}</Badge></div>}
-    />
-  </Card>
+    <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
+      {threats.length > 0 ? threats.map(t => <FeedItem key={t.id} threat={t} />) : <div className="text-center text-slate-500 italic py-8 border-2 border-dashed border-slate-800 rounded">No IoCs currently linked.</div>}
+    </div>
 );
 
 export const ActorMalwareFamilies = ({ malware }: { malware: Malware[] }) => (
-  <div className="space-y-4">
-    <Card className="p-0 overflow-hidden border-l-4 border-l-red-600">
-        <CardHeader title="Malware Arsenal" />
-        <div className="p-4">
-            {malware.length === 0 ? <div className="text-center text-slate-500 italic">No malware linked.</div> : 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{malware.map(m => (
-                <div key={m.id} className="p-4 border border-slate-700 bg-slate-950 rounded">
-                <div className="flex justify-between"><h4 className="text-white font-bold">{m.name}</h4><Badge color="red">MALICIOUS</Badge></div>
-                <div className="text-xs text-slate-400 mb-2">Family: <span className="text-red-400">{m.family}</span></div>
-                <div className="text-[10px] bg-slate-900 p-2 rounded font-mono text-slate-300 truncate mb-3 border border-slate-800">{m.hash}</div>
-                <Button variant="outline" className="w-full text-[10px]">ANALYSIS</Button>
+    <div className="grid grid-cols-1 gap-3">
+        {malware.length === 0 ? <div className="text-center text-slate-500 italic text-xs py-4">No malware linked.</div> : 
+        malware.map(m => (
+            <div key={m.id} className="p-3 border border-slate-800 bg-slate-950 rounded flex justify-between items-center group hover:border-red-900/50 transition-colors">
+                <div>
+                    <div className="text-white font-bold text-xs">{m.name}</div>
+                    <div className="text-[10px] text-red-400">{m.family}</div>
                 </div>
-            ))}</div>}
-        </div>
-    </Card>
-  </div>
-);
-
-export const ActorInfraDetails = ({ infra }: { infra: Infrastructure[] }) => (
-  <Card className="p-0 overflow-hidden">
-    <CardHeader title="Infrastructure Audit" />
-    <table className="w-full text-left text-sm text-slate-400">
-      <thead className="bg-slate-950 text-xs uppercase font-medium text-slate-500 border-b border-slate-800"><tr><th className="px-6 py-3">Value</th><th className="px-6 py-3">Type</th><th className="px-6 py-3">Status</th></tr></thead>
-      <tbody className="divide-y divide-slate-800">{infra.map(i => (
-        <tr key={i.id}><td className="px-6 py-4 font-mono text-cyan-400">{i.value}</td><td className="px-6 py-4 text-xs">{i.type}</td><td className="px-6 py-4"><Badge color={i.status === 'ACTIVE' ? 'red' : 'green'}>{i.status}</Badge></td></tr>
-      ))}</tbody>
-    </table>
-  </Card>
+                <div className="flex flex-col items-end gap-1">
+                    <Badge color="red">MALICIOUS</Badge>
+                    <span className="text-[9px] text-slate-600 font-mono truncate max-w-[80px]">{m.hash}</span>
+                </div>
+            </div>
+        ))}
+    </div>
 );
 
 export const ActorNetworkAnalysis = ({ pcaps }: { pcaps: Pcap[] }) => (
-  <div className="space-y-4">
-    <Card className="p-0 overflow-hidden">
-        <CardHeader title="Network Forensics" action={<span className="text-xs font-bold text-slate-500">{pcaps.length} CAPTURES</span>} />
-        <div className="p-4 space-y-2">
-            {pcaps.length > 0 ? pcaps.map(p => (
-            <div key={p.id} className="bg-slate-900 border border-slate-800 p-4 rounded flex justify-between items-center">
-                <div className="flex items-center gap-4"><div className="w-10 h-10 rounded bg-slate-800 flex items-center justify-center text-slate-400 font-bold">PCAP</div><div><div className="font-bold text-white font-mono text-sm">{p.name}</div><div className="text-xs text-slate-400">{p.size}</div></div></div>
-                <Badge color={p.analysisStatus === 'ANALYZED' ? 'green' : 'orange'}>{p.analysisStatus}</Badge>
+    <div className="space-y-2">
+        {pcaps.length > 0 ? pcaps.map(p => (
+        <div key={p.id} className="bg-slate-900 border border-slate-800 p-3 rounded flex justify-between items-center">
+            <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-slate-500 font-bold text-[10px] border border-slate-700">PCAP</div>
+                <div><div className="font-bold text-white font-mono text-xs">{p.name}</div><div className="text-[10px] text-slate-500">{p.size}</div></div>
             </div>
-            )) : <div className="text-slate-500 text-center py-4 italic">No captures linked.</div>}
+            <Badge color={p.analysisStatus === 'ANALYZED' ? 'green' : 'orange'}>{p.analysisStatus}</Badge>
         </div>
-    </Card>
-  </div>
+        )) : <div className="text-slate-500 text-center py-4 italic text-xs">No captures linked.</div>}
+    </div>
 );
+
+// --- Consolidated View ---
+
+interface IntelligenceViewProps {
+    actor: ThreatActor;
+    linkedThreats: Threat[];
+    malware: Malware[];
+    pcaps: Pcap[];
+    actions: any;
+    state: any;
+    setters: any;
+}
+
+export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ 
+    actor, linkedThreats, malware, pcaps, actions, state, setters 
+}) => {
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Left Col: Sources & Malware */}
+            <div className="flex flex-col gap-6">
+                <Card className="p-0 overflow-hidden">
+                    <CardHeader title="Intel Sources" />
+                    <div className="p-4">
+                        <ActorThreatFeeds actorName={actor.name} />
+                    </div>
+                </Card>
+                <Card className="p-0 overflow-hidden flex-1 border-l-4 border-l-red-600">
+                    <CardHeader title="Malware Arsenal" />
+                    <div className="p-4 overflow-y-auto">
+                        <ActorMalwareFamilies malware={malware} />
+                    </div>
+                </Card>
+            </div>
+
+            {/* Center Col: IoCs */}
+            <Card className="lg:col-span-2 p-0 overflow-hidden flex flex-col">
+                <CardHeader 
+                    title="Indicators of Compromise" 
+                    action={<Badge color="red">{linkedThreats.length} Active IoCs</Badge>}
+                />
+                <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex gap-2">
+                    <Input 
+                        value={state.newThreatId} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setters.setNewThreatId(e.target.value)} 
+                        placeholder="Link existing Threat ID..." 
+                        className="flex-1 text-xs" 
+                    />
+                    <Button onClick={actions.linkThreat} variant="secondary" className="text-xs">LINK</Button>
+                </div>
+                <div className="p-4 flex-1 overflow-y-auto custom-scrollbar bg-slate-900/20">
+                    <ActorIoCAssociations threats={linkedThreats} />
+                </div>
+                
+                {/* Bottom Section inside IoC card for Network Analysis */}
+                <div className="border-t border-slate-800">
+                    <CardHeader title="Network Forensics" className="bg-slate-950/50" action={<span className="text-[10px] text-slate-500">{pcaps.length} FILES</span>} />
+                    <div className="p-4 bg-slate-900/10">
+                        <ActorNetworkAnalysis pcaps={pcaps} />
+                    </div>
+                </div>
+            </Card>
+        </div>
+    );
+};
