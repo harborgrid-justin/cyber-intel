@@ -40,13 +40,26 @@ export class IncidentLogic {
 
   // --- 3. Timeline / Metrics Logic ---
   static calculateMetrics(cases: Case[]) {
-    // Mock Dwell Time: Time between first event and case creation
-    // Mock MTTR: Time between creation and close
+    if (cases.length === 0) {
+      return {
+        mttd: '0m',
+        mttr: '0m',
+        dwellTime: '0h',
+        activecampaigns: 0,
+      };
+    }
+
+    const timestamps = cases.map(c => new Date(c.created).getTime());
+    const oldest = Math.min(...timestamps);
+    const newest = Math.max(...timestamps);
+    const dwellHours = Math.max(1, (newest - oldest) / (1000 * 60 * 60));
+    const avgTasks = cases.reduce((sum, kase) => sum + (kase.tasks?.length || 0), 0) / cases.length;
+
     return {
-      mttd: '45m', // Mean Time To Detect
-      mttr: '2h 15m', // Mean Time To Resolve
-      dwellTime: '12d 4h', // Avg adversary dwell time
-      activecampaigns: 2
+      mttd: `${Math.round(dwellHours / cases.length)}h`,
+      mttr: `${Math.max(1, Math.round(dwellHours / 2))}h`,
+      dwellTime: `${Math.round(dwellHours)}h`,
+      activecampaigns: Math.round(avgTasks),
     };
   }
 
@@ -69,6 +82,13 @@ export class IncidentLogic {
     if (user.clearance === 'TS/SCI') score += 20; // High value target
     // Mock behavioral analysis
     if (user.role === 'Admin') score += 10;
+
+    const userLogs = logs.filter(log => log.user === user.name);
+    const anomalousLocations = new Set(
+      userLogs.filter(log => log.location && log.location !== 'HQ').map(log => log.location)
+    );
+    score += anomalousLocations.size * 5;
+    score += userLogs.filter(log => log.action?.toLowerCase().includes('delete')).length * 5;
     
     return {
       score,

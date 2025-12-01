@@ -67,6 +67,9 @@ export class BaseStore<T extends { id: string }> {
   }
 
   protected notify() {
-    window.dispatchEvent(new Event('data-update'));
+    const scope = globalThis as unknown as { dispatchEvent?: (event: any) => void; Event?: any };
+    if (typeof scope?.dispatchEvent === 'function' && typeof scope?.Event === 'function') {
+      scope.dispatchEvent(new scope.Event('data-update'));
+    }
   }
 }

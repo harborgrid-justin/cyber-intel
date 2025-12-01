@@ -1,5 +1,4 @@
-import { Table, Column, Model, DataType, BelongsTo, ForeignKey, HasMany } from 'sequelize-typescript';
-import { Threat } from './threat.model';
+import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
 import { Evidence } from './evidence.model';
 
 @Table({

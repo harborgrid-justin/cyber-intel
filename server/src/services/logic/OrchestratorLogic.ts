@@ -1,5 +1,5 @@
 
-import { SystemNode, ResponsePlan, SegmentationPolicy, TrafficFlow, Honeytoken, PatchPrioritization, Vulnerability } from '@/types';
+import { SystemNode, ResponsePlan, SegmentationPolicy, TrafficFlow, Honeytoken, Vulnerability } from '@/types';
 import { SimPathLogic } from './SimPathLogic';
 import { threatData } from '../dataLayer';
 

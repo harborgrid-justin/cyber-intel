@@ -380,7 +380,7 @@ export class IngestionService {
           const enrichedRecord = await this.applyEnrichmentModules(parsedRecord);
 
           // Apply normalization rules
-          const normalizedRecord = this.applyNormalizationRules(enrichedRecord);
+          const _normalizedRecord = this.applyNormalizationRules(enrichedRecord);
 
           // Store the processed record (would integrate with other modules here)
           processedCount++;
@@ -533,7 +533,7 @@ export class IngestionService {
   }
 
   // Enrichment helper methods
-  private async enrichWithGeoIP(record: any, module: EnrichmentModule): Promise<any> {
+  private async enrichWithGeoIP(record: any, _module: EnrichmentModule): Promise<any> {
     // Mock GeoIP enrichment - in real implementation, would call GeoIP service
     if (record.ip) {
       record.geo = {
@@ -546,7 +546,7 @@ export class IngestionService {
     return record;
   }
 
-  private async enrichWithThreatIntel(record: any, module: EnrichmentModule): Promise<any> {
+  private async enrichWithThreatIntel(record: any, _module: EnrichmentModule): Promise<any> {
     // Mock threat intelligence enrichment
     if (record.ip || record.domain) {
       record.threat_score = Math.random() * 100;
@@ -555,7 +555,7 @@ export class IngestionService {
     return record;
   }
 
-  private async enrichWithDomainLookup(record: any, module: EnrichmentModule): Promise<any> {
+  private async enrichWithDomainLookup(record: any, _module: EnrichmentModule): Promise<any> {
     // Mock domain lookup enrichment
     if (record.domain) {
       record.domain_info = {

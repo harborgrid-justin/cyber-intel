@@ -40,6 +40,7 @@ export class CaseLogic {
     const EU_AGENCIES = ['INTERPOL', 'EUROPOL', 'ANSSI'];
     const US_AGENCIES = ['FBI_CYBER', 'NSA', 'CISA'];
     if (kase.region === 'EU' && US_AGENCIES.includes(targetAgency)) return false;
+    if (kase.region === 'US' && EU_AGENCIES.includes(targetAgency)) return false;
     return true;
   }
 

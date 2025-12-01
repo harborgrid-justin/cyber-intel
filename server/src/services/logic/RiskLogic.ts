@@ -1,5 +1,5 @@
 
-import { Campaign, Threat, Case, ThreatActor } from '@/types';
+import { Campaign, Threat, Case } from '@/types';
 
 export class RiskLogic {
   

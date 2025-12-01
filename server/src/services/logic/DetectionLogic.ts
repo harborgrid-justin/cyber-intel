@@ -28,10 +28,11 @@ export class DetectionLogic {
   }
 
   static analyzeDiskMFT(node: SystemNode): { file: string; status: string }[] {
+    const hostPrefix = node.name ? `${node.name}:` : '';
     return [
-      { file: 'C:\\Windows\\System32\\cmd.exe', status: 'Modified (M) - 2m ago' },
-      { file: 'C:\\Users\\Admin\\AppData\\Local\\Temp\\mimikatz.exe', status: 'Created (B) - 10m ago' },
-      { file: 'D:\\Backups\\sensitive.zip', status: 'Access (A) - 1h ago' }
+      { file: `${hostPrefix}C\\Windows\\System32\\cmd.exe`, status: 'Modified (M) - 2m ago' },
+      { file: `${hostPrefix}C\\Users\\Admin\\AppData\\Local\\Temp\\mimikatz.exe`, status: 'Created (B) - 10m ago' },
+      { file: `${hostPrefix}D\\Backups\\sensitive.zip`, status: 'Access (A) - 1h ago' }
     ];
   }
 

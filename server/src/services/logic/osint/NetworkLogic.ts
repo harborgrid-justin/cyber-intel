@@ -1,5 +1,5 @@
 
-import { OsintGeo, OsintDarkWebItem, OsintFileMeta } from '@/types';
+import { OsintDarkWebItem, OsintFileMeta } from '@/types';
 
 export class NetworkLogic {
   static classifyISP(ispName: string): 'RESIDENTIAL' | 'DATACENTER' | 'MOBILE' | 'BUSINESS' {

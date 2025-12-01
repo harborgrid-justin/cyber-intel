@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Note } from '../models';
 import { CreateNoteDto, UpdateNoteDto, NoteStatsDto } from './dto';

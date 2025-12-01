@@ -68,13 +68,20 @@ export class SyncManager {
   private startSyncLoop() {
     this.syncInterval = setInterval(() => {
         // 1. Run Logic Engine Checks
-        const updates = {
-            cases: this.layer.cases.map(c => LogicEngine.checkSLA(c)),
-            threats: this.layer.threats.map(t => LogicEngine.decayConfidence(t)),
-            users: this.layer.systemUsers.map(u => LogicEngine.enforceDormantAccountPolicy(u)),
-            devices: this.layer.devices.map(d => LogicEngine.enforceZeroTrustPatching(d)),
-            feeds: this.layer.feeds.map(f => LogicEngine.tripFeedCircuitBreaker(f))
-        };
+        const updatedCases = this.layer.cases.map(c => LogicEngine.checkSLA(c));
+        updatedCases.forEach(kase => this.layer.caseStore.update(kase));
+
+        const updatedThreats = this.layer.threats.map(t => LogicEngine.decayConfidence(t));
+        updatedThreats.forEach(threat => this.layer.threatStore.update(threat));
+
+        const updatedUsers = this.layer.systemUsers.map(u => LogicEngine.enforceDormantAccountPolicy(u));
+        updatedUsers.forEach(user => this.layer.userStore.update(user));
+
+        const updatedDevices = this.layer.devices.map(d => LogicEngine.enforceZeroTrustPatching(d));
+        updatedDevices.forEach(device => this.layer.deviceStore.update(device));
+
+        const updatedFeeds = this.layer.feeds.map(f => LogicEngine.tripFeedCircuitBreaker(f));
+        updatedFeeds.forEach(feed => this.layer.feedStore.update(feed));
 
         // Batch Updates (In a real app, logic engine would return diffs)
         // For now, we rely on the logic engine's side effects if any, or manual updates if logic returns new objects

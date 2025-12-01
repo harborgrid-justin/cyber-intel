@@ -1,5 +1,5 @@
 
-import { SystemNode, Pcap, VendorFeedItem } from '@/types';
+import { SystemNode, Pcap } from '@/types';
 
 export class HealthLogic {
   static predictNodeFailure(node: SystemNode): { risk: number, prediction: string } {

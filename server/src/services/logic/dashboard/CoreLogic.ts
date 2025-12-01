@@ -1,5 +1,5 @@
 
-import { Threat, Case, SystemNode, Severity, IncidentStatus } from '@/types';
+import { Threat, Case, Severity, IncidentStatus } from '@/types';
 
 export class OverviewLogic {
   static calculateDefconLevel(threats: Threat[], cases: Case[]): { level: number, label: string, color: string } {

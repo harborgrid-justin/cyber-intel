@@ -51,6 +51,9 @@ export class SimBuilderLogic {
                 invalidIndices.push(i);
             }
         }
+        if (lastStageIdx !== -1 && currStageIdx !== -1 && currStageIdx < lastStageIdx) {
+          invalidIndices.push(i);
+        }
         
         lastStageIdx = currStageIdx;
         completedTTPs.add(curr.id);

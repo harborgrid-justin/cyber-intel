@@ -15,7 +15,7 @@ import { VendorStore } from './stores/vendorStore';
 import { MessagingStore } from './stores/messagingStore';
 import { 
   IncidentStatus, Threat, Case, ThreatActor, Playbook, Artifact, ChainEvent, 
-  Malware, ForensicJob, Device, Pcap, Vulnerability, SystemUser, IncidentReport, 
+  Malware, ForensicJob, Device, Pcap, SystemUser, IncidentReport, 
   Campaign, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, 
   OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus, Vendor, Channel, TeamMessage 
 } from '../../../types';
@@ -154,7 +154,10 @@ export class DataLayer {
         s.setAdapter(adapter);
         s.fetch(); // Auto-fetch on provider switch
     });
-    window.dispatchEvent(new Event('db-adapter-changed'));
+    const globalScope = globalThis as unknown as { dispatchEvent?: (event: any) => void; Event?: any };
+    if (typeof globalScope.dispatchEvent === 'function' && typeof globalScope.Event === 'function') {
+      globalScope.dispatchEvent(new globalScope.Event('db-adapter-changed'));
+    }
   }
 
   getAdapterInfo() { return { name: this.adapter.name, type: this.adapter.type }; }

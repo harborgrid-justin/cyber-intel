@@ -1,5 +1,5 @@
 
-import { TeamMessage, Channel, SystemUser } from '@/types';
+import { Channel, SystemUser } from '@/types';
 
 export class MessagingLogic {
   static formatMessageTime(isoString: string): string {

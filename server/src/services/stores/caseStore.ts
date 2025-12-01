@@ -47,7 +47,10 @@ export class CaseStore extends BaseStore<Case> {
   addTask(caseId: string, task: Task) {
     const c = this.getById(caseId);
     if (c) {
-      if (LogicEngine.detectTaskCycles(c.tasks, task)) { alert("Circular dependency detected in Task Graph!"); return; }
+      if (LogicEngine.detectTaskCycles(c.tasks, task)) { 
+        console.warn('Circular dependency detected in Task Graph!');
+        return; 
+      }
       c.tasks.push(task);
       this.update(c);
     }

@@ -5,6 +5,19 @@ import { CONFIG } from '@/config';
 let aiClient: OpenAI | null = null;
 const BRIEFING_CACHE_KEY = 'SENTINEL_BRIEFING_CACHE';
 
+interface StorageLike {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+}
+
+const getLocalStorage = (): StorageLike | null => {
+  const scope = globalThis as unknown as { localStorage?: StorageLike };
+  if (scope && scope.localStorage) {
+    return scope.localStorage;
+  }
+  return null;
+};
+
 const getAiClient = (): OpenAI | null => {
   if (aiClient) return aiClient;
   
@@ -68,17 +81,20 @@ export const createAnalysisChat = (): ChatSession | null => {
 
 export const generateDailyBriefing = async (): Promise<string> => {
   // 1. Check Local Cache (Prevent rate limits on reload)
-  try {
-    const cached = localStorage.getItem(BRIEFING_CACHE_KEY);
-    if (cached) {
-      const { date, text } = JSON.parse(cached);
-      // If cached data is from today, use it
-      if (date === new Date().toDateString()) {
-        return text;
+  const storage = getLocalStorage();
+  if (storage) {
+    try {
+      const cached = storage.getItem(BRIEFING_CACHE_KEY);
+      if (cached) {
+        const { date, text } = JSON.parse(cached);
+        // If cached data is from today, use it
+        if (date === new Date().toDateString()) {
+          return text;
+        }
       }
+    } catch (e) {
+      console.warn("Briefing cache read failed", e);
     }
-  } catch (e) {
-    console.warn("Briefing cache read failed", e);
   }
 
   const ai = getAiClient();
@@ -105,7 +121,7 @@ export const generateDailyBriefing = async (): Promise<string> => {
     const text = response.choices[0]?.message?.content || "Unable to generate briefing.";
 
     // 2. Save to Cache
-    localStorage.setItem(BRIEFING_CACHE_KEY, JSON.stringify({
+    storage?.setItem(BRIEFING_CACHE_KEY, JSON.stringify({
       date: new Date().toDateString(),
       text
     }));

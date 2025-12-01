@@ -37,6 +37,14 @@ export class DefenseLogic {
     if (vendor.compliance.some(c => c.status === 'EXPIRED')) {
         score += 10;
     }
+
+    // 6. Active Threat Focus
+    const highInterestActors = actors.filter(actor =>
+      actor.targets?.some(target => target.toLowerCase().includes(vendor.category.toLowerCase()))
+    ).length;
+    if (highInterestActors > 0) {
+      score += highInterestActors * 5;
+    }
     
     // Normalize cap
     const finalScore = Math.min(100, score);
@@ -115,8 +123,11 @@ export class DefenseLogic {
     } else {
       entryNodes.forEach(n => {
         const evasion = this.calculateEvasionProbability(actor, n);
+        const vulnId = n.vulnerabilities?.[0];
+        const vulnDetails = vulnId ? vulns.find(v => v.id === vulnId) : null;
+        const exploitLabel = vulnDetails ? `${vulnDetails.name} (${vulnDetails.id})` : n.vulnerabilities?.[0];
         pathSteps.push({
-          id: `step-entry-${n.id}`, stage: 'Initial Access', node: n.name, method: `Exploit Public Facing Application (${n.vulnerabilities![0]})`,
+          id: `step-entry-${n.id}`, stage: 'Initial Access', node: n.name, method: `Exploit Public Facing Application (${exploitLabel})`,
           successProbability: 0.9, description: `Direct exploitation of unpatched vulnerability on ${n.name}. Evasion Prob: ${(evasion*100).toFixed(0)}%`,
           detectionRisk: 1 - evasion
         });

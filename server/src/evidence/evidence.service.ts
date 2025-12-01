@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { EvidenceStore } from '../services/stores/evidenceStore';
-import { MockAdapter } from '../services/dbAdapter';
 import { ChainEvent, Malware, ForensicJob, Device, Pcap } from '../../../types';
 import { MOCK_CHAIN, MOCK_MALWARE, MOCK_LAB_JOBS, MOCK_DEVICES, MOCK_PCAPS } from '../constants';
 
