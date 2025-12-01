@@ -1,0 +1,38 @@
+
+import React from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { threatData } from '../services-frontend/dataLayer';
+import { CONFIG } from '../../config';
+import { Card, CardHeader } from '../Shared/UI';
+
+const ThreatChart: React.FC = () => {
+  const { CHARTS } = CONFIG.THEME;
+  const data = threatData.getThreatTrends();
+
+  return (
+    <Card className="shadow-lg h-96 p-0 overflow-hidden flex flex-col">
+      <CardHeader title="Global Threat Volume (24h)" />
+      <div className="flex-1 w-full min-h-0 p-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={CHARTS.PRIMARY} stopOpacity={0.3}/>
+                <stop offset="95%" stopColor={CHARTS.PRIMARY} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={CHARTS.GRID} />
+            <XAxis dataKey="name" stroke={CHARTS.TEXT} fontSize={12} tickLine={false} />
+            <YAxis stroke={CHARTS.TEXT} fontSize={12} tickLine={false} />
+            <Tooltip 
+              contentStyle={{ backgroundColor: CHARTS.TOOLTIP_BG, borderColor: CHARTS.TOOLTIP_BORDER, color: CHARTS.TOOLTIP_TEXT }}
+              itemStyle={{ color: CHARTS.PRIMARY }}
+            />
+            <Area type="monotone" dataKey="value" stroke={CHARTS.PRIMARY} fillOpacity={1} fill="url(#colorValue)" strokeWidth={2} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </Card>
+  );
+};
+export default ThreatChart;
