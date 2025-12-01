@@ -49,6 +49,18 @@ const ReportsCenter: React.FC<ReportsCenterProps> = ({ initialId }) => {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [reports, statusFilter, searchTerm]);
 
+  // --- Helpers ---
+  const getTemplateIcon = (id: string) => {
+    switch (id) {
+        case 'FEDRAMP': return <Icons.Shield className="w-10 h-10" />;
+        case 'NIST': return <Icons.FileText className="w-10 h-10" />;
+        case 'CISA': return <Icons.AlertTriangle className="w-10 h-10" />;
+        case 'FBI': return <Icons.Users className="w-10 h-10" />;
+        case 'EXEC': return <Icons.DollarSign className="w-10 h-10" />;
+        default: return <Icons.FileText className="w-10 h-10" />;
+    }
+  };
+
   // --- Sub-Components ---
 
   const ReportList = () => (
@@ -192,10 +204,12 @@ const ReportsCenter: React.FC<ReportsCenterProps> = ({ initialId }) => {
       >
         <Grid cols={4}>
           {templates.map(t => (
-            <Card key={t.id} className="p-6 hover:border-cyan-500 transition-colors cursor-pointer group flex flex-col h-full" onClick={() => { setIsCreating(true); setActiveModule('Library'); }}>
-              <div className="text-4xl mb-4 text-slate-600 group-hover:text-cyan-500 transition-colors">{t.icon}</div>
-              <h3 className="font-bold text-white mb-2 group-hover:text-cyan-400">{t.name}</h3>
-              <p className="text-xs text-slate-400 mb-6 flex-1">{t.desc}</p>
+            <Card key={t.id} className="p-6 hover:border-cyan-500 transition-colors cursor-pointer group flex flex-col h-full bg-slate-900" onClick={() => { setIsCreating(true); setActiveModule('Library'); }}>
+              <div className="mb-4 text-slate-600 group-hover:text-cyan-500 transition-colors">
+                 {getTemplateIcon(t.id)}
+              </div>
+              <h3 className="font-bold text-white mb-2 group-hover:text-cyan-400 text-sm">{t.name}</h3>
+              <p className="text-xs text-slate-400 mb-6 flex-1 leading-relaxed">{t.desc}</p>
               <Button variant="secondary" className="w-full text-xs">USE TEMPLATE</Button>
             </Card>
           ))}
@@ -213,18 +227,49 @@ const ReportsCenter: React.FC<ReportsCenterProps> = ({ initialId }) => {
         activeModule={activeModule}
         onModuleChange={setActiveModule}
       >
-        <Card className="p-0 overflow-hidden">
-           <CardHeader title="Active Schedules" />
-           <div className="p-6">
-              <div className="bg-slate-900 border border-slate-800 p-4 rounded-lg flex items-center justify-between">
+        <Card className="p-0 overflow-hidden h-full">
+           <CardHeader title="Active Schedules" action={<Button variant="primary" className="text-[10px] py-1">+ NEW SCHEDULE</Button>} />
+           <div className="p-6 space-y-4">
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-lg flex items-center justify-between hover:border-cyan-500 transition-colors group">
                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-slate-800 rounded text-xl">⏰</div>
+                    <div className="p-3 bg-slate-800 rounded border border-slate-700 text-cyan-500 group-hover:text-cyan-400">
+                        <Icons.Clock className="w-6 h-6" />
+                    </div>
                     <div>
-                       <div className="font-bold text-white text-sm">Daily Threat Briefing</div>
-                       <div className="text-xs text-slate-500">Recipients: soc-team@sentinel.co • Frequency: Daily @ 0800Z</div>
+                       <div className="font-bold text-white text-sm group-hover:text-cyan-400">Daily Threat Briefing</div>
+                       <div className="text-xs text-slate-500 mt-1">
+                          <span className="font-bold text-slate-400">Recipients:</span> soc-team@sentinel.co • <span className="font-bold text-slate-400">Frequency:</span> Daily @ 0800Z
+                       </div>
                     </div>
                  </div>
-                 <Badge color="green">ACTIVE</Badge>
+                 <div className="flex items-center gap-4">
+                    <div className="text-right">
+                        <div className="text-[10px] text-slate-500 uppercase font-bold">Next Run</div>
+                        <div className="text-xs text-white font-mono">Tomorrow 08:00</div>
+                    </div>
+                    <Badge color="green">ACTIVE</Badge>
+                 </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-lg flex items-center justify-between hover:border-cyan-500 transition-colors group opacity-75">
+                 <div className="flex items-center gap-4">
+                    <div className="p-3 bg-slate-800 rounded border border-slate-700 text-slate-500">
+                        <Icons.FileText className="w-6 h-6" />
+                    </div>
+                    <div>
+                       <div className="font-bold text-slate-300 text-sm">Weekly Executive Summary</div>
+                       <div className="text-xs text-slate-500 mt-1">
+                          <span className="font-bold text-slate-400">Recipients:</span> ciso@sentinel.co • <span className="font-bold text-slate-400">Frequency:</span> Weekly (Fri)
+                       </div>
+                    </div>
+                 </div>
+                 <div className="flex items-center gap-4">
+                    <div className="text-right">
+                        <div className="text-[10px] text-slate-500 uppercase font-bold">Next Run</div>
+                        <div className="text-xs text-slate-400 font-mono">Fri 17:00</div>
+                    </div>
+                    <Badge color="slate">PAUSED</Badge>
+                 </div>
               </div>
            </div>
         </Card>
