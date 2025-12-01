@@ -13,33 +13,21 @@ import { UserStore } from './stores/userStore';
 import { BaseStore } from './stores/baseStore';
 import { VendorStore } from './stores/vendorStore';
 import { MessagingStore } from './stores/messagingStore';
-import { startBackgroundJobs } from './jobs';
 import { 
-  MOCK_THREATS, MOCK_CASES, MOCK_FEEDS, MOCK_ACTORS, MOCK_PLAYBOOKS, 
-  MOCK_CHAIN, MOCK_MALWARE, MOCK_LAB_JOBS, MOCK_DEVICES, MOCK_PCAPS, 
-  MOCK_VULNERABILITIES, MOCK_AUDIT_LOGS, MOCK_USERS, MOCK_INCIDENT_REPORTS,
-  MOCK_TACTICS, MOCK_TECHNIQUES, MOCK_SUB_TECHNIQUES, MOCK_GROUPS, MOCK_SOFTWARE, MOCK_MITIGATIONS,
-  MOCK_DOMAIN, MOCK_BREACH, MOCK_GEO, MOCK_DARKWEB, MOCK_META, MOCK_SOCIAL, MOCK_INTEGRATIONS, MOCK_CAMPAIGNS,
-  SYSTEM_NODES, MOCK_PATCH_STATUS, MOCK_SCANNERS, MOCK_VENDOR_FEEDS, MOCK_TEMPLATES, MOCK_VENDORS
-} from '../constants';
-import { IncidentStatus, Threat, Case, ThreatActor, Playbook, Artifact, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, SystemUser, IncidentReport, Campaign, SystemNode, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus, Vendor, NistControl, Channel, TeamMessage } from '../types';
+  IncidentStatus, Threat, Case, ThreatActor, Playbook, Artifact, ChainEvent, 
+  Malware, ForensicJob, Device, Pcap, Vulnerability, SystemUser, IncidentReport, 
+  Campaign, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, 
+  OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus, Vendor, Channel, TeamMessage 
+} from '../types';
 import { SupplyChainLogic } from './logic/SupplyChainLogic';
-
-// Mock Data for Messaging
-const MOCK_CHANNELS: Channel[] = [
-  { id: 'C1', name: 'general', type: 'PUBLIC', members: ['ALL'], topic: 'Company-wide announcements' },
-  { id: 'C2', name: 'incidents-critical', type: 'WAR_ROOM', members: ['SOC', 'ADMIN'], topic: 'Active P1 Incidents' },
-  { id: 'C3', name: 'intel-sharing', type: 'PUBLIC', members: ['ALL'], topic: 'IOCs and OSINT findings' },
-  { id: 'C4', name: 'shift-handoff', type: 'PRIVATE', members: ['SOC'], topic: 'Shift logs' }
-];
-
-const MOCK_MESSAGES: TeamMessage[] = [
-  { id: 'M1', channelId: 'C1', userId: 'System', content: 'Welcome to Sentinel Chat. All comms are logged.', timestamp: new Date(Date.now() - 86400000).toISOString(), type: 'SYSTEM' },
-  { id: 'M2', channelId: 'C2', userId: 'J. Doe', content: 'Tracking lateral movement on FIN-DB-02.', timestamp: new Date(Date.now() - 3600000).toISOString(), type: 'TEXT' }
-];
+import { InitialDataFactory } from './initialData';
+import { ThreatMapper, CaseMapper, ActorMapper } from './mappers';
+import { SyncManager } from './syncManager';
+import { MOCK_TEMPLATES, MOCK_DARKWEB, MOCK_META } from '../constants';
 
 export class DataLayer {
   public adapter: DatabaseAdapter = new MockAdapter();
+  public syncManager: SyncManager;
   
   // Domain Specific Stores
   public threatStore: ThreatStore;
@@ -96,48 +84,58 @@ export class DataLayer {
   set devices(v: Device[]) { /* No-op */ }
 
   constructor() {
-    this.threatStore = new ThreatStore('THREATS', MOCK_THREATS, this.adapter);
-    this.caseStore = new CaseStore('CASES', MOCK_CASES, this.adapter);
-    this.actorStore = new ActorStore('ACTORS', MOCK_ACTORS, this.adapter);
-    this.campaignStore = new CampaignStore('CAMPAIGNS', MOCK_CAMPAIGNS, this.adapter);
-    this.feedStore = new FeedStore('FEEDS', MOCK_FEEDS, this.adapter);
-    this.logStore = new LogStore('LOGS', MOCK_AUDIT_LOGS, this.adapter);
-    this.vulnStore = new VulnerabilityStore('VULNS', MOCK_VULNERABILITIES, this.adapter);
-    this.nodeStore = new SystemNodeStore('NODES', SYSTEM_NODES, this.adapter);
-    this.reportStore = new ReportStore('REPORTS', MOCK_INCIDENT_REPORTS, this.adapter);
-    this.userStore = new UserStore('USERS', MOCK_USERS, this.adapter);
-    this.vendorStore = new VendorStore('VENDORS', MOCK_VENDORS, this.adapter);
-    this.messagingStore = new MessagingStore('CHANNELS', MOCK_CHANNELS, MOCK_MESSAGES, this.adapter);
+    // Initialize Domain Stores with Mappers
+    this.threatStore = new ThreatStore('THREATS', InitialDataFactory.getThreats(), this.adapter, new ThreatMapper());
+    this.caseStore = new CaseStore('CASES', InitialDataFactory.getCases(), this.adapter, new CaseMapper());
+    this.actorStore = new ActorStore('ACTORS', InitialDataFactory.getActors(), this.adapter, new ActorMapper());
+    
+    // Initialize standard stores
+    this.campaignStore = new CampaignStore('CAMPAIGNS', InitialDataFactory.getCampaigns(), this.adapter);
+    this.feedStore = new FeedStore('FEEDS', InitialDataFactory.getFeeds(), this.adapter);
+    this.logStore = new LogStore('LOGS', InitialDataFactory.getLogs(), this.adapter);
+    this.vulnStore = new VulnerabilityStore('VULNS', InitialDataFactory.getVulns(), this.adapter);
+    this.nodeStore = new SystemNodeStore('NODES', InitialDataFactory.getNodes(), this.adapter);
+    this.reportStore = new ReportStore('REPORTS', InitialDataFactory.getReports(), this.adapter);
+    this.userStore = new UserStore('USERS', InitialDataFactory.getUsers(), this.adapter);
+    this.vendorStore = new VendorStore('VENDORS', InitialDataFactory.getVendors(), this.adapter);
+    
+    const { channels, messages } = InitialDataFactory.getMessagingData();
+    this.messagingStore = new MessagingStore('CHANNELS', channels, messages, this.adapter);
     
     // Initialize Generic Stores
-    this.playbookStore = new BaseStore('PLAYBOOKS', MOCK_PLAYBOOKS, this.adapter);
-    this.chainStore = new BaseStore('CHAIN', MOCK_CHAIN, this.adapter);
-    this.malwareStore = new BaseStore('MALWARE', MOCK_MALWARE, this.adapter);
-    this.jobStore = new BaseStore('JOBS', MOCK_LAB_JOBS, this.adapter);
-    this.deviceStore = new BaseStore('DEVICES', MOCK_DEVICES, this.adapter);
-    this.pcapStore = new BaseStore('PCAPS', MOCK_PCAPS, this.adapter);
-    this.vendorFeedStore = new BaseStore('VENDOR_FEEDS', MOCK_VENDOR_FEEDS, this.adapter);
-    this.scannerStore = new BaseStore('SCANNERS', MOCK_SCANNERS, this.adapter);
+    this.playbookStore = new BaseStore('PLAYBOOKS', InitialDataFactory.getPlaybooks(), this.adapter);
+    this.chainStore = new BaseStore('CHAIN', InitialDataFactory.getChain(), this.adapter);
+    this.malwareStore = new BaseStore('MALWARE', InitialDataFactory.getMalware(), this.adapter);
+    this.jobStore = new BaseStore('JOBS', InitialDataFactory.getJobs(), this.adapter);
+    this.deviceStore = new BaseStore('DEVICES', InitialDataFactory.getDevices(), this.adapter);
+    this.pcapStore = new BaseStore('PCAPS', InitialDataFactory.getPcaps(), this.adapter);
+    this.vendorFeedStore = new BaseStore('VENDOR_FEEDS', InitialDataFactory.getVendorFeeds(), this.adapter);
+    this.scannerStore = new BaseStore('SCANNERS', InitialDataFactory.getScanners(), this.adapter);
 
     // Knowledge Base Stores
-    this.mitreTacticStore = new BaseStore('MITRE_TACTICS', MOCK_TACTICS, this.adapter);
-    this.mitreTechniqueStore = new BaseStore('MITRE_TECHNIQUES', MOCK_TECHNIQUES, this.adapter);
-    this.mitreSubStore = new BaseStore('MITRE_SUB_TECHNIQUES', MOCK_SUB_TECHNIQUES, this.adapter);
-    this.mitreGroupStore = new BaseStore('MITRE_GROUPS', MOCK_GROUPS, this.adapter);
-    this.mitreSoftwareStore = new BaseStore('MITRE_SOFTWARE', MOCK_SOFTWARE, this.adapter);
-    this.mitreMitigationStore = new BaseStore('MITRE_MITIGATIONS', MOCK_MITIGATIONS, this.adapter);
+    const mitre = InitialDataFactory.getMitreData();
+    this.mitreTacticStore = new BaseStore('MITRE_TACTICS', mitre.tactics, this.adapter);
+    this.mitreTechniqueStore = new BaseStore('MITRE_TECHNIQUES', mitre.techniques, this.adapter);
+    this.mitreSubStore = new BaseStore('MITRE_SUB_TECHNIQUES', mitre.subTechniques, this.adapter);
+    this.mitreGroupStore = new BaseStore('MITRE_GROUPS', mitre.groups, this.adapter);
+    this.mitreSoftwareStore = new BaseStore('MITRE_SOFTWARE', mitre.software, this.adapter);
+    this.mitreMitigationStore = new BaseStore('MITRE_MITIGATIONS', mitre.mitigations, this.adapter);
 
     // OSINT Stores
-    this.osintDomainStore = new BaseStore('OSINT_DOMAINS', MOCK_DOMAIN, this.adapter);
-    this.osintBreachStore = new BaseStore('OSINT_BREACHES', MOCK_BREACH, this.adapter);
-    this.osintGeoStore = new BaseStore('OSINT_GEO', MOCK_GEO, this.adapter);
-    this.osintSocialStore = new BaseStore('OSINT_SOCIAL', MOCK_SOCIAL, this.adapter);
+    const osint = InitialDataFactory.getOsintData();
+    this.osintDomainStore = new BaseStore('OSINT_DOMAINS', osint.domains, this.adapter);
+    this.osintBreachStore = new BaseStore('OSINT_BREACHES', osint.breaches, this.adapter);
+    this.osintGeoStore = new BaseStore('OSINT_GEO', osint.geo, this.adapter);
+    this.osintSocialStore = new BaseStore('OSINT_SOCIAL', osint.social, this.adapter);
 
     // Config Stores
-    this.integrationStore = new BaseStore('INTEGRATIONS', MOCK_INTEGRATIONS, this.adapter);
-    this.patchStatusStore = new BaseStore('PATCH_STATUS', MOCK_PATCH_STATUS, this.adapter);
+    const config = InitialDataFactory.getConfigData();
+    this.integrationStore = new BaseStore('INTEGRATIONS', config.integrations, this.adapter);
+    this.patchStatusStore = new BaseStore('PATCH_STATUS', config.patchStatus, this.adapter);
     
-    startBackgroundJobs(this);
+    // Start Sync Engine
+    this.syncManager = new SyncManager(this);
+    this.syncManager.start();
   }
 
   setProvider(adapter: DatabaseAdapter) {
@@ -161,7 +159,9 @@ export class DataLayer {
 
   getAdapterInfo() { return { name: this.adapter.name, type: this.adapter.type }; }
   
-  // --- Threat Management ---
+  // --- Facade Methods (Delegating to Stores) ---
+  
+  // Threat Management
   getThreats(sort = true) { return this.threatStore.getThreats(sort); }
   getThreatsByActor(name: string) { return this.threatStore.getByActor(name); }
   addThreat(t: Threat) { this.threatStore.addThreat(t, this.actorStore.getAll(), this.caseStore.getAll(), (c) => this.addCase(c)); }
@@ -170,7 +170,7 @@ export class DataLayer {
   updateThreat(t: Threat) { this.threatStore.update(t); }
   linkThreatToActor(tid: string, name: string) { const t = this.threatStore.getById(tid); if(t) { t.threatActor = name; this.threatStore.update(t); } }
 
-  // --- Case Management ---
+  // Case Management
   getCases() { return this.caseStore.getCases(); }
   getCase(id: string) { return this.caseStore.getById(id); }
   addCase(c: Case) { this.caseStore.addCase(c, this.playbookStore.getAll(), (id, n) => this.caseStore.addNote(id, n)); }
@@ -202,7 +202,7 @@ export class DataLayer {
   linkCases(sourceId: string, targetId: string) { this.caseStore.linkCases(sourceId, targetId); }
   unlinkCases(sourceId: string, targetId: string) { this.caseStore.unlinkCases(sourceId, targetId); }
 
-  // --- Campaign Management ---
+  // Campaign Management
   getCampaigns() { return this.campaignStore.getAll(); }
   addCampaign(arg1: Campaign | string, arg2?: string): void { 
     if (typeof arg1 === 'string' && typeof arg2 === 'string') { this.actorStore.linkCampaign(arg1, arg2); } 
@@ -211,7 +211,7 @@ export class DataLayer {
   updateCampaign(c: Campaign) { this.campaignStore.updateCampaign(c); }
   deleteCampaign(id: string) { this.campaignStore.delete(id); }
 
-  // --- Actor Management ---
+  // Actor Management
   getActors() { return this.actorStore.getAll(); }
   addActor(a: ThreatActor) { this.actorStore.add(a); }
   updateActor(a: ThreatActor) { this.actorStore.update(a); }
@@ -225,7 +225,7 @@ export class DataLayer {
   deleteReference(aid: string, r: string) { this.actorStore.removeReference(aid, r); }
   addHistoryEvent(aid: string, e: any) { this.actorStore.addHistoryEvent(aid, e); }
 
-  // --- Feed & Ingestion ---
+  // Feed & Ingestion
   getFeeds() { return this.feedStore.getAll(); }
   addFeed(f: any) { this.feedStore.add(f); }
   deleteFeed(id: string) { this.feedStore.delete(id); }
@@ -233,7 +233,7 @@ export class DataLayer {
   getVendorFeedItems() { return this.vendorFeedStore.getAll(); }
   addVendorFeedItem(i: VendorFeedItem) { this.vendorFeedStore.add(i); }
 
-  // --- Vendor Management (SCRM) ---
+  // Vendor Management (SCRM)
   getVendors() { return this.vendorStore.getAll(); }
   addVendor(v: Vendor) { this.vendorStore.add(v); }
   updateVendor(v: Vendor) { this.vendorStore.update(v); }
@@ -248,13 +248,13 @@ export class DataLayer {
     });
   }
 
-  // --- Messaging ---
+  // Messaging
   getChannels() { return this.messagingStore.getChannels(); }
   getMessages(channelId: string) { return this.messagingStore.getMessages(channelId); }
   sendMessage(msg: TeamMessage) { this.messagingStore.sendMessage(msg); }
   createChannel(c: Channel) { this.messagingStore.createChannel(c); }
 
-  // --- System & Evidence ---
+  // System & Evidence
   getChainOfCustody() { return this.chainStore.getAll(); }
   addChainEvent(e: ChainEvent) { this.chainStore.add(e); }
   getMalwareSamples() { return this.malwareStore.getAll(); }
@@ -278,7 +278,7 @@ export class DataLayer {
   getScannerStatus() { return this.scannerStore.getAll(); }
   updateScannerStatus(s: ScannerStatus) { this.scannerStore.update(s); }
 
-  // --- Analytics & Helpers ---
+  // Analytics & Helpers
   getThreatTrends(): ChartDataPoint[] {
     const total = this.threatStore.getAll().length;
     const base = Math.max(5, Math.floor(total / 6));

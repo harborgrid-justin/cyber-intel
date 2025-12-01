@@ -23,24 +23,30 @@ import Orchestrator from './components/Response/Orchestrator';
 import ExecutiveProtection from './components/Osint/ExecutiveProtection';
 import MessagingPlatform from './components/Messaging/MessagingPlatform';
 import { View } from './types';
+import { threatData } from './services/dataLayer';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [viewParams, setViewParams] = useState<{ id?: string }>({});
 
   useEffect(() => {
+    // Intelligent Pre-fetching when view changes
+    threatData.syncManager.prefetch(currentView);
+
     const handleNavigation = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail) {
         const { view, ...params } = customEvent.detail;
         setCurrentView(view);
         setViewParams(params);
+        // Pre-fetch immediately on event
+        threatData.syncManager.prefetch(view);
       }
     };
 
     window.addEventListener('app-navigation', handleNavigation);
     return () => window.removeEventListener('app-navigation', handleNavigation);
-  }, []);
+  }, [currentView]);
 
   const renderContent = () => {
     switch (currentView) {
