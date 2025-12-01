@@ -22,7 +22,7 @@ import {
 } from '@/types';
 
 @ApiTags('ingestion')
-@Controller('ingestion')
+@Controller('api/ingestion')
 export class IngestionController {
   constructor(private readonly ingestionService: IngestionService) {}
 

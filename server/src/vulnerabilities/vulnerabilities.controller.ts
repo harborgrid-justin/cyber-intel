@@ -11,7 +11,7 @@ import {
 } from './dto';
 
 @ApiTags('vulnerabilities')
-@Controller('vulnerabilities')
+@Controller('api/vulnerabilities')
 export class VulnerabilitiesController {
   constructor(private readonly vulnerabilitiesService: VulnerabilitiesService) {}
 

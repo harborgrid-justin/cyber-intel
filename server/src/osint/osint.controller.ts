@@ -19,7 +19,7 @@ import {
 } from '@/types';
 
 @ApiTags('osint')
-@Controller('osint')
+@Controller('api/osint')
 export class OsintController {
   constructor(private readonly osintService: OsintService) {}
 

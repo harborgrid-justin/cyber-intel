@@ -24,7 +24,7 @@ import { Note } from '../models';
 import { CreateNoteDto, UpdateNoteDto, NoteStatsDto } from './dto';
 
 @ApiTags('notes')
-@Controller('notes')
+@Controller('api/notes')
 export class NotesController {
   constructor(private readonly notesService: NotesService) {}
 

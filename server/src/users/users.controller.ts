@@ -24,7 +24,7 @@ import { User } from '../models';
 import { CreateUserDto, UpdateUserDto, LockUserDto, UserStatsDto } from './dto';
 
 @ApiTags('users')
-@Controller('users')
+@Controller('api/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

@@ -24,7 +24,7 @@ import { Artifact } from '../models';
 import { CreateArtifactDto, UpdateArtifactDto, ArtifactStatsDto } from './dto';
 
 @ApiTags('artifacts')
-@Controller('artifacts')
+@Controller('api/artifacts')
 export class ArtifactsController {
   constructor(private readonly artifactsService: ArtifactsService) {}
 

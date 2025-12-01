@@ -24,7 +24,7 @@ import { Task } from '../models';
 import { CreateTaskDto, UpdateTaskDto, UpdateTaskStatusDto, TaskStatsDto } from './dto';
 
 @ApiTags('tasks')
-@Controller('tasks')
+@Controller('api/tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 

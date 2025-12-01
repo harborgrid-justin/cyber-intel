@@ -34,7 +34,7 @@ import {
 } from './dto';
 
 @ApiTags('reports')
-@Controller('reports')
+@Controller('api/reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 

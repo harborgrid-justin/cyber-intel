@@ -41,7 +41,7 @@ import {
 } from './dto';
 
 @ApiTags('evidence')
-@Controller('evidence')
+@Controller('api/evidence')
 export class EvidenceController {
   constructor(private readonly evidenceService: EvidenceService) {}
 

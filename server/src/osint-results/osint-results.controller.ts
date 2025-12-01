@@ -5,7 +5,7 @@ import { CreateOsintResultDto, UpdateOsintResultDto } from './dto';
 import { OsintResult } from '../models';
 
 @ApiTags('osint-results')
-@Controller('osint-results')
+@Controller('api/osint-results')
 export class OsintResultsController {
   constructor(private readonly osintResultsService: OsintResultsService) {}
 

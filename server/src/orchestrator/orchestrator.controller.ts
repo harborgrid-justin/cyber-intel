@@ -16,7 +16,7 @@ import {
 import { ResponsePlan, VIPProfile, Honeytoken, PatchPrioritization, SegmentationPolicy, TrafficFlow } from '@/types';
 
 @ApiTags('orchestrator')
-@Controller('orchestrator')
+@Controller('api/orchestrator')
 export class OrchestratorController {
   constructor(private readonly orchestratorService: OrchestratorService) {}
 

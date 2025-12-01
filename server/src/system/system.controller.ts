@@ -31,7 +31,7 @@ import {
 } from './dto';
 
 @ApiTags('system')
-@Controller('system')
+@Controller('api/system')
 export class SystemController {
   constructor(private readonly systemService: SystemService) {}
 

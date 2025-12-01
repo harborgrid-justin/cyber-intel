@@ -25,7 +25,7 @@ import { TeamMessage } from '../models';
 import { CreateTeamMessageDto, UpdateTeamMessageDto } from './dto';
 
 @ApiTags('team-messages')
-@Controller('team-messages')
+@Controller('api/team-messages')
 export class TeamMessagesController {
   constructor(private readonly teamMessagesService: TeamMessagesService) {}
 

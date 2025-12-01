@@ -23,7 +23,7 @@ import { Channel } from '../models';
 import { CreateChannelDto, UpdateChannelDto } from './dto';
 
 @ApiTags('channels')
-@Controller('channels')
+@Controller('api/channels')
 export class ChannelsController {
   constructor(private readonly channelsService: ChannelsService) {}
 

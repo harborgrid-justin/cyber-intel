@@ -34,7 +34,7 @@ import {
 } from './dto';
 
 @ApiTags('messaging')
-@Controller('messaging')
+@Controller('api/messaging')
 export class MessagingController {
   constructor(private readonly messagingService: MessagingService) {}
 
