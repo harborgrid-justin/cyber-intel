@@ -1,17 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../models';
-import { Op } from 'sequelize';
+import { CreateUserDto, UpdateUserDto, LockUserDto, UserStatsDto } from './dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User)
-    private userModel: typeof User,
+    private readonly userModel: typeof User,
   ) {}
 
   async findAll(filters?: { status?: string; role?: string }): Promise<User[]> {
-    const where: any = {};
+    const where: Record<string, string> = {};
     if (filters?.status) {
       where.status = filters.status;
     }
@@ -25,15 +25,16 @@ export class UsersService {
     return this.userModel.findByPk(id);
   }
 
-  async create(createUserDto: any): Promise<User> {
-    if (!createUserDto.id) {
-      createUserDto.id = `user-${Date.now()}`;
-    }
-    return this.userModel.create(createUserDto);
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const userData = {
+      ...createUserDto,
+      id: `user-${Date.now()}`,
+    };
+    return this.userModel.create(userData as any);
   }
 
-  async update(id: string, updateUserDto: any): Promise<User | null> {
-    const [affectedCount] = await this.userModel.update(updateUserDto, { where: { id } });
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
+    const [affectedCount] = await this.userModel.update(updateUserDto as any, { where: { id } });
     if (affectedCount === 0) {
       return null;
     }
@@ -45,46 +46,54 @@ export class UsersService {
     return affectedCount > 0;
   }
 
-  async lockUser(id: string, lockData: { reason: string; duration?: number }): Promise<User> {
+  async lockUser(id: string, lockData: LockUserDto): Promise<User> {
     const user = await this.findOne(id);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return await this.update(id, {
+    // Store lock reason and duration for audit purposes
+    const lockMetadata = {
+      reason: lockData.reason,
+      duration: lockData.duration,
+      lockedAt: new Date().toISOString(),
+    };
+
+    const updatedUser = await this.update(id, {
       status: 'Suspended',
-      // Store lock reason in preferences temporarily
-      preferences: { ...user.preferences, locked: { reason: lockData.reason, duration: lockData.duration || 0 } }
-    }) as User;
+      preferences: { ...((user.preferences as object) || {}), lockMetadata },
+    } as UpdateUserDto);
+
+    return updatedUser as User;
   }
 
   async unlockUser(id: string): Promise<User> {
     const user = await this.findOne(id);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    // Remove lock metadata from preferences
-    const updatedPreferences = { ...user.preferences };
-    delete updatedPreferences.locked;
-
-    return await this.update(id, {
+    const updatedUser = await this.update(id, {
       status: 'Active',
-      preferences: updatedPreferences
-    }) as User;
+    } as UpdateUserDto);
+
+    return updatedUser as User;
   }
 
-  async getUserStats(): Promise<any> {
+  async getUserStats(): Promise<UserStatsDto> {
     const users = await this.userModel.findAll();
     const total = users.length;
-    const active = users.filter(u => u.status === 'Active').length;
-    const inactive = users.filter(u => u.status === 'Inactive').length;
-    const suspended = users.filter(u => u.status === 'Suspended').length;
+    const active = users.filter((u) => u.status === 'Active').length;
+    const inactive = users.filter((u) => u.status === 'Inactive').length;
+    const suspended = users.filter((u) => u.status === 'Suspended').length;
 
-    const roles = users.reduce((acc, user) => {
-      acc[user.role] = (acc[user.role] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const roles = users.reduce(
+      (acc, user) => {
+        acc[user.role] = (acc[user.role] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       total,
@@ -92,22 +101,29 @@ export class UsersService {
       inactive,
       suspended,
       roles,
-      activeRate: Math.round((active / total) * 100)
+      activeRate: total > 0 ? Math.round((active / total) * 100) : 0,
     };
   }
 
   async getActiveUsers(): Promise<User[]> {
     return this.userModel.findAll({
       where: {
-        status: 'Active'
-      }
+        status: 'Active',
+      },
     });
   }
 
   async updateLastLogin(id: string): Promise<User | null> {
-    return await this.update(id, {
-      lastLogin: new Date(),
-      status: 'Active'
-    });
+    const [affectedCount] = await this.userModel.update(
+      {
+        lastLogin: new Date(),
+        status: 'Active',
+      },
+      { where: { id } },
+    );
+    if (affectedCount === 0) {
+      return null;
+    }
+    return this.userModel.findByPk(id);
   }
 }

@@ -2,16 +2,23 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { SystemNode } from '../models';
 import { Op } from 'sequelize';
+import {
+  CreateSystemNodeDto,
+  UpdateSystemNodeDto,
+  IsolateNodeDto,
+  SystemHealthDto,
+  VulnerabilitySummaryDto,
+} from './dto';
 
 @Injectable()
 export class SystemService {
   constructor(
     @InjectModel(SystemNode)
-    private systemNodeModel: typeof SystemNode,
+    private readonly systemNodeModel: typeof SystemNode,
   ) {}
 
   async findAllNodes(filters?: { status?: string; segment?: string }): Promise<SystemNode[]> {
-    const where: any = {};
+    const where: Record<string, string> = {};
     if (filters?.status) {
       where.status = filters.status;
     }
@@ -25,14 +32,15 @@ export class SystemService {
     return this.systemNodeModel.findByPk(id);
   }
 
-  async createNode(createNodeDto: any): Promise<SystemNode> {
-    if (!createNodeDto.id) {
-      createNodeDto.id = `node-${Date.now()}`;
+  async createNode(createNodeDto: CreateSystemNodeDto): Promise<SystemNode> {
+    const nodeData = { ...createNodeDto };
+    if (!nodeData.id) {
+      nodeData.id = `node-${Date.now()}`;
     }
-    return this.systemNodeModel.create(createNodeDto);
+    return this.systemNodeModel.create(nodeData as SystemNode);
   }
 
-  async updateNode(id: string, updateNodeDto: any): Promise<SystemNode | null> {
+  async updateNode(id: string, updateNodeDto: UpdateSystemNodeDto): Promise<SystemNode | null> {
     const [affectedCount] = await this.systemNodeModel.update(updateNodeDto, { where: { id } });
     if (affectedCount === 0) {
       return null;
@@ -45,17 +53,35 @@ export class SystemService {
     return affectedCount > 0;
   }
 
-  async getSystemHealth(): Promise<any> {
+  async getSystemHealth(): Promise<SystemHealthDto> {
     const nodes = await this.systemNodeModel.findAll();
     const total = nodes.length;
+
+    if (total === 0) {
+      return {
+        total: 0,
+        online: 0,
+        offline: 0,
+        degraded: 0,
+        isolated: 0,
+        uptime: 0,
+        avgLoad: 0,
+        avgLatency: 0,
+        segments: {},
+        criticalNodes: 0,
+      };
+    }
+
     const online = nodes.filter(n => n.status === 'ONLINE').length;
     const offline = nodes.filter(n => n.status === 'OFFLINE').length;
     const degraded = nodes.filter(n => n.status === 'DEGRADED').length;
     const isolated = nodes.filter(n => n.status === 'ISOLATED').length;
 
     const avgLoad = nodes.reduce((sum, node) => sum + node.load, 0) / total;
-    const avgLatency = nodes.filter(n => n.status === 'ONLINE')
-      .reduce((sum, node) => sum + node.latency, 0) / online || 0;
+    const onlineNodes = nodes.filter(n => n.status === 'ONLINE');
+    const avgLatency = onlineNodes.length > 0
+      ? onlineNodes.reduce((sum, node) => sum + node.latency, 0) / onlineNodes.length
+      : 0;
 
     const segments = nodes.reduce((acc, node) => {
       if (node.segment) {
@@ -74,7 +100,7 @@ export class SystemService {
       avgLoad: Math.round(avgLoad),
       avgLatency: Math.round(avgLatency),
       segments,
-      criticalNodes: nodes.filter(n => n.load > 80 || n.status === 'DEGRADED').length
+      criticalNodes: nodes.filter(n => n.load > 80 || n.status === 'DEGRADED').length,
     };
   }
 
@@ -82,35 +108,42 @@ export class SystemService {
     return this.systemNodeModel.findAll({ where: { segment } });
   }
 
-  async isolateNode(id: string, isolationData: { reason: string; duration?: number }): Promise<SystemNode> {
+  async isolateNode(id: string, isolationData: IsolateNodeDto): Promise<SystemNode> {
     const node = await this.findNodeById(id);
     if (!node) {
-      throw new NotFoundException('System node not found');
+      throw new NotFoundException(`System node with ID ${id} not found`);
     }
 
-    return await this.updateNode(id, {
+    const updatedNode = await this.updateNode(id, {
       status: 'ISOLATED',
-      // Store isolation metadata in dependencies
-      dependencies: [...(node.dependencies || []), `ISOLATED:${isolationData.reason}:${isolationData.duration || 0}`]
-    }) as SystemNode;
+      dependencies: [
+        ...(node.dependencies || []),
+        `ISOLATED:${isolationData.reason}:${isolationData.duration || 0}`,
+      ],
+    });
+
+    return updatedNode as SystemNode;
   }
 
   async restoreNode(id: string): Promise<SystemNode> {
     const node = await this.findNodeById(id);
     if (!node) {
-      throw new NotFoundException('System node not found');
+      throw new NotFoundException(`System node with ID ${id} not found`);
     }
 
-    // Remove isolation metadata
-    const cleanDependencies = (node.dependencies || []).filter(dep => !dep.startsWith('ISOLATED:'));
+    const cleanDependencies = (node.dependencies || []).filter(
+      dep => !dep.startsWith('ISOLATED:'),
+    );
 
-    return await this.updateNode(id, {
+    const updatedNode = await this.updateNode(id, {
       status: 'ONLINE',
-      dependencies: cleanDependencies
-    }) as SystemNode;
+      dependencies: cleanDependencies,
+    });
+
+    return updatedNode as SystemNode;
   }
 
-  async getVulnerabilitySummary(): Promise<any> {
+  async getVulnerabilitySummary(): Promise<VulnerabilitySummaryDto> {
     const nodes = await this.systemNodeModel.findAll();
     const allVulnerabilities = nodes.flatMap(node => node.vulnerabilities || []);
     const uniqueVulnerabilities = [...new Set(allVulnerabilities)];
@@ -122,19 +155,21 @@ export class SystemService {
       return acc;
     }, {} as Record<string, number>);
 
-    const nodesWithVulnerabilities = nodes.filter(node =>
-      (node.vulnerabilities || []).length > 0
+    const nodesWithVulnerabilities = nodes.filter(
+      node => (node.vulnerabilities || []).length > 0,
     ).length;
 
     return {
       totalVulnerabilities: uniqueVulnerabilities.length,
       affectedNodes: nodesWithVulnerabilities,
       vulnerabilityDistribution: vulnerabilityCounts,
-      riskScore: this.calculateRiskScore(nodes)
+      riskScore: this.calculateRiskScore(nodes),
     };
   }
 
   private calculateRiskScore(nodes: SystemNode[]): number {
+    if (nodes.length === 0) return 0;
+
     let totalRisk = 0;
 
     nodes.forEach(node => {
@@ -153,14 +188,14 @@ export class SystemService {
       nodeRisk += (node.vulnerabilities?.length || 0) * 15;
 
       // Data sensitivity risk
-      const sensitivityMultiplier = {
-        'PUBLIC': 1,
-        'INTERNAL': 2,
-        'CONFIDENTIAL': 3,
-        'RESTRICTED': 4
-      }[node.dataSensitivity] || 1;
+      const sensitivityMultiplier: Record<string, number> = {
+        PUBLIC: 1,
+        INTERNAL: 2,
+        CONFIDENTIAL: 3,
+        RESTRICTED: 4,
+      };
 
-      totalRisk += nodeRisk * sensitivityMultiplier;
+      totalRisk += nodeRisk * (sensitivityMultiplier[node.dataSensitivity] || 1);
     });
 
     return Math.min(100, Math.round(totalRisk / nodes.length));
@@ -172,9 +207,9 @@ export class SystemService {
         [Op.or]: [
           { load: { [Op.gt]: 80 } },
           { status: 'DEGRADED' },
-          { status: 'OFFLINE' }
-        ]
-      }
+          { status: 'OFFLINE' },
+        ],
+      },
     });
   }
 }

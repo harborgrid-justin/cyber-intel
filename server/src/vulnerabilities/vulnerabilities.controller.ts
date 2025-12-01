@@ -1,113 +1,120 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { VulnerabilitiesService } from './vulnerabilities.service';
 import { Vulnerability } from '../models';
+import {
+  CreateVulnerabilityDto,
+  UpdateVulnerabilityDto,
+  VulnerabilityQueryDto,
+  MitigateVulnerabilityDto,
+  VulnerabilityStatsDto,
+} from './dto';
 
+@ApiTags('vulnerabilities')
 @Controller('vulnerabilities')
 export class VulnerabilitiesController {
   constructor(private readonly vulnerabilitiesService: VulnerabilitiesService) {}
 
   @Get()
-  async findAll(@Query('status') status?: string, @Query('severity') severity?: string): Promise<Vulnerability[]> {
-    try {
-      return await this.vulnerabilitiesService.findAll({ status, severity });
-    } catch (error) {
-      throw new HttpException('Failed to retrieve vulnerabilities', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Vulnerability> {
-    try {
-      const vulnerability = await this.vulnerabilitiesService.findOne(id);
-      if (!vulnerability) {
-        throw new HttpException('Vulnerability not found', HttpStatus.NOT_FOUND);
-      }
-      return vulnerability;
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
-      throw new HttpException('Failed to retrieve vulnerability', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @Post()
-  async create(@Body() createVulnerabilityDto: Omit<Vulnerability, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vulnerability> {
-    try {
-      return await this.vulnerabilitiesService.create(createVulnerabilityDto);
-    } catch (error) {
-      throw new HttpException('Failed to create vulnerability', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() updateVulnerabilityDto: Partial<Vulnerability>): Promise<Vulnerability> {
-    try {
-      const vulnerability = await this.vulnerabilitiesService.update(id, updateVulnerabilityDto);
-      if (!vulnerability) {
-        throw new HttpException('Vulnerability not found', HttpStatus.NOT_FOUND);
-      }
-      return vulnerability;
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
-      throw new HttpException('Failed to update vulnerability', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @Delete(':id')
-  async remove(@Param('id') id: string): Promise<{ message: string }> {
-    try {
-      const result = await this.vulnerabilitiesService.remove(id);
-      if (!result) {
-        throw new HttpException('Vulnerability not found', HttpStatus.NOT_FOUND);
-      }
-      return { message: 'Vulnerability deleted successfully' };
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
-      throw new HttpException('Failed to delete vulnerability', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @Get(':id/affected-products')
-  async getAffectedProducts(@Param('id') id: string): Promise<string[]> {
-    try {
-      return await this.vulnerabilitiesService.getAffectedProducts(id);
-    } catch (error) {
-      throw new HttpException('Failed to retrieve affected products', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @Post(':id/mitigate')
-  async mitigate(@Param('id') id: string, @Body() mitigationData: { action: string; notes?: string }): Promise<Vulnerability> {
-    try {
-      return await this.vulnerabilitiesService.mitigate(id, mitigationData);
-    } catch (error) {
-      throw new HttpException('Failed to mitigate vulnerability', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ApiOperation({ summary: 'Get all vulnerabilities with optional filtering' })
+  @ApiQuery({ name: 'status', required: false, enum: ['Open', 'Investigating', 'Mitigated', 'Closed'], description: 'Filter by vulnerability status' })
+  @ApiQuery({ name: 'severity', required: false, enum: ['Low', 'Medium', 'High', 'Critical'], description: 'Filter by severity level' })
+  @ApiResponse({ status: 200, description: 'List of vulnerabilities returned successfully' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async findAll(@Query() query: VulnerabilityQueryDto): Promise<Vulnerability[]> {
+    return this.vulnerabilitiesService.findAll({ status: query.status, severity: query.severity });
   }
 
   @Get('stats/overview')
-  async getStats(): Promise<any> {
-    try {
-      return await this.vulnerabilitiesService.getVulnerabilityStats();
-    } catch (error) {
-      throw new HttpException('Failed to retrieve vulnerability statistics', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ApiOperation({ summary: 'Get vulnerability statistics overview' })
+  @ApiResponse({ status: 200, description: 'Vulnerability statistics returned successfully', type: VulnerabilityStatsDto })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async getStats(): Promise<VulnerabilityStatsDto> {
+    return this.vulnerabilitiesService.getVulnerabilityStats();
   }
 
   @Get('high-risk/list')
+  @ApiOperation({ summary: 'Get high-risk vulnerabilities (Critical and High severity, Open status)' })
+  @ApiResponse({ status: 200, description: 'List of high-risk vulnerabilities returned successfully' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async getHighRiskVulnerabilities(): Promise<Vulnerability[]> {
-    try {
-      return await this.vulnerabilitiesService.getHighRiskVulnerabilities();
-    } catch (error) {
-      throw new HttpException('Failed to retrieve high risk vulnerabilities', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    return this.vulnerabilitiesService.getHighRiskVulnerabilities();
   }
 
   @Get('cve/:cveId')
+  @ApiOperation({ summary: 'Get vulnerabilities by CVE ID' })
+  @ApiParam({ name: 'cveId', description: 'CVE identifier (e.g., CVE-2024-1234)', type: String })
+  @ApiResponse({ status: 200, description: 'Vulnerabilities matching CVE ID returned successfully' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async getVulnerabilitiesByCveId(@Param('cveId') cveId: string): Promise<Vulnerability[]> {
-    try {
-      return await this.vulnerabilitiesService.getVulnerabilitiesByCveId(cveId);
-    } catch (error) {
-      throw new HttpException('Failed to retrieve vulnerabilities by CVE ID', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    return this.vulnerabilitiesService.getVulnerabilitiesByCveId(cveId);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get vulnerability by ID' })
+  @ApiParam({ name: 'id', description: 'Vulnerability ID', type: String })
+  @ApiResponse({ status: 200, description: 'Vulnerability details returned successfully' })
+  @ApiResponse({ status: 404, description: 'Vulnerability not found' })
+  async findOne(@Param('id') id: string): Promise<Vulnerability> {
+    return this.vulnerabilitiesService.findOne(id);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new vulnerability' })
+  @ApiBody({ type: CreateVulnerabilityDto, description: 'Vulnerability data' })
+  @ApiResponse({ status: 201, description: 'Vulnerability created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid input data' })
+  async create(@Body() createVulnerabilityDto: CreateVulnerabilityDto): Promise<Vulnerability> {
+    return this.vulnerabilitiesService.create(createVulnerabilityDto);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a vulnerability' })
+  @ApiParam({ name: 'id', description: 'Vulnerability ID', type: String })
+  @ApiBody({ type: UpdateVulnerabilityDto, description: 'Vulnerability update data' })
+  @ApiResponse({ status: 200, description: 'Vulnerability updated successfully' })
+  @ApiResponse({ status: 404, description: 'Vulnerability not found' })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid input data' })
+  async update(
+    @Param('id') id: string,
+    @Body() updateVulnerabilityDto: UpdateVulnerabilityDto,
+  ): Promise<Vulnerability> {
+    return this.vulnerabilitiesService.update(id, updateVulnerabilityDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a vulnerability' })
+  @ApiParam({ name: 'id', description: 'Vulnerability ID', type: String })
+  @ApiResponse({ status: 200, description: 'Vulnerability deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Vulnerability not found' })
+  async remove(@Param('id') id: string): Promise<{ message: string }> {
+    await this.vulnerabilitiesService.remove(id);
+    return { message: 'Vulnerability deleted successfully' };
+  }
+
+  @Get(':id/affected-products')
+  @ApiOperation({ summary: 'Get affected products for a vulnerability' })
+  @ApiParam({ name: 'id', description: 'Vulnerability ID', type: String })
+  @ApiResponse({ status: 200, description: 'List of affected products returned successfully' })
+  @ApiResponse({ status: 404, description: 'Vulnerability not found' })
+  async getAffectedProducts(@Param('id') id: string): Promise<string[]> {
+    return this.vulnerabilitiesService.getAffectedProducts(id);
+  }
+
+  @Post(':id/mitigate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Apply mitigation to a vulnerability' })
+  @ApiParam({ name: 'id', description: 'Vulnerability ID', type: String })
+  @ApiBody({ type: MitigateVulnerabilityDto, description: 'Mitigation action data' })
+  @ApiResponse({ status: 200, description: 'Vulnerability mitigation applied successfully' })
+  @ApiResponse({ status: 404, description: 'Vulnerability not found' })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid mitigation action' })
+  async mitigate(
+    @Param('id') id: string,
+    @Body() mitigateVulnerabilityDto: MitigateVulnerabilityDto,
+  ): Promise<Vulnerability> {
+    return this.vulnerabilitiesService.mitigate(id, mitigateVulnerabilityDto);
   }
 }

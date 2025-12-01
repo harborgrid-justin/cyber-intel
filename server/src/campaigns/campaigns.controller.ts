@@ -1,86 +1,270 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+} from '@nestjs/swagger';
 import { CampaignsService } from './campaigns.service';
-import { Campaign } from '@/types';
+import {
+  CreateCampaignDto,
+  UpdateCampaignDto,
+  CampaignResponseDto,
+  DeleteCampaignResponseDto,
+  CampaignStatsDto,
+} from './dto/campaign.dto';
 
-@Controller('campaigns')
+@ApiTags('campaigns')
+@Controller('api/campaigns')
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}
 
   @Get()
-  async findAll(@Query('status') status?: string, @Query('actor') actor?: string): Promise<Campaign[]> {
-    try {
-      return await this.campaignsService.findAll({ status, actor });
-    } catch (error) {
-      throw new HttpException('Failed to retrieve campaigns', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ApiOperation({
+    summary: 'Get all campaigns',
+    description: 'Retrieves all threat campaigns with optional filtering by status and actor',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['ACTIVE', 'DORMANT', 'ARCHIVED'],
+    description: 'Filter by campaign status',
+  })
+  @ApiQuery({
+    name: 'actor',
+    required: false,
+    type: String,
+    description: 'Filter by associated threat actor',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of campaigns retrieved successfully',
+    type: [CampaignResponseDto],
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  findAll(
+    @Query('status') status?: string,
+    @Query('actor') actor?: string,
+  ): Promise<CampaignResponseDto[]> {
+    return this.campaignsService.findAll({ status, actor });
+  }
+
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Get campaign statistics',
+    description: 'Retrieves statistics about campaigns including total and active counts',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign statistics retrieved successfully',
+    type: CampaignStatsDto,
+  })
+  getStats(): Promise<CampaignStatsDto> {
+    return this.campaignsService.getCampaignStats();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Campaign> {
-    try {
-      const campaign = await this.campaignsService.findOne(id);
-      if (!campaign) {
-        throw new HttpException('Campaign not found', HttpStatus.NOT_FOUND);
-      }
-      return campaign;
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
-      throw new HttpException('Failed to retrieve campaign', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ApiOperation({
+    summary: 'Get campaign by ID',
+    description: 'Retrieves a specific campaign by its unique identifier',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Unique campaign identifier',
+    example: 'campaign-001',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign details retrieved successfully',
+    type: CampaignResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Campaign not found',
+  })
+  findOne(@Param('id') id: string): Promise<CampaignResponseDto> {
+    return this.campaignsService.findOne(id);
   }
 
   @Post()
-  async create(@Body() createCampaignDto: Omit<Campaign, 'id'>): Promise<Campaign> {
-    try {
-      return await this.campaignsService.create(createCampaignDto);
-    } catch (error) {
-      throw new HttpException('Failed to create campaign', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a new campaign',
+    description: 'Creates a new threat campaign in the system',
+  })
+  @ApiBody({ type: CreateCampaignDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Campaign created successfully',
+    type: CampaignResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid input data',
+  })
+  create(@Body() createCampaignDto: CreateCampaignDto): Promise<CampaignResponseDto> {
+    return this.campaignsService.create(createCampaignDto);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateCampaignDto: Partial<Campaign>): Promise<Campaign> {
-    try {
-      const campaign = await this.campaignsService.update(id, updateCampaignDto);
-      if (!campaign) {
-        throw new HttpException('Campaign not found', HttpStatus.NOT_FOUND);
-      }
-      return campaign;
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
-      throw new HttpException('Failed to update campaign', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ApiOperation({
+    summary: 'Update a campaign',
+    description: 'Updates an existing campaign with new data',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Unique campaign identifier',
+    example: 'campaign-001',
+  })
+  @ApiBody({ type: UpdateCampaignDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign updated successfully',
+    type: CampaignResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Campaign not found',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid input data',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateCampaignDto: UpdateCampaignDto,
+  ): Promise<CampaignResponseDto> {
+    return this.campaignsService.update(id, updateCampaignDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<{ message: string }> {
-    try {
-      const result = await this.campaignsService.remove(id);
-      if (!result) {
-        throw new HttpException('Campaign not found', HttpStatus.NOT_FOUND);
-      }
-      return { message: 'Campaign deleted successfully' };
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
-      throw new HttpException('Failed to delete campaign', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ApiOperation({
+    summary: 'Delete a campaign',
+    description: 'Removes a campaign from the system',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Unique campaign identifier',
+    example: 'campaign-001',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign deleted successfully',
+    type: DeleteCampaignResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Campaign not found',
+  })
+  remove(@Param('id') id: string): Promise<DeleteCampaignResponseDto> {
+    return this.campaignsService.remove(id);
   }
 
   @Get(':id/threats')
-  async getCampaignThreats(@Param('id') id: string): Promise<any[]> {
-    try {
-      return await this.campaignsService.getCampaignThreats(id);
-    } catch (error) {
-      throw new HttpException('Failed to retrieve campaign threats', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ApiOperation({
+    summary: 'Get campaign threats',
+    description: 'Retrieves all threats associated with a specific campaign',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Unique campaign identifier',
+    example: 'campaign-001',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign threats retrieved successfully',
+    type: [Object],
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Campaign not found',
+  })
+  getCampaignThreats(@Param('id') id: string): Promise<any[]> {
+    return this.campaignsService.getCampaignThreats(id);
   }
 
   @Get(':id/actors')
-  async getCampaignActors(@Param('id') id: string): Promise<any[]> {
-    try {
-      return await this.campaignsService.getCampaignActors(id);
-    } catch (error) {
-      throw new HttpException('Failed to retrieve campaign actors', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ApiOperation({
+    summary: 'Get campaign actors',
+    description: 'Retrieves all threat actors associated with a specific campaign',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Unique campaign identifier',
+    example: 'campaign-001',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign actors retrieved successfully',
+    type: [Object],
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Campaign not found',
+  })
+  getCampaignActors(@Param('id') id: string): Promise<any[]> {
+    return this.campaignsService.getCampaignActors(id);
+  }
+
+  @Get('objective/:objective')
+  @ApiOperation({
+    summary: 'Get campaigns by objective',
+    description: 'Retrieves all campaigns with a specific objective',
+  })
+  @ApiParam({
+    name: 'objective',
+    type: String,
+    enum: ['ESPIONAGE', 'FINANCIAL', 'DESTRUCTION', 'INFLUENCE', 'UNKNOWN'],
+    description: 'Campaign objective to filter by',
+    example: 'ESPIONAGE',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of campaigns by objective retrieved successfully',
+    type: [CampaignResponseDto],
+  })
+  findByObjective(@Param('objective') objective: string): Promise<CampaignResponseDto[]> {
+    return this.campaignsService.findByObjective(objective);
+  }
+
+  @Get('sector/:sector')
+  @ApiOperation({
+    summary: 'Get campaigns by target sector',
+    description: 'Retrieves all campaigns targeting a specific sector',
+  })
+  @ApiParam({
+    name: 'sector',
+    type: String,
+    description: 'Target sector to filter by',
+    example: 'Healthcare',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of campaigns by sector retrieved successfully',
+    type: [CampaignResponseDto],
+  })
+  findBySector(@Param('sector') sector: string): Promise<CampaignResponseDto[]> {
+    return this.campaignsService.findBySector(sector);
   }
 }

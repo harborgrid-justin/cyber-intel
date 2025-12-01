@@ -1,13 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Threat } from '../models/threat.model';
 import { Op } from 'sequelize';
+import { CreateThreatDto, UpdateThreatDto } from './dto/threat.dto';
 
 @Injectable()
 export class ThreatsService {
   constructor(
     @InjectModel(Threat)
-    private threatModel: typeof Threat,
+    private readonly threatModel: typeof Threat,
   ) {}
 
   async findAll(sort: boolean = true): Promise<Threat[]> {
@@ -20,23 +21,31 @@ export class ThreatsService {
   }
 
   async findOne(id: string): Promise<Threat> {
-    return this.threatModel.findByPk(id);
-  }
-
-  async create(threatData: Partial<Threat>): Promise<Threat> {
-    return this.threatModel.create(threatData);
-  }
-
-  async update(id: string, threatData: Partial<Threat>): Promise<Threat> {
     const threat = await this.threatModel.findByPk(id);
     if (!threat) {
-      throw new Error('Threat not found');
+      throw new NotFoundException(`Threat with ID ${id} not found`);
+    }
+    return threat;
+  }
+
+  async create(threatData: CreateThreatDto): Promise<Threat> {
+    return this.threatModel.create(threatData as any);
+  }
+
+  async update(id: string, threatData: UpdateThreatDto): Promise<Threat> {
+    const threat = await this.threatModel.findByPk(id);
+    if (!threat) {
+      throw new NotFoundException(`Threat with ID ${id} not found`);
     }
     await threat.update(threatData);
     return threat;
   }
 
   async remove(id: string): Promise<{ deleted: boolean }> {
+    const threat = await this.threatModel.findByPk(id);
+    if (!threat) {
+      throw new NotFoundException(`Threat with ID ${id} not found`);
+    }
     const result = await this.threatModel.destroy({ where: { id } });
     return { deleted: result > 0 };
   }
@@ -44,7 +53,7 @@ export class ThreatsService {
   async updateStatus(id: string, status: string): Promise<Threat> {
     const threat = await this.threatModel.findByPk(id);
     if (!threat) {
-      throw new Error('Threat not found');
+      throw new NotFoundException(`Threat with ID ${id} not found`);
     }
     await threat.update({ status: status as any });
     return threat;

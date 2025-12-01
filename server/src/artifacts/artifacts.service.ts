@@ -1,16 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Artifact } from '../models';
+import { CreateArtifactDto, UpdateArtifactDto, ArtifactStatsDto } from './dto';
 
 @Injectable()
 export class ArtifactsService {
   constructor(
     @InjectModel(Artifact)
-    private artifactModel: typeof Artifact,
+    private readonly artifactModel: typeof Artifact,
   ) {}
 
   async findAll(filters?: { caseId?: string; type?: string }): Promise<Artifact[]> {
-    const where: any = {};
+    const where: Record<string, string> = {};
     if (filters?.caseId) {
       where.caseId = filters.caseId;
     }
@@ -20,30 +21,33 @@ export class ArtifactsService {
     return this.artifactModel.findAll({
       where,
       include: ['case'],
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
     });
   }
 
   async findOne(id: string): Promise<Artifact | null> {
     return this.artifactModel.findByPk(id, {
-      include: ['case']
+      include: ['case'],
     });
   }
 
-  async create(createArtifactDto: any): Promise<Artifact> {
-    if (!createArtifactDto.id) {
-      createArtifactDto.id = `artifact-${Date.now()}`;
-    }
-    return this.artifactModel.create(createArtifactDto);
+  async create(createArtifactDto: CreateArtifactDto): Promise<Artifact> {
+    const artifactData = {
+      ...createArtifactDto,
+      id: `artifact-${Date.now()}`,
+    };
+    return this.artifactModel.create(artifactData as any);
   }
 
-  async update(id: string, updateArtifactDto: any): Promise<Artifact | null> {
-    const [affectedCount] = await this.artifactModel.update(updateArtifactDto, { where: { id } });
+  async update(id: string, updateArtifactDto: UpdateArtifactDto): Promise<Artifact | null> {
+    const [affectedCount] = await this.artifactModel.update(updateArtifactDto as any, {
+      where: { id },
+    });
     if (affectedCount === 0) {
       return null;
     }
     return this.artifactModel.findByPk(id, {
-      include: ['case']
+      include: ['case'],
     });
   }
 
@@ -55,7 +59,7 @@ export class ArtifactsService {
   async getArtifactsByCase(caseId: string): Promise<Artifact[]> {
     return this.artifactModel.findAll({
       where: { caseId },
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
     });
   }
 
@@ -63,24 +67,30 @@ export class ArtifactsService {
     return this.artifactModel.findAll({
       where: { type },
       include: ['case'],
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
     });
   }
 
-  async getArtifactStats(): Promise<any> {
+  async getArtifactStats(): Promise<ArtifactStatsDto> {
     const total = await this.artifactModel.count();
     const artifactsByType = await this.artifactModel.findAll({
       attributes: [
         'type',
-        [this.artifactModel.sequelize?.fn('COUNT', this.artifactModel.sequelize?.col('id')), 'count']
+        [
+          this.artifactModel.sequelize?.fn(
+            'COUNT',
+            this.artifactModel.sequelize?.col('id'),
+          ),
+          'count',
+        ],
       ],
       group: ['type'],
-      raw: true
+      raw: true,
     });
 
     return {
       total,
-      artifactsByType
+      artifactsByType: artifactsByType as any,
     };
   }
 }

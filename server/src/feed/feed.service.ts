@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Feed } from '../models/feed.model';
 
@@ -6,7 +6,7 @@ import { Feed } from '../models/feed.model';
 export class FeedService {
   constructor(
     @InjectModel(Feed)
-    private feedModel: typeof Feed,
+    private readonly feedModel: typeof Feed,
   ) {}
 
   async getFeeds(): Promise<Feed[]> {
@@ -15,18 +15,18 @@ export class FeedService {
     });
   }
 
-  async getFeed(id: string): Promise<Feed> {
+  async getFeed(id: string): Promise<Feed | null> {
     return this.feedModel.findByPk(id);
   }
 
   async createFeed(feedData: Partial<Feed>): Promise<Feed> {
-    return this.feedModel.create(feedData);
+    return this.feedModel.create(feedData as any);
   }
 
   async updateFeed(id: string, updates: Partial<Feed>): Promise<Feed> {
     const feed = await this.feedModel.findByPk(id);
     if (!feed) {
-      throw new Error('Feed not found');
+      throw new NotFoundException(`Feed with ID ${id} not found`);
     }
     await feed.update(updates);
     return feed;
@@ -40,7 +40,7 @@ export class FeedService {
   async syncFeed(id: string): Promise<Feed> {
     const feed = await this.feedModel.findByPk(id);
     if (!feed) {
-      throw new Error('Feed not found');
+      throw new NotFoundException(`Feed with ID ${id} not found`);
     }
     await feed.update({ lastUpdated: new Date() });
     return feed;
@@ -49,7 +49,7 @@ export class FeedService {
   async toggleFeedStatus(id: string): Promise<Feed> {
     const feed = await this.feedModel.findByPk(id);
     if (!feed) {
-      throw new Error('Feed not found');
+      throw new NotFoundException(`Feed with ID ${id} not found`);
     }
     const newStatus = feed.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     await feed.update({ status: newStatus as any });

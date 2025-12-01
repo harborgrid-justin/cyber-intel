@@ -2,12 +2,18 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Vulnerability } from '../models';
 import { Op } from 'sequelize';
+import {
+  CreateVulnerabilityDto,
+  UpdateVulnerabilityDto,
+  MitigateVulnerabilityDto,
+  VulnerabilityStatsDto,
+} from './dto';
 
 @Injectable()
 export class VulnerabilitiesService {
   constructor(
     @InjectModel(Vulnerability)
-    private vulnerabilityModel: typeof Vulnerability,
+    private readonly vulnerabilityModel: typeof Vulnerability,
   ) {}
 
   async findAll(filters?: { status?: string; severity?: string }): Promise<Vulnerability[]> {
@@ -21,59 +27,65 @@ export class VulnerabilitiesService {
     return this.vulnerabilityModel.findAll({ where, order: [['cvssScore', 'DESC']] });
   }
 
-  async findOne(id: string): Promise<Vulnerability | null> {
-    return this.vulnerabilityModel.findByPk(id);
-  }
-
-  async create(createVulnerabilityDto: any): Promise<Vulnerability> {
-    if (!createVulnerabilityDto.id) {
-      createVulnerabilityDto.id = `vuln-${Date.now()}`;
+  async findOne(id: string): Promise<Vulnerability> {
+    const vulnerability = await this.vulnerabilityModel.findByPk(id);
+    if (!vulnerability) {
+      throw new NotFoundException(`Vulnerability with ID ${id} not found`);
     }
-    return this.vulnerabilityModel.create(createVulnerabilityDto);
+    return vulnerability;
   }
 
-  async update(id: string, updateVulnerabilityDto: any): Promise<Vulnerability | null> {
-    const [affectedCount] = await this.vulnerabilityModel.update(updateVulnerabilityDto, { where: { id } });
-    if (affectedCount === 0) {
-      return null;
+  async create(createVulnerabilityDto: CreateVulnerabilityDto): Promise<Vulnerability> {
+    const vulnerabilityData = {
+      ...createVulnerabilityDto,
+      id: createVulnerabilityDto.id || `vuln-${Date.now()}`,
+      status: createVulnerabilityDto.status || 'Open',
+    };
+    return this.vulnerabilityModel.create(vulnerabilityData as any);
+  }
+
+  async update(id: string, updateVulnerabilityDto: UpdateVulnerabilityDto): Promise<Vulnerability> {
+    const vulnerability = await this.vulnerabilityModel.findByPk(id);
+    if (!vulnerability) {
+      throw new NotFoundException(`Vulnerability with ID ${id} not found`);
     }
-    return this.vulnerabilityModel.findByPk(id);
+    await vulnerability.update(updateVulnerabilityDto);
+    return vulnerability;
   }
 
-  async remove(id: string): Promise<boolean> {
+  async remove(id: string): Promise<void> {
     const affectedCount = await this.vulnerabilityModel.destroy({ where: { id } });
-    return affectedCount > 0;
+    if (affectedCount === 0) {
+      throw new NotFoundException(`Vulnerability with ID ${id} not found`);
+    }
   }
 
   async getAffectedProducts(id: string): Promise<string[]> {
     const vulnerability = await this.findOne(id);
-    if (!vulnerability) {
-      throw new NotFoundException('Vulnerability not found');
-    }
     return vulnerability.affectedProducts || [];
   }
 
-  async mitigate(id: string, mitigationData: { action: string; notes?: string }): Promise<Vulnerability> {
+  async mitigate(id: string, mitigateVulnerabilityDto: MitigateVulnerabilityDto): Promise<Vulnerability> {
     const vulnerability = await this.findOne(id);
-    if (!vulnerability) {
-      throw new NotFoundException('Vulnerability not found');
-    }
 
     // Update status based on mitigation action
     let newStatus: string = vulnerability.status;
-    if (mitigationData.action === 'PATCH') {
+    if (mitigateVulnerabilityDto.action === 'PATCH' || mitigateVulnerabilityDto.action === 'MITIGATE') {
       newStatus = 'Mitigated';
-    } else if (mitigationData.action === 'MITIGATE') {
-      newStatus = 'Mitigated';
+    } else if (mitigateVulnerabilityDto.action === 'WORKAROUND') {
+      newStatus = 'Investigating';
     }
 
-    return await this.update(id, {
-      status: newStatus,
-      mitigation: mitigationData.notes || 'Mitigated'
-    }) as Vulnerability;
+    await vulnerability.update({
+      status: newStatus as 'Open' | 'Investigating' | 'Mitigated' | 'Closed',
+      mitigation: mitigateVulnerabilityDto.notes || `Mitigated via ${mitigateVulnerabilityDto.action}`,
+      lastModifiedDate: new Date(),
+    });
+
+    return vulnerability;
   }
 
-  async getVulnerabilityStats(): Promise<any> {
+  async getVulnerabilityStats(): Promise<VulnerabilityStatsDto> {
     const total = await this.vulnerabilityModel.count();
     const mitigated = await this.vulnerabilityModel.count({ where: { status: 'Mitigated' } });
     const open = await this.vulnerabilityModel.count({ where: { status: 'Open' } });
@@ -84,19 +96,17 @@ export class VulnerabilitiesService {
       mitigated,
       open,
       critical,
-      complianceRate: total > 0 ? Math.round((mitigated / total) * 100) : 0
+      complianceRate: total > 0 ? Math.round((mitigated / total) * 100) : 0,
     };
   }
 
   async getHighRiskVulnerabilities(): Promise<Vulnerability[]> {
     return this.vulnerabilityModel.findAll({
       where: {
-        [Op.or]: [
-          { severity: 'Critical' },
-          { severity: 'High' }
-        ],
-        status: 'Open'
-      }
+        [Op.or]: [{ severity: 'Critical' }, { severity: 'High' }],
+        status: 'Open',
+      },
+      order: [['cvssScore', 'DESC']],
     });
   }
 
