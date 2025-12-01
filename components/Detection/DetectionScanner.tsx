@@ -26,10 +26,8 @@ const DetectionScanner: React.FC = () => {
   const handlePromoteAll = () => {
     if(results.length === 0) return;
     
-    // 1. Add threats to the global feed
     results.forEach(t => threatData.addThreat(t));
 
-    // 2. Create an investigation case
     threatData.addCase({
       id: `CASE-${Date.now()}`, title: `Log Analysis Batch: ${results.length} IoCs`, description: `Batch promotion of IoCs detected from log analysis.\n\nIndicators:\n${results.map(r => r.indicator).join('\n')}`,
       status: 'OPEN', priority: 'HIGH', assignee: 'Unassigned', reporter: 'Detection_Scanner', tasks: [], findings: '', relatedThreatIds: results.map(r => r.id), created: new Date().toLocaleDateString(),
@@ -37,7 +35,7 @@ const DetectionScanner: React.FC = () => {
     });
     
     alert(`Promoted ${results.length} findings to Threat Feed and created Case.`);
-    setResults([]); // Clear local results after promotion
+    setResults([]); 
   };
 
   return (
@@ -55,11 +53,12 @@ const DetectionScanner: React.FC = () => {
               title="Log Analysis Sandbox" 
               action={<Button onClick={handleScan} disabled={isScanning}>{isScanning ? 'SCANNING...' : 'SCAN LOGS'}</Button>} 
             />
+            {/* Standardized TextArea style */}
             <TextArea 
               value={logInput} 
               onChange={(e) => setLogInput(e.target.value)} 
               placeholder="Paste raw server logs, headers, or text dumps here..." 
-              className="flex-1 w-full border-none focus:ring-0 rounded-none p-4 font-mono text-sm resize-none bg-slate-900"
+              className="flex-1 w-full border-none focus:ring-0 rounded-none p-4 font-mono text-sm resize-none bg-slate-950 text-slate-300"
             />
           </Card>
           
@@ -85,8 +84,9 @@ const DetectionScanner: React.FC = () => {
              title="YARA Rule Editor" 
              action={<div className="flex gap-2"><Button variant="secondary">Validate</Button><Button variant="primary">Save Rule</Button></div>}
            />
+           {/* Standardized Editor style */}
            <TextArea 
-             className="flex-1 bg-slate-900 text-green-400 font-mono p-4 focus:outline-none resize-none border-none" 
+             className="flex-1 bg-slate-950 text-green-400 font-mono p-4 focus:outline-none resize-none border-none text-sm" 
              value={yaraRule}
              onChange={(e) => setYaraRule(e.target.value)}
              spellCheck={false}

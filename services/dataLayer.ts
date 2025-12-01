@@ -11,6 +11,7 @@ import { SystemNodeStore } from './stores/systemNodeStore';
 import { ReportStore } from './stores/reportStore';
 import { UserStore } from './stores/userStore';
 import { BaseStore } from './stores/baseStore';
+import { VendorStore } from './stores/vendorStore';
 import { startBackgroundJobs } from './jobs';
 import { 
   MOCK_THREATS, MOCK_CASES, MOCK_FEEDS, MOCK_ACTORS, MOCK_PLAYBOOKS, 
@@ -18,9 +19,10 @@ import {
   MOCK_VULNERABILITIES, MOCK_AUDIT_LOGS, MOCK_USERS, MOCK_INCIDENT_REPORTS,
   MOCK_TACTICS, MOCK_TECHNIQUES, MOCK_SUB_TECHNIQUES, MOCK_GROUPS, MOCK_SOFTWARE, MOCK_MITIGATIONS,
   MOCK_DOMAIN, MOCK_BREACH, MOCK_GEO, MOCK_DARKWEB, MOCK_META, MOCK_SOCIAL, MOCK_INTEGRATIONS, MOCK_CAMPAIGNS,
-  SYSTEM_NODES, MOCK_PATCH_STATUS, MOCK_SCANNERS, MOCK_VENDOR_FEEDS, MOCK_TEMPLATES
+  SYSTEM_NODES, MOCK_PATCH_STATUS, MOCK_SCANNERS, MOCK_VENDOR_FEEDS, MOCK_TEMPLATES, MOCK_VENDORS
 } from '../constants';
-import { IncidentStatus, Threat, Case, ThreatActor, Playbook, Artifact, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, SystemUser, IncidentReport, Campaign, SystemNode, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus } from '../types';
+import { IncidentStatus, Threat, Case, ThreatActor, Playbook, Artifact, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, SystemUser, IncidentReport, Campaign, SystemNode, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus, Vendor, NistControl } from '../types';
+import { SupplyChainLogic } from './logic/SupplyChainLogic';
 
 export class DataLayer {
   public adapter: DatabaseAdapter = new MockAdapter();
@@ -36,6 +38,7 @@ export class DataLayer {
   public nodeStore: SystemNodeStore;
   public reportStore: ReportStore;
   public userStore: UserStore;
+  public vendorStore: VendorStore;
   
   // Generic Stores
   public playbookStore: BaseStore<Playbook>;
@@ -88,6 +91,7 @@ export class DataLayer {
     this.nodeStore = new SystemNodeStore('NODES', SYSTEM_NODES, this.adapter);
     this.reportStore = new ReportStore('REPORTS', MOCK_INCIDENT_REPORTS, this.adapter);
     this.userStore = new UserStore('USERS', MOCK_USERS, this.adapter);
+    this.vendorStore = new VendorStore('VENDORS', MOCK_VENDORS, this.adapter);
     
     // Initialize Generic Stores
     this.playbookStore = new BaseStore('PLAYBOOKS', MOCK_PLAYBOOKS, this.adapter);
@@ -124,7 +128,7 @@ export class DataLayer {
     this.adapter = adapter;
     const stores = [
       this.threatStore, this.caseStore, this.actorStore, this.campaignStore,
-      this.feedStore, this.logStore, this.vulnStore, this.nodeStore, this.reportStore, this.userStore,
+      this.feedStore, this.logStore, this.vulnStore, this.nodeStore, this.reportStore, this.userStore, this.vendorStore,
       this.playbookStore, this.chainStore, this.malwareStore, this.jobStore, 
       this.deviceStore, this.pcapStore,
       this.vendorFeedStore, this.scannerStore,
@@ -210,6 +214,21 @@ export class DataLayer {
   toggleFeed(id: string) { this.feedStore.toggleStatus(id); }
   getVendorFeedItems() { return this.vendorFeedStore.getAll(); }
   addVendorFeedItem(i: VendorFeedItem) { this.vendorFeedStore.add(i); }
+
+  // --- Vendor Management (SCRM) ---
+  getVendors() { return this.vendorStore.getAll(); }
+  addVendor(v: Vendor) { this.vendorStore.add(v); }
+  updateVendor(v: Vendor) { this.vendorStore.update(v); }
+  deleteVendor(id: string) { this.vendorStore.delete(id); }
+  reassessVendorRisk() {
+    const vendors = this.vendorStore.getAll();
+    vendors.forEach(v => {
+        const newScore = SupplyChainLogic.calculateHolisticRiskScore(v);
+        if (newScore !== v.riskScore) {
+            this.vendorStore.update({ ...v, riskScore: newScore });
+        }
+    });
+  }
 
   // --- System & Evidence ---
   getChainOfCustody() { return this.chainStore.getAll(); }

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { threatData } from '../../services/dataLayer';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { StandardPage } from '../Shared/Layouts';
-import { Button, Card, CardHeader, Input, Badge, Select } from '../Shared/UI';
+import { Button, Card, CardHeader, Input, Badge, Select, FilterGroup } from '../Shared/UI';
 import { CONFIG } from '../../config';
 import { AuditLog } from '../../types';
 import { Icons } from '../Shared/Icons';
@@ -49,14 +49,8 @@ const AuditLogViewer: React.FC = () => {
       );
     }
 
-    // Time Filter (Mock logic for recent times vs older)
-    // Assuming mock data is generally "recent", this is a structural placeholder
-    if (timeFilter === '1H') {
-       // logic to filter last hour
-    }
-
     return result.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [logs, activeModule, searchTerm, timeFilter]);
+  }, [logs, activeModule, searchTerm]);
 
   const handleExport = () => {
     const { url, filename } = threatData.logStore.generateExport();
@@ -95,13 +89,6 @@ const AuditLogViewer: React.FC = () => {
                      </div>
                      <Button variant="text" className="text-cyan-500 text-xs">DOWNLOAD</Button>
                   </div>
-                  <div className="flex justify-between items-center bg-slate-950 p-3 rounded border border-slate-800">
-                     <div className="flex items-center gap-3">
-                        <Icons.FileText className="w-5 h-5 text-green-500" />
-                        <div><div className="text-sm font-bold text-white">audit_dump_2023_10_25.csv</div><div className="text-[10px] text-slate-500">22MB • System</div></div>
-                     </div>
-                     <Button variant="text" className="text-cyan-500 text-xs">DOWNLOAD</Button>
-                  </div>
                </div>
             </Card>
          </div>
@@ -135,26 +122,31 @@ const AuditLogViewer: React.FC = () => {
   return (
     <StandardPage title="System Audit Logs" subtitle="Compliance Tracking & User Activity" modules={CONFIG.MODULES.AUDIT} activeModule={activeModule} onModuleChange={setActiveModule}>
       <Card className="p-0 overflow-hidden flex flex-col h-full">
-        <div className="p-4 border-b border-slate-800 bg-slate-950 flex flex-col md:flex-row justify-between items-center gap-4">
-           <div className="font-bold text-white text-sm uppercase tracking-wider flex items-center gap-2">
-              <Icons.FileText className="w-4 h-4 text-slate-500" />
-              {activeModule} Trail
-           </div>
-           <div className="flex gap-2 w-full md:w-auto">
+        {/* Standard Card Header */}
+        <CardHeader 
+            title={`${activeModule} Trail`}
+            action={<Badge color="slate">{filteredLogs.length} Records</Badge>} 
+        />
+        
+        {/* Standard Control Bar */}
+        <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex flex-col md:flex-row gap-4 items-center">
+           <div className="flex-1 w-full md:w-auto">
               <Input 
-                 placeholder="Search user, IP, action..." 
+                 placeholder="Search user, IP, action, or details..." 
                  value={searchTerm} 
                  onChange={e => setSearchTerm(e.target.value)} 
-                 className="md:w-64"
+                 className="bg-slate-950 border-slate-800"
               />
-              <Select value={timeFilter} onChange={e => setTimeFilter(e.target.value)} className="w-32">
+           </div>
+           <div className="flex gap-2 w-full md:w-auto">
+              <Select value={timeFilter} onChange={e => setTimeFilter(e.target.value)} className="w-full md:w-40 bg-slate-950 border-slate-800">
                  <option value="ALL">All Time</option>
                  <option value="1H">Last Hour</option>
                  <option value="24H">Last 24h</option>
                  <option value="7D">Last 7 Days</option>
               </Select>
-              <Button onClick={handleExport} variant="secondary" className="px-3">
-                 <Icons.Box className="w-4 h-4" />
+              <Button onClick={handleExport} variant="secondary" className="px-3 whitespace-nowrap">
+                 <Icons.Box className="w-4 h-4 mr-2" /> Export
               </Button>
            </div>
         </div>
@@ -180,7 +172,7 @@ const AuditLogViewer: React.FC = () => {
           />
         </div>
         <div className="p-2 border-t border-slate-800 bg-slate-950 text-right text-[10px] text-slate-600 font-mono">
-           Showing {filteredLogs.length} Records | Hash Verified
+           Hash Verified: SHA-256 | Ledger: Immutable
         </div>
       </Card>
     </StandardPage>

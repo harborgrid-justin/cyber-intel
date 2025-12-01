@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Threat, Case, Severity } from '../../types';
-import { Button, Card, Badge, CardHeader } from '../Shared/UI';
+import { Button, Card, Badge, CardHeader, HeaderContainer } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import { IncidentLogic } from '../../services/logic/IncidentLogic';
 import ChatInterface, { Message } from '../Shared/ChatInterface';
@@ -10,11 +10,10 @@ import Modal from '../Shared/Modal';
 
 interface Props { threats: Threat[]; cases: Case[]; onUpdate: () => void; }
 
-// Enterprise Ticker Component
 const StatusTicker = () => {
   const logs = threatData.getAuditLogs().slice(0, 5);
   return (
-    <div className="bg-slate-950 border-y border-slate-800 py-1 overflow-hidden whitespace-nowrap flex items-center gap-4">
+    <div className="bg-slate-950 border-b border-slate-800 py-1 overflow-hidden whitespace-nowrap flex items-center gap-4 shrink-0">
       <div className="text-[10px] font-bold text-red-500 px-4 animate-pulse">LIVE FEED</div>
       <div className="inline-block animate-[marquee_20s_linear_infinite] text-[10px] font-mono text-cyan-500/80">
         {logs.map((l, i) => <span key={i} className="mx-4">[{l.timestamp}] {l.action} :: {l.user} ({l.details})</span>)}
@@ -70,27 +69,30 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
         </div>
       </Modal>
 
-      <div className="p-4 border-b border-slate-800 bg-slate-900/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
-        <div>
-          <h2 className="text-xl font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
-            <span className={`w-3 h-3 rounded-full ${isLocked ? 'bg-red-600 animate-ping' : 'bg-green-500'}`}></span>
-            Strategic Operations
-          </h2>
-          <div className="flex gap-4 mt-1 text-[10px] font-mono text-slate-500">
-            <span>ZULU: {currentTime.toISOString().split('T')[1].split('.')[0]}Z</span>
-            <span className="hidden md:inline">|</span>
-            <span>RESPONDERS: {activeResponders} ACTIVE</span>
-          </div>
+      {/* Standard Header Container */}
+      <HeaderContainer>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+            <h2 className="text-xl font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                <span className={`w-3 h-3 rounded-full ${isLocked ? 'bg-red-600 animate-ping' : 'bg-green-500'}`}></span>
+                Strategic Operations
+            </h2>
+            <div className="flex gap-4 mt-1 text-[10px] font-mono text-slate-500">
+                <span>ZULU: {currentTime.toISOString().split('T')[1].split('.')[0]}Z</span>
+                <span className="hidden md:inline">|</span>
+                <span>RESPONDERS: {activeResponders} ACTIVE</span>
+            </div>
+            </div>
+            <div className="flex items-center gap-2">
+            <div className={`px-3 py-1 rounded text-[10px] font-bold border ${isLocked ? 'bg-red-900/50 border-red-500 text-red-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                {isLocked ? 'SYSTEM LOCKED' : 'SECURE'}
+            </div>
+            <Button onClick={() => setShowLockdown(true)} variant="danger" className="text-[10px] py-1 border-red-500/50">
+                {isLocked ? 'RESTORE ACCESS' : 'INITIATE LOCKDOWN'}
+            </Button>
+            </div>
         </div>
-        <div className="flex items-center gap-2">
-           <div className={`px-3 py-1 rounded text-[10px] font-bold border ${isLocked ? 'bg-red-900/50 border-red-500 text-red-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
-             {isLocked ? 'SYSTEM LOCKED' : 'SECURE'}
-           </div>
-           <Button onClick={() => setShowLockdown(true)} variant="danger" className="text-[10px] py-1 border-red-500/50">
-             {isLocked ? 'RESTORE ACCESS' : 'INITIATE LOCKDOWN'}
-           </Button>
-        </div>
-      </div>
+      </HeaderContainer>
 
       <StatusTicker />
 
