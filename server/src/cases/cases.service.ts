@@ -13,15 +13,12 @@ export class CasesService {
 
   async findAll(): Promise<Case[]> {
     return this.caseModel.findAll({
-      include: ['threat', 'evidence'],
       order: [['createdAt', 'DESC']],
     });
   }
 
   async findOne(id: string): Promise<Case> {
-    const caseItem = await this.caseModel.findByPk(id, {
-      include: ['threat', 'evidence'],
-    });
+    const caseItem = await this.caseModel.findByPk(id);
     if (!caseItem) {
       throw new NotFoundException(`Case with ID ${id} not found`);
     }
@@ -53,14 +50,12 @@ export class CasesService {
   async findByStatus(status: string): Promise<Case[]> {
     return this.caseModel.findAll({
       where: { status },
-      include: ['threat', 'evidence'],
     });
   }
 
   async findByPriority(priority: string): Promise<Case[]> {
     return this.caseModel.findAll({
       where: { priority },
-      include: ['threat', 'evidence'],
     });
   }
 

@@ -30,7 +30,7 @@ export const databaseConfig: SequelizeModuleOptions = {
     SystemNode,
     User,
   ],
-  autoLoadModels: false,
+  autoLoadModels: true,
   synchronize: true,
   logging,
 };

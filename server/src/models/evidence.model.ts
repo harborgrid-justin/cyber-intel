@@ -62,10 +62,10 @@ export class Evidence extends Model<Evidence> {
 
   @ForeignKey(() => Case)
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.STRING,
     allowNull: true,
   })
-  caseId?: number;
+  caseId?: string;
 
   @BelongsTo(() => Case)
   case?: Case;

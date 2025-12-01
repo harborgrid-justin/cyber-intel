@@ -27,7 +27,11 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const userData = {
-      ...createUserDto,
+      username: createUserDto.name,
+      email: createUserDto.email,
+      role: createUserDto.role,
+      status: createUserDto.status || 'Active',
+      preferences: createUserDto.preferences,
       id: `user-${Date.now()}`,
     };
     return this.userModel.create(userData as any);

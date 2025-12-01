@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { databaseConfig } from './database.config';
+import { AppController } from './app.controller';
 
 // Core Domain Modules
 import { ThreatsModule } from './threats/threats.module';
@@ -35,6 +36,7 @@ import { TeamMessagesModule } from './team-messages/team-messages.module';
 import { ComplianceItemsModule } from './compliance-items/compliance-items.module';
 
 @Module({
+  controllers: [AppController],
   imports: [
     // Database Configuration
     SequelizeModule.forRoot(databaseConfig),

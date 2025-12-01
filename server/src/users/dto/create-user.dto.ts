@@ -28,16 +28,6 @@ export class CreateUserDto {
   @IsEnum(['Active', 'Inactive', 'Suspended'])
   status?: 'Active' | 'Inactive' | 'Suspended';
 
-  @ApiPropertyOptional({ description: 'User avatar URL', example: 'https://example.com/avatar.jpg' })
-  @IsOptional()
-  @IsString()
-  avatar?: string;
-
-  @ApiPropertyOptional({ description: 'User department', example: 'Security Operations' })
-  @IsOptional()
-  @IsString()
-  department?: string;
-
   @ApiPropertyOptional({ description: 'User preferences object' })
   @IsOptional()
   @IsObject()
