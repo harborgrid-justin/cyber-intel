@@ -1,140 +1,225 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button, Card, Badge, Input, FilterGroup, CardHeader } from '../Shared/UI';
+import React, { useState, useEffect, useRef } from 'react';
+import { Button, Card, Badge, Input, FilterGroup, CardHeader, ProgressBar, Switch, Grid, Label } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
-import { MockAdapter, PostgresAdapter, DatabaseAdapter } from '../../services/dbAdapter';
+import { MockAdapter, PostgresAdapter, DatabaseAdapter, DatabaseStats } from '../../services/dbAdapter';
 import { CONFIG } from '../../config';
+import { Icons } from '../Shared/Icons';
 
 const DatabaseConnector: React.FC = () => {
   const [providerType, setProviderType] = useState<'MEMORY' | 'SQL'>('MEMORY');
-  const [host, setHost] = useState(CONFIG.DATABASE.POSTGRES.HOST);
-  const [user, setUser] = useState(CONFIG.DATABASE.POSTGRES.USER);
-  const [dbName, setDbName] = useState(CONFIG.DATABASE.POSTGRES.DB_NAME);
-  const [status, setStatus] = useState<'DISCONNECTED' | 'CONNECTING' | 'CONNECTED'>('CONNECTED');
-  const [logs, setLogs] = useState<string[]>([]);
+  const [config, setConfig] = useState({
+    host: CONFIG.DATABASE.POSTGRES.HOST,
+    user: CONFIG.DATABASE.POSTGRES.USER,
+    dbName: CONFIG.DATABASE.POSTGRES.DB_NAME,
+    port: CONFIG.DATABASE.POSTGRES.PORT,
+    ssl: true,
+    poolSize: 20,
+    autoRecovery: true
+  });
   
-  // Refresh logs periodically
+  const [stats, setStats] = useState<DatabaseStats>({ status: 'DISCONNECTED', activeConnections: 0, idleConnections: 0, latency: 0, uptime: 0, version: '-', tps: 0 });
+  const [logs, setLogs] = useState<string[]>([]);
+  const [isBusy, setIsBusy] = useState(false); // For maintenance tasks
+  const logContainerRef = useRef<HTMLDivElement>(null);
+
+  // Sync with global adapter
+  useEffect(() => {
+    // If global is already PG, sync state
+    if (threatData.adapter.type === 'SQL') {
+        setProviderType('SQL');
+    }
+  }, []);
+
+  // Polling for stats and logs
   useEffect(() => {
     const interval = setInterval(() => {
       setLogs([...threatData.adapter.logs]);
-    }, 1000);
+      if (threatData.adapter.getStats) {
+        setStats(threatData.adapter.getStats());
+      }
+    }, 500); 
     return () => clearInterval(interval);
   }, []);
 
   const handleConnect = async () => {
-    setStatus('CONNECTING');
     let adapter: DatabaseAdapter;
-    
     if (providerType === 'SQL') {
-      adapter = new PostgresAdapter();
+      adapter = new PostgresAdapter(); // Create new instance for clean slate
     } else {
       adapter = new MockAdapter();
     }
+    
+    // Set UI to reflect attempting connection (the adapter will handle async state)
+    threatData.setProvider(adapter); // Switch globally first to capture logs
+    await adapter.connect(config);
+  };
 
+  const handleDisconnect = async () => {
+    await threatData.adapter.disconnect();
+  };
+
+  const handleMaintenance = async (task: 'VACUUM' | 'REINDEX' | 'BACKUP' | 'ROTATE_CREDS') => {
+    setIsBusy(true);
     try {
-      await adapter.connect({ host, user, dbName, port: CONFIG.DATABASE.POSTGRES.PORT });
-      threatData.setProvider(adapter);
-      setStatus('CONNECTED');
-    } catch (e) {
-      setStatus('DISCONNECTED');
-      alert("Connection Failed: Host unreachable");
+        await threatData.adapter.maintenance(task);
+    } catch(e) {
+        console.error(e);
+    } finally {
+        setIsBusy(false);
     }
+  };
+
+  const handleSimulateFailure = () => {
+    if (threatData.adapter.simulateFailure) threatData.adapter.simulateFailure();
+  };
+
+  const toggleRecovery = (val: boolean) => {
+    setConfig({ ...config, autoRecovery: val });
+    if (threatData.adapter.setAutoRecovery) threatData.adapter.setAutoRecovery(val);
   };
 
   return (
     <div className="flex flex-col h-full gap-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Configuration Card */}
-        <Card className="p-0 overflow-hidden flex flex-col">
-          <CardHeader 
-            title="Database Adapter" 
-            action={<Badge color={status === 'CONNECTED' ? 'green' : status === 'CONNECTING' ? 'yellow' : 'red'}>{status}</Badge>}
-          />
-          
-          <div className="p-6 space-y-4">
+      {/* Top Stats Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 shrink-0">
+         <Card className="p-4 flex items-center justify-between border-l-4 border-l-slate-600">
             <div>
-              <label className="text-[10px] text-slate-500 uppercase font-bold mb-2 block">Persistence Engine</label>
-              <FilterGroup
-                value={providerType}
-                onChange={(v) => setProviderType(v as any)}
-                options={[
-                  { label: 'In-Memory (Mock)', value: 'MEMORY' },
-                  { label: 'PostgreSQL / Sequelize', value: 'SQL' }
-                ]}
-              />
+               <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Connection State</div>
+               <div className={`text-lg font-bold font-mono ${stats.status === 'CONNECTED' ? 'text-green-500' : stats.status === 'ERROR' ? 'text-red-500' : 'text-slate-300'}`}>
+                  {stats.status}
+               </div>
             </div>
+            <Icons.Server className={`w-6 h-6 ${stats.status === 'CONNECTED' ? 'text-green-500' : 'text-slate-700'}`} />
+         </Card>
+         <Card className="p-4 flex items-center justify-between">
+            <div>
+               <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Throughput</div>
+               <div className="text-lg font-bold font-mono text-cyan-400">{stats.tps} TPS</div>
+            </div>
+            <Icons.Activity className="w-6 h-6 text-cyan-900" />
+         </Card>
+         <Card className="p-4 flex items-center justify-between">
+            <div>
+               <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Latency</div>
+               <div className="text-lg font-bold font-mono text-white">{stats.latency} ms</div>
+            </div>
+            <Icons.Zap className="w-6 h-6 text-yellow-500" />
+         </Card>
+         <Card className="p-4 flex items-center justify-between">
+            <div>
+               <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Session Uptime</div>
+               <div className="text-lg font-bold font-mono text-slate-300">{stats.uptime}s</div>
+            </div>
+            <Icons.Clock className="w-6 h-6 text-slate-600" />
+         </Card>
+      </div>
 
-            {providerType === 'SQL' && (
-              <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="grid grid-cols-3 gap-3">
-                   <div className="col-span-2">
-                     <label className="text-[10px] text-slate-500 uppercase font-bold">Host Endpoint</label>
-                     <Input value={host} onChange={e => setHost(e.target.value)} />
-                   </div>
-                   <div>
-                     <label className="text-[10px] text-slate-500 uppercase font-bold">Port</label>
-                     <Input value={CONFIG.DATABASE.POSTGRES.PORT.toString()} disabled />
-                   </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+        
+        {/* Left Col: Config & Maintenance */}
+        <div className="flex flex-col gap-6 lg:h-full overflow-y-auto">
+            <Card className="p-0 overflow-hidden">
+                <CardHeader title="Configuration" action={stats.status === 'CONNECTED' ? <Badge color="green">ONLINE</Badge> : <Badge color="slate">OFFLINE</Badge>} />
+                <div className="p-6 space-y-4">
+                    <div>
+                        <Label>Persistence Engine</Label>
+                        <FilterGroup value={providerType} onChange={(v: any) => setProviderType(v)} options={[{ label: 'In-Memory', value: 'MEMORY' }, { label: 'PostgreSQL', value: 'SQL' }]} />
+                    </div>
+                    {providerType === 'SQL' && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-left-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><Label>Host</Label><Input value={config.host} onChange={e => setConfig({...config, host: e.target.value})} disabled={stats.status === 'CONNECTED'} /></div>
+                                <div><Label>Port</Label><Input value={config.port.toString()} onChange={e => setConfig({...config, port: parseInt(e.target.value)})} disabled={stats.status === 'CONNECTED'} /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><Label>User</Label><Input value={config.user} onChange={e => setConfig({...config, user: e.target.value})} disabled={stats.status === 'CONNECTED'} /></div>
+                                <div><Label>Database</Label><Input value={config.dbName} onChange={e => setConfig({...config, dbName: e.target.value})} disabled={stats.status === 'CONNECTED'} /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800">
+                                    <span className="text-xs text-slate-300">SSL / TLS 1.3</span>
+                                    <Switch checked={config.ssl} onChange={v => setConfig({...config, ssl: v})} />
+                                </div>
+                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800">
+                                    <span className="text-xs text-slate-300">Auto Recovery</span>
+                                    <Switch checked={config.autoRecovery} onChange={toggleRecovery} />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div className="pt-4 flex gap-2">
+                        {stats.status !== 'CONNECTED' ? (
+                            <Button onClick={handleConnect} disabled={stats.status === 'RECONNECTING'} className="w-full">
+                                {stats.status === 'RECONNECTING' ? 'CONNECTING...' : 'CONNECT'}
+                            </Button>
+                        ) : (
+                            <Button onClick={handleDisconnect} variant="danger" className="w-full">DISCONNECT</Button>
+                        )}
+                    </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                   <div>
-                     <label className="text-[10px] text-slate-500 uppercase font-bold">Username</label>
-                     <Input value={user} onChange={e => setUser(e.target.value)} />
-                   </div>
-                   <div>
-                     <label className="text-[10px] text-slate-500 uppercase font-bold">Database</label>
-                     <Input value={dbName} onChange={e => setDbName(e.target.value)} />
-                   </div>
-                </div>
-                <div>
-                   <label className="text-[10px] text-slate-500 uppercase font-bold">Password</label>
-                   <Input type="password" value="********" disabled />
-                </div>
-              </div>
+            </Card>
+
+            {providerType === 'SQL' && stats.status === 'CONNECTED' && (
+                <Card className="p-0 overflow-hidden">
+                    <CardHeader title="Admin Operations" />
+                    <div className="p-6 grid grid-cols-2 gap-3">
+                        <Button onClick={() => handleMaintenance('BACKUP')} disabled={isBusy} variant="secondary" className="text-[10px]">SNAPSHOT BACKUP</Button>
+                        <Button onClick={() => handleMaintenance('VACUUM')} disabled={isBusy} variant="secondary" className="text-[10px]">VACUUM FULL</Button>
+                        <Button onClick={() => handleMaintenance('ROTATE_CREDS')} disabled={isBusy} variant="outline" className="text-[10px]">ROTATE CREDS</Button>
+                        <Button onClick={handleSimulateFailure} variant="danger" className="text-[10px] border-red-900/50 hover:bg-red-900/30">SIMULATE OUTAGE</Button>
+                    </div>
+                </Card>
             )}
-
-            <div className="pt-4 border-t border-slate-800 flex gap-2">
-              <Button onClick={handleConnect} disabled={status === 'CONNECTING'} className="flex-1">
-                {status === 'CONNECTING' ? 'ESTABLISHING LINK...' : 'CONNECT ADAPTER'}
-              </Button>
-              {providerType === 'SQL' && <Button variant="secondary">TEST PING</Button>}
-            </div>
-          </div>
-        </Card>
-
-        {/* Live Status Visualization */}
-        <div className="flex flex-col gap-4">
-           <Card className="flex-1 border-slate-800 flex flex-col p-0 overflow-hidden">
-              <CardHeader title="Adapter Traffic Monitor" />
-              <div className="relative flex-1 bg-slate-950 p-2 min-h-0 overflow-hidden flex flex-col">
-                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
-                 <div className="font-mono text-xs space-y-1 h-64 overflow-y-auto custom-scrollbar relative z-10 p-2">
-                    {logs.map((log, i) => (
-                      <div key={i} className="border-l-2 border-slate-800 pl-2 py-0.5 animate-pulse">
-                        <span className="text-slate-600 mr-2">{new Date().toLocaleTimeString()}</span>
-                        <span className={log.includes('SQL') ? 'text-blue-400' : 'text-green-400'}>{log}</span>
-                      </div>
-                    ))}
-                    {logs.length === 0 && <div className="text-slate-700 italic">No traffic on interface.</div>}
-                 </div>
-              </div>
-           </Card>
-           
-           <div className="grid grid-cols-3 gap-4">
-              <Card className="p-3 text-center">
-                 <div className="text-[10px] text-slate-500 uppercase font-bold">Write Latency</div>
-                 <div className="text-xl font-mono text-white font-bold">{providerType === 'SQL' ? '124ms' : '0ms'}</div>
-              </Card>
-              <Card className="p-3 text-center">
-                 <div className="text-[10px] text-slate-500 uppercase font-bold">Active Conn</div>
-                 <div className="text-xl font-mono text-cyan-500 font-bold">{providerType === 'SQL' ? '4' : '1'}</div>
-              </Card>
-              <Card className="p-3 text-center">
-                 <div className="text-[10px] text-slate-500 uppercase font-bold">Encryption</div>
-                 <div className="text-xl font-mono text-green-500 font-bold">TLS 1.3</div>
-              </Card>
-           </div>
         </div>
+
+        {/* Right Col: Logs & Pool Monitor */}
+        <div className="lg:col-span-2 flex flex-col gap-6 min-h-[500px]">
+            {/* Pool Monitor */}
+            <Card className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-white uppercase tracking-wider text-sm">Connection Pool</h3>
+                    <div className="text-xs text-slate-500 font-mono">Max: {config.poolSize}</div>
+                </div>
+                <div className="flex items-end gap-2 h-24 mb-2">
+                    {Array.from({ length: config.poolSize }).map((_, i) => (
+                        <div 
+                            key={i} 
+                            className={`flex-1 rounded-t transition-all duration-300 ${i < stats.activeConnections ? 'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]' : 'bg-slate-800'}`}
+                            style={{ height: i < stats.activeConnections ? '80%' : '20%' }}
+                        ></div>
+                    ))}
+                </div>
+                <div className="flex justify-between text-xs font-mono">
+                    <span className="text-cyan-400 font-bold">{stats.activeConnections} Active</span>
+                    <span className="text-slate-500">{stats.idleConnections} Idle</span>
+                </div>
+            </Card>
+
+            {/* Terminal Log */}
+            <Card className="flex-1 border-slate-800 flex flex-col p-0 overflow-hidden bg-[#0c0c0c]">
+                <CardHeader title="System Output" className="bg-[#1a1a1a] border-[#2a2a2a]" action={<Badge color="slate">TAIL -F</Badge>} />
+                <div className="relative flex-1 p-4 font-mono text-[11px] leading-relaxed text-slate-300 overflow-hidden">
+                    <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-4 space-y-1">
+                        {logs.length === 0 && <span className="text-slate-700 italic">Waiting for connection stream...</span>}
+                        {logs.map((log, i) => {
+                            const isError = log.includes('ERROR') || log.includes('FATAL');
+                            const isWarn = log.includes('WARN');
+                            const isSuccess = log.includes('SUCCESS') || log.includes('READY');
+                            const isExec = log.includes('EXEC') || log.includes('SQL');
+                            
+                            return (
+                                <div key={i} className={`border-l-2 pl-2 ${isError ? 'border-red-500 text-red-400' : isWarn ? 'border-orange-500 text-orange-300' : isSuccess ? 'border-green-500 text-green-300' : isExec ? 'border-cyan-700 text-cyan-200' : 'border-slate-800 text-slate-500'}`}>
+                                    {log}
+                                </div>
+                            );
+                        })}
+                        <div ref={logContainerRef} />
+                    </div>
+                </div>
+            </Card>
+        </div>
+
       </div>
     </div>
   );

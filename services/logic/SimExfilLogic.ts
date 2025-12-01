@@ -56,7 +56,7 @@ export class SimExfilLogic {
     if (config.protocol === 'DNS' && node.dataVolumeGB > 0.1) detectionScore += 50;
     
     // Entropy Impact: High entropy on non-encrypted protocols triggers IPS
-    if (config.protocol === 'HTTP' && enc.entropy > 0.8) detectionScore += 30; // DLP catch
+    if (config.protocol !== 'HTTPS' && enc.entropy > 0.8) detectionScore += 30; // DLP catch
     
     // DLP Evasion:
     if (node.securityControls.includes('DLP')) {
