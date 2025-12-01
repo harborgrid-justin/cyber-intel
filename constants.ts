@@ -85,7 +85,42 @@ export const REPORT_BOILERPLATE: Record<string, ReportSection[]> = {
   ]
 };
 
-export const MOCK_AUDIT_LOGS: AuditLog[] = [{ id: 'l1', action: 'LOGIN_SUCCESS', user: 'admin', timestamp: '10-27 08:00', details: 'IP: 10.0.0.2' }];
+export const MOCK_AUDIT_LOGS: AuditLog[] = [
+  // AUTH
+  { id: 'L-1001', action: 'LOGIN_SUCCESS', user: 'admin', timestamp: '2023-10-27 08:00:01', details: 'Method: MFA', location: '10.0.0.5' },
+  { id: 'L-1006', action: 'LOGIN_FAILURE', user: 'admin', timestamp: '2023-10-27 09:10:00', details: 'Bad Password (3rd attempt)', location: '203.0.113.55' },
+  { id: 'L-1012', action: 'AUTH_MFA_FAIL', user: 'vendor_01', timestamp: '2023-10-27 13:45:10', details: 'Invalid Token', location: 'VPN-Gateway' },
+  { id: 'L-1016', action: 'LOGOUT_SUCCESS', user: 'j.doe', timestamp: '2023-10-27 17:00:00', details: 'Session Terminated', location: '10.0.0.12' },
+  
+  // SYSTEM
+  { id: 'L-1002', action: 'SYSTEM_STARTUP', user: 'SYSTEM', timestamp: '2023-10-27 08:00:05', details: 'Kernel init complete', location: 'Server-01' },
+  { id: 'L-1013', action: 'SYSTEM_UPDATE', user: 'admin', timestamp: '2023-10-27 14:00:00', details: 'Applied Patch KB4056892', location: 'DC-01' },
+  { id: 'L-1017', action: 'SERVICE_RESTART', user: 'SYSTEM', timestamp: '2023-10-27 03:00:00', details: 'Nginx Service Restarted', location: 'Web-01' },
+
+  // NETWORK
+  { id: 'L-1003', action: 'NETWORK_CONNECT', user: 'j.doe', timestamp: '2023-10-27 08:15:22', details: 'VPN Established', location: '192.168.1.50' },
+  { id: 'L-1010', action: 'FIREWALL_DENY', user: 'SYSTEM', timestamp: '2023-10-27 10:15:33', details: 'Blocked inbound tcp/445 from 185.200.1.1', location: 'FW-Edge' },
+  { id: 'L-1018', action: 'IPS_ALERT', user: 'SYSTEM', timestamp: '2023-10-27 11:20:00', details: 'SQL Injection Blocked', location: 'WAF-01' },
+
+  // DATA
+  { id: 'L-1004', action: 'DATA_ACCESS', user: 'analyst_01', timestamp: '2023-10-27 08:30:00', details: 'Viewed Case #23-001', location: 'Workstation-04' },
+  { id: 'L-1009', action: 'DATA_EXPORT', user: 'j.doe', timestamp: '2023-10-27 10:00:00', details: 'Exported 500 records to CSV', location: 'Workstation-02' },
+  { id: 'L-1014', action: 'DATA_DELETE', user: 'admin', timestamp: '2023-10-27 14:30:00', details: 'Purged temporary artifacts', location: 'File-Server' },
+
+  // POLICY
+  { id: 'L-1005', action: 'POLICY_VIOLATION', user: 'temp_user', timestamp: '2023-10-27 09:05:11', details: 'USB Mass Storage Detected', location: 'Kiosk-02' },
+  { id: 'L-1019', action: 'DLP_BLOCK', user: 'j.doe', timestamp: '2023-10-27 15:10:00', details: 'Blocked SSN Pattern in Email', location: 'Mail-GW' },
+
+  // ERROR
+  { id: 'L-1007', action: 'ERROR_API', user: 'SYSTEM', timestamp: '2023-10-27 09:12:45', details: '500 Internal Server Error /api/v1/feeds', location: 'Gateway-01' },
+  { id: 'L-1015', action: 'ERROR_DB', user: 'SYSTEM', timestamp: '2023-10-27 15:00:00', details: 'Connection Pool Exhausted', location: 'DB-Cluster' },
+
+  // ADMIN
+  { id: 'L-1008', action: 'ADMIN_ACTION', user: 'admin', timestamp: '2023-10-27 09:30:00', details: 'Promoted user j.doe to Handler', location: '10.0.0.5' },
+  { id: 'L-1011', action: 'ARCHIVE_JOB', user: 'SYSTEM', timestamp: '2023-10-27 12:00:00', details: 'Daily log rotation completed', location: 'Archive-Svc' },
+  { id: 'L-1020', action: 'CONFIG_CHANGE', user: 'admin', timestamp: '2023-10-27 16:00:00', details: 'Updated Retention Policy to 365 days', location: 'Sys-Config' },
+];
+
 export const MOCK_VULNERABILITIES: Vulnerability[] = [
   { id: 'CVE-2023-23397', score: 9.8, name: 'Outlook EoP', status: 'PATCHED', vendor: 'Microsoft', vectors: 'Network', zeroDay: false, exploited: true },
   { id: 'CVE-2023-34362', score: 9.8, name: 'MOVEit SQLi', status: 'UNPATCHED', vendor: 'Progress', vectors: 'Web', zeroDay: true, exploited: true },
