@@ -76,4 +76,28 @@ export class CaseLogic {
       return a.status === 'DONE' ? 1 : -1;
     });
   }
+
+  // Reporting Logic
+  static generateReportDraft(c: Case, type: string): string {
+    const header = `OFFICIAL SENTINEL REPORT\nTYPE: ${type.toUpperCase()}\nCASE: ${c.title} (${c.id})\nDATE: ${new Date().toISOString()}\n\n`;
+    
+    let body = "";
+    if (type === 'Executive') {
+        body = `EXECUTIVE SUMMARY\n\nCurrent Status: ${c.status}\nPriority: ${c.priority}\n\nAssessment:\n${c.description}\n\nImpact Analysis:\nEvidence count: ${c.artifacts.length}\nTimeline events: ${c.timeline.length}`;
+    } else if (type === 'Forensic') {
+        body = `FORENSIC ANALYSIS\n\nArtifacts Analyzed:\n${c.artifacts.map(a => `- ${a.name} (${a.hash})`).join('\n')}\n\nChain of Custody Validated: YES`;
+    } else {
+        body = `TECHNICAL DETAILS\n\nThreat Indicators:\n${c.relatedThreatIds.join(', ')}\n\nAction Log:\n${c.timeline.map(t => `[${t.date}] ${t.title}`).join('\n')}`;
+    }
+    
+    return header + body;
+  }
+
+  static validateTransfer(c: Case, agency: string): boolean {
+      return c.agency !== agency;
+  }
+
+  static validateSharing(c: Case, agency: string): boolean {
+      return !c.sharedWith.includes(agency);
+  }
 }
