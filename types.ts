@@ -59,7 +59,16 @@ export interface Campaign {
   threatIds: string[]; ttps: string[];
 }
 
-export interface Vulnerability { id: string; name: string; score: number; status: 'PATCHED' | 'UNPATCHED' | 'MITIGATED' | 'NEW'; vendor: string; vectors: string; zeroDay: boolean; exploited: boolean; description?: string; riskAmplified?: boolean; killChainReady?: boolean; } 
+export interface Vulnerability { 
+  id: string; name: string; score: number; status: 'PATCHED' | 'UNPATCHED' | 'MITIGATED' | 'NEW'; 
+  vendor: string; vectors: string; zeroDay: boolean; exploited: boolean; 
+  description?: string; riskAmplified?: boolean; killChainReady?: boolean; 
+  firstDetected?: string; affectedAssets?: string[];
+} 
+
+export interface SlaStatus { status: 'ON_TRACK' | 'WARNING' | 'BREACHED'; daysRemaining: number; dueDate: string; }
+export interface VulnerabilityScan { id: string; target: string; status: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED'; findings: number; progress: number; startTime: string; }
+
 export interface AuditLog { id: string; action: string; user: string; timestamp: string; details: string; location?: string; } 
 
 export interface SystemNode { 
@@ -69,6 +78,7 @@ export interface SystemNode {
   securityControls: ('EDR' | 'AV' | 'DLP' | 'FIREWALL' | 'SIEM_AGENT')[];
   dataSensitivity: 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED';
   dataVolumeGB: number;
+  segment?: 'DMZ' | 'PROD' | 'DEV' | 'CORP';
 }
 
 export interface ChartDataPoint { name: string; value: number; fullMark?: number; }
@@ -92,14 +102,14 @@ export interface OsintGeo { ip: string; city: string; country: string; isp: stri
 export interface SystemUser { id: string; name: string; role: string; clearance: string; status: 'Online' | 'Offline' | 'Busy' | 'LOCKED' | 'FATIGUED'; lastLogin?: string; casesResolved24h?: number; email?: string; isVIP?: boolean; }
 export interface Integration { name: string; status: 'Connected' | 'Disconnected' | 'Limited'; type: string; }
 
-export interface PatchStatus { system: string; total: number; patched: number; compliance: number; }
-export interface ScannerStatus { id: string; name: string; status: string; lastScan: string; coverage: string; findings: number; }
-export interface VendorFeedItem { id: string; vendor: string; date: string; title: string; severity: string; }
+export interface PatchStatus { system: string; total: number; patched: number; compliance: number; criticalPending: number; }
+export interface ScannerStatus { id: string; name: string; status: string; lastScan: string; coverage: string; findings: number; healthScore?: number; licenseExpiry?: string; }
+export interface VendorFeedItem { id: string; vendor: string; date: string; title: string; severity: string; matchedAssets?: number; cveIds?: string[]; }
 
 // Enhanced SCRM Types
-export interface SbomComponent { name: string; version: string; license: string; vulnerabilities: number; critical: boolean; }
+export interface SbomComponent { name: string; version: string; license: string; vulnerabilities: number; critical: boolean; outdated?: boolean; }
 export interface ComplianceCert { standard: 'SOC2' | 'ISO27001' | 'GDPR' | 'HIPAA' | 'FEDRAMP'; status: 'VALID' | 'EXPIRED' | 'PENDING'; expiry: string; }
-export interface VendorAccess { systemId: string; accessLevel: 'READ' | 'WRITE' | 'ADMIN'; accountCount: number; }
+export interface VendorAccess { systemId: string; accessLevel: 'READ' | 'WRITE' | 'ADMIN'; accountCount: number; lastAudit?: string; mfaEnabled?: boolean; }
 
 export interface Vendor { 
   id: string;
@@ -115,17 +125,29 @@ export interface Vendor {
   sbom: SbomComponent[];
   compliance: ComplianceCert[];
   access: VendorAccess[];
-  subcontractors: string[]; 
+  subcontractors: string[]; // IDs of other vendors or names
 }
 
 export interface AttackStep { id: string; stage: string; node?: string; method: string; successProbability: number; description: string; detectionRisk?: number; }
 export interface AttackPath { actorId: string; entryPoint: string; steps: AttackStep[]; estimatedTime: string; criticalAssetCompromised: boolean; totalDetectionProbability: number; }
 
-export interface ResponsePlan { id: string; name: string; targetNodes: string[]; type: 'ISOLATION' | 'PATCH' | 'BLOCK_IP' | 'DECEPTION'; collateralDamageScore: number; businessImpact: string[]; successRate: number; status: 'DRAFT' | 'EXECUTING' | 'COMPLETED'; }
+// Active Defense & Orchestrator Types
+export interface ResponsePlan { 
+  id: string; name: string; targetNodes: string[]; type: 'ISOLATION' | 'PATCH' | 'BLOCK_IP' | 'DECEPTION'; 
+  collateralDamageScore: number; businessImpact: string[]; successRate: number; 
+  status: 'DRAFT' | 'EXECUTING' | 'COMPLETED'; requiredAuth?: string; estimatedTTR?: string;
+}
 export interface VIPProfile { userId: string; name: string; title: string; doxxingProb: number; phishingSusceptibility: number; exposedCreds: number; sentiment: 'Neutral' | 'Negative' | 'Hostile'; recentMentions: number; }
 
-export interface Honeytoken { id: string; name: string; type: 'FILE' | 'CREDENTIAL' | 'SERVICE'; location: string; status: 'ACTIVE' | 'TRIGGERED' | 'DORMANT'; lastTriggered?: string; }
+export interface Honeytoken { 
+  id: string; name: string; type: 'FILE' | 'CREDENTIAL' | 'SERVICE'; 
+  location: string; status: 'ACTIVE' | 'TRIGGERED' | 'DORMANT'; 
+  lastTriggered?: string; effectiveness?: number; deploymentDate?: string;
+}
 export interface PatchPrioritization { vulnId: string; assetId: string; score: number; reason: string; cvss: number; businessCriticality: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'; }
+
+export interface SegmentationPolicy { id: string; name: string; source: string; destination: string; port: string; action: 'ALLOW' | 'DENY'; status: 'ACTIVE' | 'DRAFT' | 'CONFLICT'; }
+export interface TrafficFlow { id: string; source: string; dest: string; port: string; allowed: boolean; timestamp: string; policyMatched?: string; }
 
 // Compliance
 export interface NistControl { id: string; family: string; name: string; status: 'IMPLEMENTED' | 'PARTIAL' | 'PLANNED' | 'FAILED'; lastAudit: string; description: string; }

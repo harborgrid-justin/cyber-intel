@@ -2,6 +2,7 @@
 import React from 'react';
 import { Threat, IncidentStatus, Severity } from '../../types';
 import { threatData } from '../../services/dataLayer';
+import { IncidentLogic } from '../../services/logic/IncidentLogic';
 import { Button, Badge, Card, CardHeader } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 
@@ -9,6 +10,14 @@ interface Props { threats: Threat[]; onUpdate: () => void; }
 
 const IncidentTriage: React.FC<Props> = ({ threats, onUpdate }) => {
   const newThreats = threats.filter(t => t.status === IncidentStatus.NEW);
+
+  const handleAutoProcess = () => {
+    const { archived, promoted } = IncidentLogic.autoTriage(newThreats);
+    archived.forEach(id => threatData.updateStatus(id, IncidentStatus.CLOSED));
+    promoted.forEach(id => threatData.updateStatus(id, IncidentStatus.INVESTIGATING));
+    onUpdate();
+    alert(`Auto-Process: ${promoted.length} Promoted, ${archived.length} Archived`);
+  };
 
   const handlePromote = (t: Threat) => {
     threatData.updateStatus(t.id, IncidentStatus.INVESTIGATING);
@@ -25,15 +34,24 @@ const IncidentTriage: React.FC<Props> = ({ threats, onUpdate }) => {
       <Card className="p-0 overflow-hidden">
         <CardHeader 
           title={`Inbox / Triage (${newThreats.length})`}
-          action={<Button onClick={() => newThreats.forEach(t => handleDismiss(t.id))} variant="secondary" className="text-[10px] py-1">CLEAR ALL</Button>}
+          action={
+            <div className="flex gap-2">
+                <Button onClick={handleAutoProcess} variant="primary" className="text-[10px] py-1 bg-purple-600 hover:bg-purple-500">✨ AI AUTO-TRIAGE</Button>
+                <Button onClick={() => newThreats.forEach(t => handleDismiss(t.id))} variant="secondary" className="text-[10px] py-1">DISMISS ALL</Button>
+            </div>
+          }
         />
+        <div className="p-4 bg-slate-900/50 border-b border-slate-800 text-xs text-slate-400">
+            Rules: Low confidence noise is archived. Critical confidence {'>'} 90% is auto-promoted.
+        </div>
       </Card>
       
       <ResponsiveTable<Threat>
         data={newThreats}
         keyExtractor={t => t.id}
         columns={[
-          { header: 'Severity', render: t => <Badge color={t.severity === Severity.CRITICAL ? 'red' : 'yellow'}>{t.severity}</Badge> },
+          { header: 'Severity', render: t => <Badge color={t.severity === Severity.CRITICAL ? 'red' : t.severity === 'HIGH' ? 'orange' : 'yellow'}>{t.severity}</Badge> },
+          { header: 'Confidence', render: t => <div className="font-mono text-xs">{t.confidence}%</div> },
           { header: 'Indicator', render: t => <div className="text-white font-mono text-sm">{t.indicator}<div className="text-xs text-slate-500">{t.type}</div></div> },
           { header: 'Score', render: t => <span className={`font-bold ${t.score > 80 ? 'text-red-500' : 'text-slate-300'}`}>{t.score}</span> },
           { header: 'Actions', render: t => (

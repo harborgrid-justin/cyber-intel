@@ -4,42 +4,67 @@ import { Button, FilterGroup } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import { ResponseLogic } from '../../services/logic/ResponseLogic';
 import { DefenseLogic } from '../../services/logic/DefenseLogic';
+import { OrchestratorLogic } from '../../services/logic/OrchestratorLogic';
 import { StandardPage } from '../Shared/Layouts';
 import { ResponsePlan, Honeytoken } from '../../types';
 import { Icons } from '../Shared/Icons';
 import { ResponseTopology } from './Views/ResponseTopology';
 import { DeceptionOps } from './Views/DeceptionOps';
 import { PatchStrategy } from './Views/PatchStrategy';
+import { SegmentationView } from './Views/SegmentationView';
+import { CONFIG } from '../../config';
 
 const Orchestrator: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'RESPONSE' | 'DECEPTION' | 'SEGMENT' | 'PATCH'>('RESPONSE');
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [generatedPlan, setGeneratedPlan] = useState<ResponsePlan | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  
   const [honeytokens, setHoneytokens] = useState<Honeytoken[]>([
-     { id: 'h1', name: 'admin_creds_backup.txt', type: 'FILE', location: 'FileShare-01', status: 'ACTIVE' },
-     { id: 'h2', name: 'aws_root_key', type: 'CREDENTIAL', location: 'DevOps-Workstation', status: 'DORMANT' },
-     { id: 'h3', name: 'fake_payroll_db', type: 'SERVICE', location: 'DB-Cluster', status: 'TRIGGERED', lastTriggered: '10 mins ago' }
+     { id: 'h1', name: 'admin_creds_backup.txt', type: 'FILE', location: 'FileShare-01', status: 'ACTIVE', effectiveness: 85 },
+     { id: 'h2', name: 'aws_root_key', type: 'CREDENTIAL', location: 'DevOps-Workstation', status: 'DORMANT', effectiveness: 40 },
+     { id: 'h3', name: 'fake_payroll_db', type: 'SERVICE', location: 'DB-Cluster', status: 'TRIGGERED', lastTriggered: '10 mins ago', effectiveness: 95 }
   ]);
   
   const nodes = threatData.getSystemNodes();
   const playbooks = threatData.getPlaybooks();
   const vulns = threatData.getVulnerabilities();
 
+  // --- Logic Integration ---
+
+  // 1. Response Topology Logic
   const handleSimulate = (pbId: string) => {
     const node = nodes.find(n => n.id === selectedNodeId);
     const pb = playbooks.find(p => p.id === pbId);
     if (!node || !pb) return;
+    
     setIsSimulating(true);
     setTimeout(() => {
-      const plan = ResponseLogic.generateResponsePlan(pb, node, nodes);
-      setGeneratedPlan(plan);
+      // Use basic logic for plan generation
+      const basicPlan = ResponseLogic.generateResponsePlan(pb, node, nodes);
+      
+      // Enhance with Advanced Orchestrator Logic
+      const blastRadius = OrchestratorLogic.calculateBlastRadius(node.id, nodes);
+      const authorized = OrchestratorLogic.validateResponseAuthority(basicPlan, CONFIG.USER.CLEARANCE);
+      const ttr = OrchestratorLogic.estimateTimeToRecovery(node);
+
+      setGeneratedPlan({
+        ...basicPlan,
+        collateralDamageScore: blastRadius.riskScore,
+        businessImpact: [...basicPlan.businessImpact, `Affected Nodes: ${blastRadius.affectedNodes.length}`, `Est. Recovery: ${ttr}`],
+        requiredAuth: authorized ? 'Authorized' : 'ELEVATION_REQUIRED'
+      });
+      
       setIsSimulating(false);
-    }, 1200);
+    }, 1000);
   };
 
   const handleExecute = () => {
     if (!generatedPlan) return;
+    if (generatedPlan.requiredAuth === 'ELEVATION_REQUIRED') {
+        alert("EXECUTION BLOCKED: Insufficient Clearance for this blast radius.");
+        return;
+    }
     setGeneratedPlan({ ...generatedPlan, status: 'EXECUTING' });
     setTimeout(() => {
       setGeneratedPlan({ ...generatedPlan, status: 'COMPLETED' });
@@ -47,7 +72,36 @@ const Orchestrator: React.FC = () => {
     }, 2000);
   };
 
-  const prioritizedPatches = useMemo(() => DefenseLogic.prioritizePatches(vulns, nodes), [vulns, nodes]);
+  // 2. Patch Strategy Logic (Advanced Context)
+  const prioritizedPatches = useMemo(() => {
+      // Use the advanced contextual scoring from OrchestratorLogic
+      return vulns.map(v => {
+          const node = nodes.find(n => n.vulnerabilities?.includes(v.id));
+          if (!node) return null;
+          
+          const riskScore = OrchestratorLogic.calculateContextualPatchRisk(v, node);
+          const window = OrchestratorLogic.determinePatchWindow(node);
+          
+          return {
+              vulnId: v.id,
+              assetId: node.id,
+              score: riskScore,
+              reason: `Window: ${window}`,
+              cvss: v.score,
+              businessCriticality: riskScore > 80 ? 'CRITICAL' : riskScore > 50 ? 'HIGH' : 'MEDIUM'
+          };
+      }).filter(Boolean) as any[];
+  }, [vulns, nodes]);
+
+  // 3. Deception Logic (Recommendations)
+  // This would typically trigger a "Recommended Decoys" modal, simulated here by updating state if empty
+  useMemo(() => {
+      if (activeTab === 'DECEPTION' && honeytokens.length < 5) {
+          const recs = OrchestratorLogic.recommendDecoyPlacement(nodes);
+          // In a real app, we'd show these as suggestions.
+          console.log("Decoy Recommendations:", recs);
+      }
+  }, [activeTab, nodes, honeytokens.length]);
 
   return (
     <StandardPage title="Active Defense Orchestrator" subtitle="SOAR & Defensive Operations" modules={[]} activeModule="" onModuleChange={() => {}}>
@@ -77,15 +131,7 @@ const Orchestrator: React.FC = () => {
 
            {activeTab === 'DECEPTION' && <DeceptionOps honeytokens={honeytokens} />}
 
-           {activeTab === 'SEGMENT' && (
-             <div className="lg:h-full flex flex-col items-center justify-center p-12 border-2 border-dashed border-slate-800 rounded-xl min-h-[300px]">
-                <div className="text-center">
-                   <h3 className="text-xl font-bold text-white mb-2">Micro-Segmentation Planner</h3>
-                   <p className="text-slate-400 max-w-md mx-auto mb-6">Visualizer allows testing firewall policies against simulated traffic before deployment.</p>
-                   <Button variant="secondary">LAUNCH POLICY SIMULATOR</Button>
-                </div>
-             </div>
-           )}
+           {activeTab === 'SEGMENT' && <SegmentationView />}
 
            {activeTab === 'PATCH' && <PatchStrategy prioritizedPatches={prioritizedPatches} />}
         </div>

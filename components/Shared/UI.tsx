@@ -77,9 +77,9 @@ export const ProgressBar: React.FC<{ value: number; max?: number; color?: string
   );
 };
 
-export interface BadgeProps { children: React.ReactNode; color?: string; onClick?: () => void; }
+export interface BadgeProps { children: React.ReactNode; color?: string; onClick?: () => void; className?: string; }
 
-export const Badge: React.FC<BadgeProps> = ({ children, color = 'slate', onClick }) => {
+export const Badge: React.FC<BadgeProps> = ({ children, color = 'slate', onClick, className = '' }) => {
   const colors: Record<string, string> = {
     red: 'bg-red-900/30 text-red-400 border-red-900/50',
     green: 'bg-green-900/30 text-green-400 border-green-900/50',
@@ -89,7 +89,7 @@ export const Badge: React.FC<BadgeProps> = ({ children, color = 'slate', onClick
     purple: 'bg-purple-900/30 text-purple-400 border-purple-900/50',
     slate: 'bg-slate-800 text-slate-400 border-slate-700',
   };
-  return <span onClick={onClick} className={`${STYLES.badge} ${colors[color] || colors.slate} ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}>{children}</span>;
+  return <span onClick={onClick} className={`${STYLES.badge} ${colors[color] || colors.slate} ${onClick ? 'cursor-pointer hover:opacity-80' : ''} ${className}`}>{children}</span>;
 };
 
 export interface FilterOption {

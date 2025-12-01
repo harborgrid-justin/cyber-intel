@@ -1,11 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { threatData } from '../../services/dataLayer';
-import NetworkGraph from '../Shared/NetworkGraph';
 import IncidentTriage from './IncidentTriage';
 import IncidentKanban from './IncidentKanban';
 import WarRoom from './WarRoom';
-import { IncidentTimeline, IncidentAssets, IncidentReports, IncidentUsers, IncidentPlaybooks, IncidentEvidence } from './IncidentViews';
+import { IncidentTimeline, IncidentAssets, IncidentReports, IncidentUsers, IncidentPlaybooks, IncidentEvidence, IncidentNetwork } from './IncidentViews';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 
@@ -43,11 +42,7 @@ const IncidentManager: React.FC = () => {
         {activeModule === 'Reports' && <IncidentReports />}
         {activeModule === 'Playbooks' && <IncidentPlaybooks />}
         {activeModule === 'Evidence' && <IncidentEvidence cases={cases} />}
-        {activeModule === 'Network' && (
-           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 min-h-[500px] flex items-center justify-center">
-             <div className="w-full max-w-4xl"><NetworkGraph threats={threats} /></div>
-           </div>
-        )}
+        {activeModule === 'Network' && <IncidentNetwork threats={threats} />}
       </div>
     </StandardPage>
   );

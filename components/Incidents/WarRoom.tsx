@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Threat, Case, Severity } from '../../types';
 import { Button, Card, Badge, CardHeader } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
+import { IncidentLogic } from '../../services/logic/IncidentLogic';
 import ChatInterface, { Message } from '../Shared/ChatInterface';
 import GeoMap from '../Dashboard/GeoMap';
 import Modal from '../Shared/Modal';
@@ -39,8 +40,8 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
   }, []);
 
   const criticalThreats = useMemo(() => threats.filter(t => t.severity === Severity.CRITICAL), [threats]);
-  const criticalCases = useMemo(() => cases.filter(c => c.priority === 'CRITICAL'), [cases]);
   const activeResponders = useMemo(() => threatData.getSystemUsers().filter(u => u.status === 'Online').length, []);
+  const metrics = IncidentLogic.calculateMetrics(cases);
 
   const handleLockdown = () => {
     setIsLocked(true);
@@ -54,24 +55,8 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text, timestamp: Date.now(), senderName: 'Cmd. Connor' }]);
   };
 
-  // Mobile Tab Navigation
-  const MobileNav = () => (
-    <div className="md:hidden flex border-t border-slate-800 bg-slate-950 sticky bottom-0 z-20">
-      {['STATUS', 'MAP', 'COMMS'].map(tab => (
-        <button 
-          key={tab} 
-          onClick={() => setActiveTab(tab as any)}
-          className={`flex-1 py-4 text-[10px] font-bold uppercase tracking-widest ${activeTab === tab ? 'text-cyan-400 bg-slate-900 border-t-2 border-cyan-500' : 'text-slate-500'}`}
-        >
-          {tab}
-        </button>
-      ))}
-    </div>
-  );
-
   return (
     <div className="flex flex-col h-full bg-slate-950 relative overflow-hidden">
-      {/* Lockdown Overlay */}
       <Modal isOpen={showLockdown} onClose={() => setShowLockdown(false)} title="CONFIRM LOCKDOWN">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
@@ -85,7 +70,6 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
         </div>
       </Modal>
 
-      {/* Enterprise Header */}
       <div className="p-4 border-b border-slate-800 bg-slate-900/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
         <div>
           <h2 className="text-xl font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
@@ -110,13 +94,16 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
 
       <StatusTicker />
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-        
-        {/* Left Column: Status Lists */}
         <div className={`md:w-1/4 bg-slate-900 border-r border-slate-800 flex flex-col transition-all ${activeTab === 'STATUS' ? 'flex' : 'hidden md:flex'} h-full overflow-hidden`}>
            <div className="flex-1 flex flex-col min-h-0">
-             <CardHeader title="Critical Targets" action={<Badge color="red">{criticalThreats.length}</Badge>} className="bg-slate-950" />
+             <CardHeader title="SITREP Summary" className="bg-slate-950" />
+             <div className="p-4 grid grid-cols-2 gap-4 border-b border-slate-800">
+                <div className="bg-slate-950 p-2 rounded border border-slate-800 text-center"><div className="text-[9px] text-slate-500 uppercase">Criticals</div><div className="text-xl text-red-500 font-bold">{criticalThreats.length}</div></div>
+                <div className="bg-slate-950 p-2 rounded border border-slate-800 text-center"><div className="text-[9px] text-slate-500 uppercase">Dwell Time</div><div className="text-xl text-orange-500 font-bold">{metrics.dwellTime}</div></div>
+                <div className="bg-slate-950 p-2 rounded border border-slate-800 text-center"><div className="text-[9px] text-slate-500 uppercase">MTTR</div><div className="text-xl text-cyan-500 font-bold">{metrics.mttr}</div></div>
+                <div className="bg-slate-950 p-2 rounded border border-slate-800 text-center"><div className="text-[9px] text-slate-500 uppercase">Campaigns</div><div className="text-xl text-white font-bold">{metrics.activecampaigns}</div></div>
+             </div>
              <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
                {criticalThreats.length === 0 && <div className="text-center text-slate-600 text-[10px] py-8">SECTOR CLEAR</div>}
                {criticalThreats.map(t => (
@@ -130,47 +117,16 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
                ))}
              </div>
            </div>
-
-           <div className="flex-1 flex flex-col min-h-0 border-t border-slate-800">
-             <CardHeader title="Active Ops" action={<Badge color="orange">{criticalCases.length}</Badge>} className="bg-slate-950" />
-             <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar bg-slate-900/50">
-               {criticalCases.map(c => (
-                 <div key={c.id} className="p-3 bg-slate-800/50 border border-slate-700 rounded hover:border-orange-500/50 transition-colors">
-                   <div className="text-xs font-bold text-white mb-1">{c.title}</div>
-                   <div className="flex justify-between text-[9px] text-slate-500 uppercase">
-                     <span>{c.assignee}</span>
-                     <span className="text-orange-400">{c.status}</span>
-                   </div>
-                 </div>
-               ))}
-             </div>
-           </div>
         </div>
 
-        {/* Center Column: Map (Visual Context) */}
         <div className={`flex-1 bg-slate-950 relative flex flex-col ${activeTab === 'MAP' ? 'flex' : 'hidden md:flex'}`}>
            <div className="absolute top-4 left-4 z-10 bg-slate-900/80 backdrop-blur border border-slate-700 p-2 rounded">
               <div className="text-[10px] font-bold text-slate-400 uppercase">Global Signal</div>
               <div className="text-xl font-mono text-cyan-400">{threats.length} <span className="text-xs text-slate-500">SIG</span></div>
            </div>
            <GeoMap threats={threats} />
-           
-           {/* Bottom Overlay Stats */}
-           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none">
-              <div className="grid grid-cols-4 gap-4 pointer-events-auto">
-                 {['NETWORK', 'CLOUD', 'ENDPOINT', 'USER'].map(sys => (
-                   <div key={sys} className="bg-slate-900/90 border border-slate-800 p-2 rounded text-center">
-                      <div className="text-[9px] text-slate-500 font-bold">{sys}</div>
-                      <div className="w-full bg-slate-800 h-1 mt-1 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500" style={{ width: '98%' }}></div>
-                      </div>
-                   </div>
-                 ))}
-              </div>
-           </div>
         </div>
 
-        {/* Right Column: Comms */}
         <div className={`md:w-1/4 bg-slate-900 border-l border-slate-800 flex flex-col ${activeTab === 'COMMS' ? 'flex' : 'hidden md:flex'} h-full`}>
            <CardHeader title="Command Channel" className="bg-slate-950" />
            <ChatInterface 
@@ -182,8 +138,6 @@ const WarRoom: React.FC<Props> = ({ threats, cases, onUpdate }) => {
            />
         </div>
       </div>
-
-      <MobileNav />
     </div>
   );
 };

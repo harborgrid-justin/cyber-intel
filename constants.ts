@@ -93,10 +93,10 @@ export const MOCK_VULNERABILITIES: Vulnerability[] = [
 ];
 
 export const MOCK_PATCH_STATUS: PatchStatus[] = [
-  { system: 'Workstations (Windows)', total: 450, patched: 442, compliance: 98 },
-  { system: 'Servers (Linux)', total: 120, patched: 110, compliance: 91 },
-  { system: 'Database Clusters', total: 15, patched: 15, compliance: 100 },
-  { system: 'Edge Devices', total: 60, patched: 45, compliance: 75 },
+  { system: 'Workstations (Windows)', total: 450, patched: 442, compliance: 98, criticalPending: 2 },
+  { system: 'Servers (Linux)', total: 120, patched: 110, compliance: 91, criticalPending: 3 },
+  { system: 'Database Clusters', total: 15, patched: 15, compliance: 100, criticalPending: 0 },
+  { system: 'Edge Devices', total: 60, patched: 45, compliance: 75, criticalPending: 5 },
 ];
 
 export const MOCK_SCANNERS: ScannerStatus[] = [
