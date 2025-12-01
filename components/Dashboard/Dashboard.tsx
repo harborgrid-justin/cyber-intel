@@ -36,7 +36,7 @@ const Dashboard: React.FC = () => {
   const activeThreatCount = threats.filter(t => t.status !== IncidentStatus.CLOSED).length;
 
   const renderContent = () => {
-    if(activeModule === 'Global Map') return <GeoMap />;
+    if(activeModule === 'Global Map') return <GeoMap threats={threats} />;
     if(activeModule === 'System Health') return <SystemHealth />;
     
     if (activeModule === 'Compliance') {
@@ -101,7 +101,7 @@ const Dashboard: React.FC = () => {
              <ThreatChart />
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-80">
                 <CategoryRadarChart />
-                <GeoMap />
+                <GeoMap threats={threats} />
              </div>
           </div>
           <div className="flex flex-col gap-6"><SystemHealth /></div>

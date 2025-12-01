@@ -13,7 +13,8 @@ interface CampaignManagerProps {
 }
 
 const CampaignManager: React.FC<CampaignManagerProps> = ({ initialId }) => {
-  const [activeModule, setActiveModule] = useState(CONFIG.MODULES.CAMPAIGNS[0]);
+  const [campModule, setCampModule] = useState(CONFIG.MODULES.CAMPAIGN_LIBRARY[0]);
+  const [activeDetailModule, setActiveDetailModule] = useState(CONFIG.MODULES.CAMPAIGNS[0]);
   const [campaigns, setCampaigns] = useState<Campaign[]>(threatData.getCampaigns());
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -48,16 +49,27 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({ initialId }) => {
     setSelectedCampaign(newCamp);
   };
 
+  const getFilteredCampaigns = () => {
+    if (campModule === 'Archived') return campaigns.filter(c => c.status === 'ARCHIVED');
+    if (campModule === 'Active Campaigns') return campaigns.filter(c => c.status === 'ACTIVE' || c.status === 'DORMANT');
+    return campaigns;
+  };
+
+  const filteredCampaigns = getFilteredCampaigns();
+
   return (
     <MasterDetailLayout
       title="Campaign Management"
       subtitle="Strategic Threat Correlation"
+      modules={CONFIG.MODULES.CAMPAIGN_LIBRARY}
+      activeModule={campModule}
+      onModuleChange={setCampModule}
       isDetailOpen={!!selectedCampaign || isCreating}
       onBack={() => { setSelectedCampaign(null); setIsCreating(false); }}
       listContent={
         <>
           <Button onClick={() => { setIsCreating(true); setSelectedCampaign(null); }} className="w-full mb-4">+ NEW CAMPAIGN</Button>
-          <CampaignList campaigns={campaigns} selectedId={selectedCampaign?.id || null} onSelect={(c) => { setSelectedCampaign(c); setIsCreating(false); }} />
+          <CampaignList campaigns={filteredCampaigns} selectedId={selectedCampaign?.id || null} onSelect={(c) => { setSelectedCampaign(c); setIsCreating(false); }} />
         </>
       }
       detailContent={
@@ -72,8 +84,8 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({ initialId }) => {
         ) : selectedCampaign ? (
           <CampaignDetail 
             campaign={selectedCampaign} 
-            activeModule={activeModule} 
-            onModuleChange={setActiveModule} 
+            activeModule={activeDetailModule} 
+            onModuleChange={setActiveDetailModule} 
             onBack={() => setSelectedCampaign(null)} 
             modules={CONFIG.MODULES.CAMPAIGNS} 
             onUpdate={refresh} 

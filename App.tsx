@@ -17,6 +17,10 @@ import EvidencePortal from './components/Evidence/EvidencePortal';
 import ReportsCenter from './components/Reports/ReportsCenter';
 import SystemConfig from './components/System/SystemConfig';
 import CampaignManager from './components/Campaigns/CampaignManager';
+import SupplyChainMonitor from './components/SupplyChain/SupplyChainMonitor';
+import BreachSimulator from './components/Simulation/BreachSimulator';
+import Orchestrator from './components/Response/Orchestrator';
+import ExecutiveProtection from './components/Osint/ExecutiveProtection';
 import { View } from './types';
 
 const App: React.FC = () => {
@@ -53,8 +57,12 @@ const App: React.FC = () => {
       case View.OSINT: return <OsintDashboard />;
       case View.EVIDENCE: return <EvidencePortal />;
       case View.SYSTEM: return <SystemConfig />;
-      case View.REPORTS: return <ReportsCenter />;
+      case View.REPORTS: return <ReportsCenter initialId={viewParams.id} />;
       case View.CAMPAIGNS: return <CampaignManager initialId={viewParams.id} />;
+      case View.SUPPLY_CHAIN: return <SupplyChainMonitor />;
+      case View.SIMULATION: return <BreachSimulator />;
+      case View.ORCHESTRATOR: return <Orchestrator />;
+      case View.VIP_PROTECTION: return <ExecutiveProtection />;
       default: return <Dashboard />;
     }
   };

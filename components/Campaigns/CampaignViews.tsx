@@ -2,7 +2,6 @@
 import React from 'react';
 import { Campaign, Threat, View } from '../../types';
 import { Card, Badge, Grid, Button } from '../Shared/UI';
-import ResponsiveTable from '../Shared/ResponsiveTable';
 import FeedItem from '../Feed/FeedItem';
 import { threatData } from '../../services/dataLayer';
 
@@ -67,7 +66,7 @@ export const CampaignTimeline: React.FC<{ campaign: Campaign }> = ({ campaign })
 
   const handleNav = (type: string, id: string) => {
       if (type === 'CASE') window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.CASES, id } }));
-      if (type === 'REPORT') window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.REPORTS } }));
+      if (type === 'REPORT') window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.REPORTS, id } }));
   };
 
   return (

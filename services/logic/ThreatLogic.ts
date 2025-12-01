@@ -1,6 +1,12 @@
 
 import { Threat, ThreatActor, IncidentStatus, Severity } from '../../types';
 
+interface AttributionResult {
+  actor: ThreatActor;
+  score: number;
+  matches: { type: 'INFRA' | 'TTP' | 'TARGET' | 'ORIGIN'; value: string }[];
+}
+
 export class ThreatLogic {
   static deduplicateThreat(newThreat: Threat, existingThreats: Threat[]) { 
       const dup = existingThreats.find(t => t.indicator === newThreat.indicator && t.type === newThreat.type);
@@ -20,6 +26,54 @@ export class ThreatLogic {
       return 'Unknown'; 
   }
 
+  static calculateAttribution(input: string, actors: ThreatActor[]): AttributionResult[] {
+    const results: AttributionResult[] = [];
+    const lowerInput = input.toLowerCase();
+
+    actors.forEach(actor => {
+      let score = 0;
+      const matches: { type: 'INFRA' | 'TTP' | 'TARGET' | 'ORIGIN'; value: string }[] = [];
+
+      // 1. Infrastructure Analysis (High Weight: 40%)
+      actor.infrastructure?.forEach(inf => {
+        if (lowerInput.includes(inf.value.toLowerCase())) {
+          score += 40;
+          matches.push({ type: 'INFRA', value: inf.value });
+        }
+      });
+
+      // 2. TTP Analysis (Medium Weight: 30% per match, capped)
+      actor.ttps?.forEach(ttp => {
+        // Match code (T1055) or name (Process Injection)
+        if (lowerInput.includes(ttp.code.toLowerCase()) || lowerInput.includes(ttp.name.toLowerCase())) {
+          score += 15;
+          matches.push({ type: 'TTP', value: `${ttp.code} ${ttp.name}` });
+        }
+      });
+
+      // 3. Target Sector/Origin Context (Low Weight: 10%)
+      // In a real system, we'd check the Victim's sector. Here we simulate via text match.
+      actor.targets?.forEach(t => {
+        if (lowerInput.includes(t.toLowerCase())) {
+          score += 10;
+          matches.push({ type: 'TARGET', value: t });
+        }
+      });
+
+      // 4. Malware Family (High Weight: 30%)
+      // If the input mentions malware associated with the actor (simulated check against description)
+      if (actor.description && lowerInput.includes("malware")) {
+         // Placeholder for deeper malware analysis logic
+      }
+
+      if (score > 0) {
+        results.push({ actor, score: Math.min(100, score), matches });
+      }
+    });
+
+    return results.sort((a, b) => b.score - a.score);
+  }
+
   static decayConfidence(threat: Threat) { return threat; }
 
   static enforceTLP(threat: Threat, userClearance: string) { 
@@ -30,7 +84,6 @@ export class ThreatLogic {
   }
 
   static checkSubnetPattern(threats: Threat[]) { 
-      // Detect if 3+ IPs from same /24 appear
       const subnetCounts = new Map<string, number>();
       threats.filter(t => t.type === 'IP Address').forEach(t => {
         const parts = t.indicator.split('.');
@@ -74,7 +127,6 @@ export class ThreatLogic {
 
   static adjustThresholdsByDefcon(threat: Threat, level: string) {
       if (level.includes('DEFCON 1') || level.includes('DEFCON 2') || level.includes('DEFCON 3') || level.includes('ELEVATED')) {
-          // Increase score sensitivity in high threat levels
           return { ...threat, score: Math.min(100, threat.score + 5) };
       }
       return threat;

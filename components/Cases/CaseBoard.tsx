@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { threatData } from '../../services/dataLayer';
 import CaseList from './CaseList';
 import CaseDetail from './CaseDetail';
@@ -8,15 +8,16 @@ import { MasterDetailLayout, StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 import KanbanBoard from '../Shared/KanbanBoard';
 import { Case } from '../../types';
-import { Button } from '../Shared/UI';
+import { Button, FilterGroup } from '../Shared/UI';
 
 interface CaseBoardProps {
   initialId?: string;
 }
 
 const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
-  const [activeModule, setActiveModule] = useState(CONFIG.MODULES.CASES[0]);
-  const [viewMode, setViewMode] = useState<'LIST' | 'KANBAN'>('LIST'); // Default to LIST for safety
+  const [boardModule, setBoardModule] = useState(CONFIG.MODULES.CASE_BOARD[0]);
+  const [activeDetailModule, setActiveDetailModule] = useState(CONFIG.MODULES.CASES[0]);
+  const [viewMode, setViewMode] = useState<'LIST' | 'KANBAN'>('LIST'); 
   const [cases, setCases] = useState<Case[]>(threatData.getCases());
   const [selectedId, setSelectedId] = useState<string | null>(initialId || null);
   const [isCreating, setIsCreating] = useState(false);
@@ -24,13 +25,17 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
   useEffect(() => {
     if (initialId) {
       setSelectedId(initialId);
-      // Force LIST view if selecting a specific ID from navigation to ensure detail visibility
       setViewMode('LIST');
     }
   }, [initialId]);
 
-  const selectedCase = cases.find(c => c.id === selectedId);
-  const linkedThreats = selectedCase ? threatData.getThreats(false).filter(t => selectedCase.relatedThreatIds.includes(t.id)) : [];
+  const selectedCase = useMemo(() => cases.find(c => c.id === selectedId), [cases, selectedId]);
+  
+  const linkedThreats = useMemo(() => {
+    return selectedCase 
+      ? threatData.getThreats(false).filter(t => selectedCase.relatedThreatIds.includes(t.id)) 
+      : [];
+  }, [selectedCase]);
 
   const handleRefresh = () => { 
     setCases(threatData.getCases()); 
@@ -45,21 +50,32 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
 
   const handleSelect = (id: string) => { setSelectedId(id); setIsCreating(false); };
   
-  const handleCreateSubmit = (newCase: any) => {
+  const handleCreateSubmit = (newCase: Case) => {
     threatData.addCase(newCase);
     handleRefresh();
     setIsCreating(false);
     setSelectedId(newCase.id);
-    setViewMode('LIST'); // Switch to list to show the new case detail
+    setViewMode('LIST');
   };
 
   const handleKanbanDrop = (id: string, newStatus: string) => {
     const c = cases.find(x => x.id === id);
     if (c && c.status !== newStatus) {
-      threatData.updateCase({ ...c, status: newStatus as any });
+      // Safe cast because Kanban columns match Status enum
+      threatData.updateCase({ ...c, status: newStatus as Case['status'] });
       handleRefresh();
     }
   };
+
+  const filteredCases = useMemo(() => {
+    if (viewMode === 'LIST') return cases;
+    switch (boardModule) {
+      case 'My Tickets': return cases.filter(c => c.assignee === CONFIG.USER.NAME || c.assignee === 'Me');
+      case 'Critical Watch': return cases.filter(c => c.priority === 'CRITICAL' || c.priority === 'HIGH');
+      case 'Pending Review': return cases.filter(c => c.status === 'PENDING_REVIEW');
+      default: return cases;
+    }
+  }, [cases, viewMode, boardModule]);
 
   const kanbanColumns = [
     { id: 'OPEN', title: 'Open' },
@@ -69,27 +85,35 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
   ];
 
   const Actions = () => (
-    <div className="flex gap-2 shrink-0">
+    <div className="flex gap-4 shrink-0 items-center">
        <Button onClick={() => { setIsCreating(true); setViewMode('LIST'); }} variant="primary" className="text-sm">+ Ticket</Button>
        <Button onClick={handleReprioritize} variant="secondary" className="text-amber-500">⚡ AI Priority</Button>
-       <Button onClick={() => setViewMode(viewMode === 'LIST' ? 'KANBAN' : 'LIST')} variant="outline">
-         {viewMode === 'LIST' ? 'Board View' : 'List View'}
-       </Button>
+       <FilterGroup 
+         value={viewMode}
+         onChange={(v) => setViewMode(v as any)}
+         options={[
+           { label: 'List View', value: 'LIST' },
+           { label: 'Board View', value: 'KANBAN' }
+         ]}
+         className="ml-2"
+       />
     </div>
   );
 
-  // Render Kanban View as a full StandardPage to avoid sidebar constraints
   if (viewMode === 'KANBAN' && !isCreating && !selectedId) {
     return (
       <StandardPage 
         title="Case Management" 
         subtitle="Kanban Board & Operational Status"
         actions={<Actions />}
+        modules={CONFIG.MODULES.CASE_BOARD}
+        activeModule={boardModule}
+        onModuleChange={setBoardModule}
       >
         <div className="flex-1 h-full overflow-hidden flex flex-col p-2">
            <KanbanBoard<Case>
              columns={kanbanColumns}
-             items={cases}
+             items={filteredCases}
              groupBy={c => c.status}
              getItemId={c => c.id}
              onDrop={handleKanbanDrop}
@@ -112,7 +136,6 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
     );
   }
 
-  // Render List/Detail View using MasterDetailLayout
   return (
     <MasterDetailLayout
       title="Case Management"
@@ -120,6 +143,9 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
       isDetailOpen={!!selectedId || isCreating}
       onBack={() => { setSelectedId(null); setIsCreating(false); }}
       actions={<Actions />}
+      modules={['Case Database']}
+      activeModule={'Case Database'}
+      onModuleChange={() => {}}
       listContent={
         <div className="flex flex-col h-full gap-4">
           <CaseList cases={cases} selectedId={selectedId} onSelect={handleSelect} />
@@ -132,8 +158,8 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
           <CaseDetail 
             activeCase={selectedCase} 
             linkedThreats={linkedThreats} 
-            activeModule={activeModule} 
-            onModuleChange={setActiveModule} 
+            activeModule={activeDetailModule} 
+            onModuleChange={setActiveDetailModule} 
             onBack={() => setSelectedId(null)} 
             modules={CONFIG.MODULES.CASES} 
             onUpdate={handleRefresh} 
@@ -141,7 +167,7 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
         ) : (
           <div className="flex-1 hidden md:flex flex-col items-center justify-center text-slate-500 border border-slate-800 rounded-xl bg-slate-900/50">
              <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center mb-4">
-               <svg className="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+               <svg className="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
              </div>
              <span className="uppercase tracking-widest font-bold text-sm">Select a ticket to view details</span>
              <p className="text-xs text-slate-600 mt-2">Or click "+ Ticket" to start a new investigation.</p>

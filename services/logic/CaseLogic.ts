@@ -1,5 +1,5 @@
 
-import { Case, Playbook } from '../../types';
+import { Case, Playbook, Task } from '../../types';
 
 export class CaseLogic {
   static checkSLA(kase: Case) { 
@@ -41,5 +41,39 @@ export class CaseLogic {
     const US_AGENCIES = ['FBI_CYBER', 'NSA', 'CISA'];
     if (kase.region === 'EU' && US_AGENCIES.includes(targetAgency)) return false;
     return true;
+  }
+
+  // Task Management Logic
+  static isTaskBlocked(task: Task, allTasks: Task[]): boolean {
+    if (!task.dependsOn || task.dependsOn.length === 0) return false;
+    return task.dependsOn.some(depId => {
+      const parent = allTasks.find(t => t.id === depId);
+      return parent && parent.status !== 'DONE';
+    });
+  }
+
+  static getTaskBlockerName(task: Task, allTasks: Task[]): string {
+    if (!task.dependsOn || !task.dependsOn.length) return '';
+    const firstBlockerId = task.dependsOn.find(depId => {
+        const parent = allTasks.find(t => t.id === depId);
+        return parent && parent.status !== 'DONE';
+    });
+    if (!firstBlockerId) return '';
+    const parent = allTasks.find(t => t.id === firstBlockerId);
+    return parent ? parent.title : 'Unknown Task';
+  }
+
+  static sortTasks(tasks: Task[]): Task[] {
+    return [...tasks].sort((a, b) => {
+      const aBlocked = CaseLogic.isTaskBlocked(a, tasks);
+      const bBlocked = CaseLogic.isTaskBlocked(b, tasks);
+      if (a.status === b.status) {
+         if (a.status === 'PENDING') {
+           if (aBlocked !== bBlocked) return aBlocked ? 1 : -1;
+         }
+         return 0;
+      }
+      return a.status === 'DONE' ? 1 : -1;
+    });
   }
 }

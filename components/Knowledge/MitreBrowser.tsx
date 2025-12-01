@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Badge, Card, Button, Grid } from '../Shared/UI';
+import React, { useState, useMemo } from 'react';
+import { Badge, Card, Button, Grid, FilterGroup } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
@@ -8,12 +8,32 @@ import { threatData } from '../../services/dataLayer';
 
 const MitreBrowser: React.FC = () => {
   const [activeModule, setActiveModule] = useState(CONFIG.MODULES.MITRE[0]);
+  const [matrixMode, setMatrixMode] = useState<'STANDARD' | 'HEATMAP'>('STANDARD');
+  
   const tactics = threatData.getMitreTactics();
   const techniques = threatData.getMitreTechniques();
   const subTechs = threatData.getMitreSubTechniques();
   const groups = threatData.getMitreGroups();
   const software = threatData.getMitreSoftware();
   const mitigations = threatData.getMitreMitigations();
+
+  // HEATMAP LOGIC: Calculate active hits per technique
+  const activeTechniqueCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const threats = threatData.getThreats();
+    const cases = threatData.getCases();
+    
+    // Scan threats for tags that match technique names (Simulated mapping)
+    threats.forEach(t => {
+      techniques.forEach(tech => {
+        if (t.description.toLowerCase().includes(tech.name.toLowerCase()) || (t.tags && t.tags.includes(tech.id))) {
+          counts[tech.id] = (counts[tech.id] || 0) + 1;
+        }
+      });
+    });
+    
+    return counts;
+  }, [techniques]);
 
   const handleLink = (url?: string) => { if(url) alert(`Navigating: ${url}`); };
   const handleView = (id: string, type: string) => alert(`Viewing KB entry for ${type} ID: ${id}`);
@@ -22,16 +42,37 @@ const MitreBrowser: React.FC = () => {
   return (
     <StandardPage title="MITRE ATT&CK Knowledge Base" subtitle="Framework Version: v13.1" actions={<Button onClick={handleSync} variant="secondary">SYNC FRAMEWORK</Button>} modules={CONFIG.MODULES.MITRE} activeModule={activeModule} onModuleChange={setActiveModule}>
       {activeModule === 'Enterprise Matrix' && (
-        <div className="overflow-x-auto pb-4 custom-scrollbar"><div className="flex gap-4 min-w-[1400px]">{tactics.map(tactic => (
-           <div key={tactic.id} className="flex-1 min-w-[160px] flex flex-col gap-2">
-              <div className="bg-slate-800 p-2 text-center border-b-2 border-cyan-600 rounded-t"><div className="text-xs font-bold text-white uppercase">{tactic.name}</div><div className="text-[10px] text-slate-500">{tactic.id}</div></div>
-              {techniques.filter(t => t.tactic === tactic.name).map(tech => (
-                <div key={tech.id} onClick={() => handleView(tech.id, 'Technique')} className="bg-slate-900 border border-slate-700 p-2 text-[10px] text-slate-300 hover:bg-cyan-900/20 hover:border-cyan-500 cursor-pointer transition-colors rounded relative group">
-                   <span className="font-bold block text-slate-400 group-hover:text-cyan-400">{tech.id}</span>{tech.name}<div className="absolute right-1 top-1 w-1.5 h-1.5 rounded-full bg-cyan-500 opacity-0 group-hover:opacity-100"></div>
-                </div>
-              ))}
-           </div>
-        ))}</div></div>
+        <div className="flex flex-col h-full">
+          <div className="flex justify-between items-center mb-4 bg-slate-900 p-2 rounded border border-slate-800">
+             <span className="text-xs font-bold text-slate-400 px-2">VISUALIZATION MODE:</span>
+             <FilterGroup value={matrixMode} onChange={(v: any) => setMatrixMode(v)} options={[{label:'Standard', value:'STANDARD'}, {label:'Live Heatmap', value:'HEATMAP', color: 'bg-red-500'}]} />
+          </div>
+          <div className="overflow-x-auto pb-4 custom-scrollbar flex-1"><div className="flex gap-4 min-w-[1400px]">
+            {tactics.map(tactic => (
+             <div key={tactic.id} className="flex-1 min-w-[160px] flex flex-col gap-2">
+                <div className="bg-slate-800 p-2 text-center border-b-2 border-cyan-600 rounded-t"><div className="text-xs font-bold text-white uppercase">{tactic.name}</div><div className="text-[10px] text-slate-500">{tactic.id}</div></div>
+                {techniques.filter(t => t.tactic === tactic.name).map(tech => {
+                  const hits = activeTechniqueCounts[tech.id] || 0;
+                  const isHeatmap = matrixMode === 'HEATMAP';
+                  const glowClass = isHeatmap && hits > 0 
+                    ? hits > 2 ? 'bg-red-900/80 border-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
+                    : 'bg-orange-900/60 border-orange-500 text-orange-100'
+                    : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-cyan-500';
+
+                  return (
+                    <div key={tech.id} onClick={() => handleView(tech.id, 'Technique')} className={`${glowClass} border p-2 text-[10px] cursor-pointer transition-all rounded relative group`}>
+                       <div className="flex justify-between">
+                         <span className="font-bold block opacity-70 group-hover:opacity-100">{tech.id}</span>
+                         {isHeatmap && hits > 0 && <span className="bg-black/50 px-1 rounded text-white font-bold">{hits}</span>}
+                       </div>
+                       {tech.name}
+                    </div>
+                  );
+                })}
+             </div>
+            ))}
+          </div></div>
+        </div>
       )}
 
       {activeModule === 'Tactics' && (

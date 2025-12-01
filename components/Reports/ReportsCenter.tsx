@@ -6,17 +6,17 @@ import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 import { threatData } from '../../services/dataLayer';
 import { IncidentReport, View } from '../../types';
+import ReportBuilder from './ReportBuilder';
+import ReportViewer from './ReportViewer';
 
-const TEMPLATES = [
-  { id: 'T1', name: 'Executive Summary', desc: 'High-level overview of threats and risks for C-suite.', icon: '📊' },
-  { id: 'T2', name: 'Technical Forensic Analysis', desc: 'Deep dive into IoCs, malware analysis, and chain of custody.', icon: '🔬' },
-  { id: 'T3', name: 'Daily SOC Briefing', desc: 'Shift handover stats and active incidents.', icon: '📋' },
-  { id: 'T4', name: 'Regulatory Compliance', desc: 'GDPR/NIST status report.', icon: '⚖️' },
-];
+interface ReportsCenterProps { initialId?: string; }
 
-const ReportsCenter: React.FC = () => {
+const ReportsCenter: React.FC<ReportsCenterProps> = ({ initialId }) => {
   const [activeModule, setActiveModule] = useState(CONFIG.MODULES.REPORTS[0]);
   const [reports, setReports] = useState<IncidentReport[]>(threatData.getReports());
+  const templates = threatData.getReportTemplates();
+  const [mode, setMode] = useState<'LIST' | 'BUILD' | 'VIEW'>('LIST');
+  const [viewingReport, setViewingReport] = useState<IncidentReport | null>(null);
 
   useEffect(() => {
     const refresh = () => setReports(threatData.getReports());
@@ -24,20 +24,35 @@ const ReportsCenter: React.FC = () => {
     return () => window.removeEventListener('data-update', refresh);
   }, []);
 
+  useEffect(() => {
+    if (initialId) {
+      const r = reports.find(rep => rep.id === initialId);
+      if (r) { setViewingReport(r); setMode('VIEW'); }
+    }
+  }, [initialId, reports]);
+
   const handleDownload = (r: IncidentReport) => {
-    alert(`Downloading ${r.title}.pdf...`);
+    const blob = new Blob([r.content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${r.title.replace(/\s+/g, '_')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleNavigate = (type: 'CASE' | 'ACTOR', id: string) => {
-    const view = type === 'CASE' ? View.CASES : View.ACTORS;
-    window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view, id } }));
+    window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: type === 'CASE' ? View.CASES : View.ACTORS, id } }));
   };
+
+  if (mode === 'BUILD') return <StandardPage title="Report Studio" subtitle="Enterprise Briefing Builder"><ReportBuilder onCancel={() => setMode('LIST')} onSave={() => setMode('LIST')} /></StandardPage>;
+  if (mode === 'VIEW' && viewingReport) return <StandardPage title="Report Viewer" subtitle="Document Preview"><ReportViewer report={viewingReport} onClose={() => { setMode('LIST'); setViewingReport(null); }} onDownload={() => handleDownload(viewingReport)} /></StandardPage>;
 
   return (
     <StandardPage 
       title="Intelligence Reporting" 
       subtitle="Executive Summaries & Technical Briefs"
-      actions={<Button>+ NEW REPORT</Button>} 
+      actions={<Button onClick={() => setMode('BUILD')}>+ NEW REPORT</Button>} 
       modules={CONFIG.MODULES.REPORTS} 
       activeModule={activeModule} 
       onModuleChange={setActiveModule}
@@ -47,7 +62,7 @@ const ReportsCenter: React.FC = () => {
           data={reports}
           keyExtractor={r => r.id}
           columns={[
-            { header: 'Report ID', render: r => <span className="font-mono text-cyan-500">{r.id}</span> },
+            { header: 'Report ID', render: r => <span className="font-mono text-cyan-500 cursor-pointer hover:underline" onClick={() => { setViewingReport(r); setMode('VIEW'); }}>{r.id}</span> },
             { header: 'Title', render: r => <span className="font-bold text-white">{r.title}</span> },
             { header: 'Type', render: r => <Badge>{r.type}</Badge> },
             { header: 'Date', render: r => <span className="text-slate-400 text-xs">{r.date}</span> },
@@ -58,12 +73,12 @@ const ReportsCenter: React.FC = () => {
                  {!r.relatedCaseId && !r.relatedActorId && <span className="text-xs text-slate-600">None</span>}
               </div>
             )},
-            { header: 'Actions', render: r => <Button onClick={() => handleDownload(r)} variant="text" className="text-cyan-400">DOWNLOAD</Button> }
+            { header: 'Actions', render: r => <div className="flex gap-2"><Button onClick={() => { setViewingReport(r); setMode('VIEW'); }} variant="text" className="text-slate-300">VIEW</Button><Button onClick={() => handleDownload(r)} variant="text" className="text-cyan-400">PDF</Button></div> }
           ]}
           renderMobileCard={r => (
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center" onClick={() => { setViewingReport(r); setMode('VIEW'); }}>
               <div><div className="text-white font-bold">{r.title}</div><div className="text-xs text-slate-500">{r.date}</div></div>
-              <Button onClick={() => handleDownload(r)} variant="text" className="text-cyan-400">PDF</Button>
+              <Button onClick={(e) => { e.stopPropagation(); handleDownload(r); }} variant="text" className="text-cyan-400">PDF</Button>
             </div>
           )}
         />
@@ -71,8 +86,8 @@ const ReportsCenter: React.FC = () => {
 
       {activeModule === 'Templates' && (
         <Grid cols={4}>
-          {TEMPLATES.map(t => (
-            <Card key={t.id} className="p-6 hover:border-cyan-500 transition-colors cursor-pointer group">
+          {templates.map(t => (
+            <Card key={t.id} className="p-6 hover:border-cyan-500 transition-colors cursor-pointer group" onClick={() => setMode('BUILD')}>
               <div className="text-3xl mb-4">{t.icon}</div>
               <h3 className="font-bold text-white mb-2 group-hover:text-cyan-400">{t.name}</h3>
               <p className="text-sm text-slate-400 mb-4">{t.desc}</p>
@@ -89,10 +104,6 @@ const ReportsCenter: React.FC = () => {
             <div className="bg-slate-950 p-4 rounded border border-slate-800 flex justify-between items-center">
               <div><div className="text-white font-bold">Daily Briefing</div><div className="text-xs text-slate-500">Every Morning @ 08:00 UTC -> Email: soc-team@sentinel.co</div></div>
               <Badge color="green">ACTIVE</Badge>
-            </div>
-            <div className="bg-slate-950 p-4 rounded border border-slate-800 flex justify-between items-center">
-               <div><div className="text-white font-bold">Monthly Compliance</div><div className="text-xs text-slate-500">1st of Month -> Email: ciso@sentinel.co</div></div>
-               <Badge color="green">ACTIVE</Badge>
             </div>
           </div>
         </div>

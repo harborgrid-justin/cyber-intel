@@ -5,6 +5,7 @@ import SubModuleNav from '../Shared/SubModuleNav';
 import { DetailViewHeader } from '../Shared/Layouts';
 import { Button, Card, Badge } from '../Shared/UI';
 import { CampaignOverview, CampaignIoCs, CampaignTimeline, CampaignAttribution } from './CampaignViews';
+import CampaignImpact from './Views/CampaignImpact';
 import { threatData } from '../../services/dataLayer';
 
 interface CampaignDetailProps {
@@ -34,6 +35,7 @@ const CampaignDetail: React.FC<CampaignDetailProps> = ({ campaign, activeModule,
       
       <div className="p-6 flex-1 overflow-y-auto">
         {activeModule === 'Overview' && <CampaignOverview campaign={campaign} />}
+        {activeModule === 'Strategic Impact' && <CampaignImpact campaign={campaign} />}
         {activeModule === 'IOCs' && <CampaignIoCs threats={linkedThreats} />}
         {activeModule === 'Attribution' && <CampaignAttribution actors={campaign.actors} />}
         {activeModule === 'Timeline' && <CampaignTimeline campaign={campaign} />}

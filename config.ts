@@ -65,7 +65,9 @@ export const CONFIG = {
     INGESTION: ['Status', 'Sources', 'Schedule', 'Parsers', 'Enrichment', 'Normalization'],
     INCIDENTS: ['Triage', 'Kanban', 'Timeline', 'Evidence', 'Playbooks', 'War Room', 'Assets', 'Users', 'Network', 'Reports'],
     ACTORS: ['Profile', 'Threat Feed Links', 'IoC Associations', 'Related Malware Families', 'Infrastructure Details', 'Network Traffic Analysis', 'TTPs', 'Campaigns', 'Exploits', 'Industries', 'Timeline', 'Associations', 'References', 'Reports'],
-    CAMPAIGNS: ['Overview', 'IOCs', 'Attribution', 'Timeline', 'TTP Matrix'],
+    ACTOR_LIBRARY: ['Directory', 'Global Graph', 'Heatmap'],
+    CAMPAIGNS: ['Overview', 'Strategic Impact', 'IOCs', 'Attribution', 'Timeline', 'TTP Matrix'],
+    CAMPAIGN_LIBRARY: ['Active Campaigns', 'Archived', 'Strategic Impact'],
     VULNERABILITIES: ['Overview', 'Critical Watch', 'Zero-Days', 'Exploited', 'Patch Status', 'Scanners', 'Vendor Feeds'],
     OSINT: ['Central Search', 'Domain Intel', 'Email Breach', 'Social Graph', 'IP Geolocation', 'Metadata', 'Dark Web'],
     EVIDENCE: ['Inventory', 'Chain of Custody', 'Malware Vault', 'Forensics Lab', 'Network Captures', 'Device Locker', 'Storage'],
@@ -75,7 +77,8 @@ export const CONFIG = {
     THREAT_FEED: ['All Threats', 'Manage IoCs', 'APTs', 'Malware', 'Phishing', 'Ransomware', 'Botnets', 'Exploits', 'Zero-Days', 'Dark Web'],
     INTEL_ASSISTANT: ['Chat', 'Briefing', 'Triage', 'Research', 'Translation', 'Decryption', 'Summary', 'Correlation', 'Attribution', 'Report Gen'],
     DASHBOARD: ['Overview', 'Global Map', 'System Health', 'Compliance', 'Dark Web', 'Insider Threat', 'Network Ops', 'Cloud Security'],
-    CASES: ['Ticket', 'Timeline', 'Intelligence', 'Coordination', 'Evidence', 'Reports', 'Audit'],
+    CASES: ['Ticket', 'Kill Chain', 'Timeline', 'Intelligence', 'Coordination', 'Evidence', 'Reports', 'Audit'],
+    CASE_BOARD: ['Kanban Board', 'My Tickets', 'Critical Watch', 'Pending Review'],
     AUDIT: ['All Logs', 'Auth', 'Data', 'System', 'Network', 'Policy', 'Exports', 'Errors', 'Admin', 'Archives'],
     MITRE: ['Enterprise Matrix', 'Tactics', 'Techniques', 'Sub-Techniques', 'APT Groups', 'Software', 'Mitigations']
   }

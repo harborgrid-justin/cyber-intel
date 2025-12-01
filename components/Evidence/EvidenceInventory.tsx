@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, Button, Badge } from '../Shared/UI';
+import { Card, Button, Badge, FilterGroup } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { Artifact, View } from '../../types';
 
@@ -19,11 +19,11 @@ const EvidenceInventory: React.FC<EvidenceInventoryProps> = ({ artifacts, handle
   return (
     <Card className="p-4 md:p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-         <div className="flex flex-wrap gap-2">
-            {['ALL', 'BINARY', 'LOG', 'IMAGE', 'DOCUMENT'].map(t => (
-               <button key={t} onClick={() => setFilterType(t)} className={`px-3 py-1 text-[10px] font-bold rounded uppercase ${filterType === t ? 'bg-cyan-900 text-cyan-400 border border-cyan-700' : 'bg-slate-950 text-slate-500 border border-slate-800'}`}>{t}</button>
-            ))}
-         </div>
+         <FilterGroup
+            value={filterType}
+            onChange={setFilterType}
+            options={['ALL', 'BINARY', 'LOG', 'IMAGE', 'DOCUMENT'].map(t => ({ label: t, value: t }))}
+         />
          <div className="text-xs text-slate-500 font-mono text-right">{filtered.length} ITEMS | {totalSize.toFixed(2)} MB</div>
       </div>
       <ResponsiveTable<EvidenceItem>

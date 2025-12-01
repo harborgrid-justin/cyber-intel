@@ -25,12 +25,19 @@ const DetectionScanner: React.FC = () => {
 
   const handlePromoteAll = () => {
     if(results.length === 0) return;
+    
+    // 1. Add threats to the global feed
+    results.forEach(t => threatData.addThreat(t));
+
+    // 2. Create an investigation case
     threatData.addCase({
       id: `CASE-${Date.now()}`, title: `Log Analysis Batch: ${results.length} IoCs`, description: `Batch promotion of IoCs detected from log analysis.\n\nIndicators:\n${results.map(r => r.indicator).join('\n')}`,
-      status: 'OPEN', priority: 'HIGH', assignee: 'Unassigned', reporter: 'Detection_Scanner', tasks: [], findings: '', relatedThreatIds: [], created: new Date().toLocaleDateString(),
+      status: 'OPEN', priority: 'HIGH', assignee: 'Unassigned', reporter: 'Detection_Scanner', tasks: [], findings: '', relatedThreatIds: results.map(r => r.id), created: new Date().toLocaleDateString(),
       notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Detection', 'Batch'], tlp: 'AMBER'
     });
-    alert("Promoted findings to new Case");
+    
+    alert(`Promoted ${results.length} findings to Threat Feed and created Case.`);
+    setResults([]); // Clear local results after promotion
   };
 
   return (

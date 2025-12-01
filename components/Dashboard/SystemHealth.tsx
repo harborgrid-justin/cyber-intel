@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { SYSTEM_NODES } from '../../constants';
+import { threatData } from '../../services/dataLayer';
 import { Card } from '../Shared/UI';
 
 const SystemHealth: React.FC = () => {
+  const nodes = threatData.getSystemNodes();
+
   return (
     <Card className="p-6 shadow-sm">
       <div className="flex justify-between items-center mb-4">
@@ -11,7 +13,7 @@ const SystemHealth: React.FC = () => {
         <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
       </div>
       <div className="space-y-4">
-        {SYSTEM_NODES.map((node) => (
+        {nodes.map((node) => (
           <div key={node.id} className="group">
             <div className="flex justify-between text-xs font-mono mb-1">
               <span className={`font-bold ${node.status === 'ONLINE' ? 'text-green-500' : 'text-red-500'}`}>
@@ -38,4 +40,3 @@ const SystemHealth: React.FC = () => {
   );
 };
 export default SystemHealth;
-    

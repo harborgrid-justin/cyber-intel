@@ -1,19 +1,20 @@
 
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { THREAT_TRENDS } from '../../constants';
+import { threatData } from '../../services/dataLayer';
 import { CONFIG } from '../../config';
 import { Card } from '../Shared/UI';
 
 const ThreatChart: React.FC = () => {
   const { CHARTS } = CONFIG.THEME;
+  const data = threatData.getThreatTrends();
 
   return (
     <Card className="p-6 shadow-lg h-96">
       <h3 className="text-lg font-semibold text-slate-200 mb-4">Global Threat Volume (24h)</h3>
       <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={THREAT_TRENDS}>
+          <AreaChart data={data}>
             <defs>
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={CHARTS.PRIMARY} stopOpacity={0.3}/>
@@ -35,4 +36,3 @@ const ThreatChart: React.FC = () => {
   );
 };
 export default ThreatChart;
-    

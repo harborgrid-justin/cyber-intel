@@ -5,6 +5,7 @@ import ResponsiveTable from '../Shared/ResponsiveTable';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 import { threatData } from '../../services/dataLayer';
+import { Icons } from '../Shared/Icons';
 
 const OsintDashboard: React.FC = () => {
   const [activeModule, setActiveModule] = useState(CONFIG.MODULES.OSINT[0]);
@@ -71,7 +72,23 @@ const OsintDashboard: React.FC = () => {
       )}
 
       {activeModule === 'Metadata' && (
-        <div className="space-y-6"><Card className="flex justify-center p-8 border-dashed border-slate-700 bg-slate-900/30 cursor-pointer hover:border-cyan-500 transition-colors"><div className="text-center"><div className="text-2xl mb-2">📄</div><p className="text-slate-400 font-bold uppercase text-sm">Drop files for analysis</p></div></Card><ResponsiveTable data={metaData} keyExtractor={f => f.name} columns={[{ header: 'File', render: f => <div className="text-white font-mono">{f.name}</div> }, { header: 'GPS', render: f => <span className="text-xs">{f.gps}</span> }]} renderMobileCard={f => <div>{f.name}</div>} /></div>
+        <div className="space-y-6">
+            <Card className="flex justify-center p-8 border-dashed border-slate-700 bg-slate-900/30 cursor-pointer hover:border-cyan-500 transition-colors">
+                <div className="text-center flex flex-col items-center">
+                    <Icons.FileText className="text-slate-600 mb-2 w-10 h-10" />
+                    <p className="text-slate-400 font-bold uppercase text-sm">Drop files for analysis</p>
+                </div>
+            </Card>
+            <ResponsiveTable 
+                data={metaData} 
+                keyExtractor={f => f.name} 
+                columns={[
+                    { header: 'File', render: f => <div className="text-white font-mono">{f.name}</div> }, 
+                    { header: 'GPS', render: f => <span className="text-xs">{f.gps}</span> }
+                ]} 
+                renderMobileCard={f => <div>{f.name}</div>} 
+            />
+        </div>
       )}
     </StandardPage>
   );

@@ -81,12 +81,51 @@ export const Badge: React.FC<BadgeProps> = ({ children, color = 'slate', onClick
   return <span onClick={onClick} className={`${STYLES.badge} ${colors[color] || colors.slate} ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}>{children}</span>;
 };
 
-// Updated to optionally include padding
+export interface FilterOption {
+  label: string;
+  value: string;
+  count?: number;
+  color?: string;
+  icon?: React.ReactNode;
+}
+
+export const FilterGroup: React.FC<{
+  options: FilterOption[];
+  value: string;
+  onChange: (val: string) => void;
+  className?: string;
+}> = ({ options, value, onChange, className = '' }) => (
+  <div className={`flex gap-2 overflow-x-auto custom-scrollbar items-center ${className}`}>
+    {options.map((opt) => {
+      const isActive = value === opt.value;
+      return (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`px-3 py-1.5 rounded border text-[10px] font-bold uppercase whitespace-nowrap transition-all flex items-center gap-2 select-none ${
+            isActive
+              ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+              : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-600 hover:text-slate-300'
+          }`}
+        >
+          {opt.color && <span className={`w-1.5 h-1.5 rounded-full ${opt.color}`}></span>}
+          {opt.icon}
+          {opt.label}
+          {opt.count !== undefined && (
+            <span className={`px-1.5 py-0.5 rounded text-[9px] ${isActive ? 'bg-cyan-900/50 text-cyan-200' : 'bg-slate-800 text-slate-400'}`}>
+              {opt.count}
+            </span>
+          )}
+        </button>
+      );
+    })}
+  </div>
+);
+
 export const PageContainer: React.FC<{ children: React.ReactNode; className?: string; noPadding?: boolean }> = ({ children, className = '', noPadding = false }) => (
   <div className={`${STYLES.container} ${!noPadding ? STYLES.page_padding : ''} ${className}`}>{children}</div>
 );
 
-// Standardized Header Container
 export const HeaderContainer: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
   <div className={`bg-slate-950 border-b border-slate-800 p-4 md:px-6 flex flex-col justify-center shrink-0 ${className}`}>
     {children}

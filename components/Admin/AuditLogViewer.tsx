@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
-import { MOCK_AUDIT_LOGS } from '../../constants';
+import { threatData } from '../../services/dataLayer';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
+import { AuditLog } from '../../types';
 
 const AuditLogViewer: React.FC = () => {
   const [activeModule, setActiveModule] = useState(CONFIG.MODULES.AUDIT[0]);
+  const logs = threatData.getAuditLogs();
 
   return (
     <StandardPage 
@@ -16,8 +18,8 @@ const AuditLogViewer: React.FC = () => {
       activeModule={activeModule} 
       onModuleChange={setActiveModule}
     >
-      <ResponsiveTable
-        data={MOCK_AUDIT_LOGS}
+      <ResponsiveTable<AuditLog>
+        data={logs}
         keyExtractor={l => l.id}
         columns={[
           { header: 'Time', render: l => <span className="text-slate-300 font-mono text-xs">{l.timestamp}</span> },

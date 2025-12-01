@@ -10,10 +10,10 @@ import CaseTicketView from './Views/CaseTicketView';
 import CaseCoordinationView from './Views/CaseCoordinationView';
 import CaseReportsView from './Views/CaseReportsView';
 import CaseTimelineView from './Views/CaseTimelineView';
+import KillChainView from './Views/KillChainView';
 import { threatData } from '../../services/dataLayer';
 import { Button, Badge } from '../Shared/UI';
 import { DetailViewHeader } from '../Shared/Layouts';
-import { MOCK_AUDIT_LOGS } from '../../constants';
 
 interface CaseDetailProps {
   activeCase: Case; linkedThreats: Threat[]; activeModule: string;
@@ -23,6 +23,7 @@ interface CaseDetailProps {
 const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, activeModule, onModuleChange, onBack, modules, onUpdate }) => {
   const [comment, setComment] = useState('');
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
+  const auditLogs = threatData.getAuditLogs();
 
   const handleTransfer = (agency: string) => { threatData.transferCase(activeCase.id, agency); onUpdate(); };
   const handleShare = (agency: string) => { threatData.shareCase(activeCase.id, agency); onUpdate(); };
@@ -53,12 +54,13 @@ const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, acti
       <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col lg:flex-row gap-6 scroll-smooth">
         <div className="flex-1 space-y-6">
           {activeModule === 'Ticket' && <CaseTicketView activeCase={activeCase} onAddTask={handleAddTask} onToggleTask={toggleTask} comment={comment} setComment={setComment} onPostComment={handleComment} />}
+          {activeModule === 'Kill Chain' && <KillChainView threats={linkedThreats} />}
           {activeModule === 'Timeline' && <CaseTimelineView activeCase={activeCase} />}
           {activeModule === 'Coordination' && <CaseCoordinationView activeCase={activeCase} onTransfer={handleTransfer} onShare={handleShare} />}
           {activeModule === 'Intelligence' && (linkedThreats.length > 0 ? <><NetworkGraph threats={linkedThreats} /><div className="space-y-2 mt-4">{linkedThreats.map(t => <FeedItem key={t.id} threat={t} />)}</div></> : <div className="p-8 text-center border-2 border-dashed border-slate-800 rounded-lg text-slate-500">No threats currently linked to this case.</div>)}
           {activeModule === 'Evidence' && <EvidenceManager artifacts={activeCase.artifacts} onAdd={handleAddArtifact} onDelete={handleDeleteArtifact} />}
           {activeModule === 'Reports' && <CaseReportsView caseId={activeCase.id} onGenerate={handleGenerateReport} />}
-          {activeModule === 'Audit' && <div className="space-y-2">{MOCK_AUDIT_LOGS.map(l => <div key={l.id} className="bg-slate-950 p-3 rounded border border-slate-800 flex justify-between items-center"><div className="text-xs text-cyan-500 font-mono mb-0.5">{l.timestamp} - {l.user}</div><div className="text-sm text-slate-300 font-bold">{l.action}</div></div>)}</div>}
+          {activeModule === 'Audit' && <div className="space-y-2">{auditLogs.map(l => <div key={l.id} className="bg-slate-950 p-3 rounded border border-slate-800 flex justify-between items-center"><div className="text-xs text-cyan-500 font-mono mb-0.5">{l.timestamp} - {l.user}</div><div className="text-sm text-slate-300 font-bold">{l.action}</div></div>)}</div>}
         </div>
         <div className="lg:w-80 space-y-4">
           <div className="bg-slate-900 border border-slate-800 rounded p-4 space-y-5 shadow-sm">

@@ -1,5 +1,5 @@
 
-import { ChainEvent, Vulnerability, SystemNode, ThreatActor, AuditLog, Artifact, Task, SystemUser, Device, IoCFeed, OsintSocial, Playbook } from '../../types';
+import { ChainEvent, Vulnerability, SystemNode, ThreatActor, AuditLog, Artifact, Task, SystemUser, Device, IoCFeed, OsintSocial, Playbook, NistControl } from '../../types';
 
 export class SystemLogic {
   static validateChainOfCustody(history: ChainEvent[], newEvent: ChainEvent) { 
@@ -8,6 +8,15 @@ export class SystemLogic {
       if (newEvent.action === 'CHECK_OUT' && lastEvent.action === 'CHECK_OUT') return false;
       if (newEvent.action === 'CHECK_IN' && lastEvent.action === 'CHECK_IN') return false;
       return true; 
+  }
+
+  static checkNistCompliance(controls: NistControl[]): { score: number, criticalGaps: string[] } {
+      const implemented = controls.filter(c => c.status === 'IMPLEMENTED');
+      const gaps = controls.filter(c => c.status === 'FAILED' || c.status === 'PLANNED').map(c => c.id);
+      return {
+          score: Math.round((implemented.length / controls.length) * 100),
+          criticalGaps: gaps
+      };
   }
 
   static assessAssetRisk(v: Vulnerability, nodes: SystemNode[]) { 

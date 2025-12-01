@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Task } from '../../types';
 import { Button, Input, Badge, Card, Select } from '../Shared/UI';
+import { CaseLogic } from '../../services/logic/CaseLogic';
 
 interface TaskManagerProps {
   tasks: Task[];
@@ -23,37 +24,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ tasks, onAdd, onToggle }) => 
     }
   };
 
-  const isBlocked = (task: Task) => {
-    if (!task.dependsOn || task.dependsOn.length === 0) return false;
-    return task.dependsOn.some(depId => {
-      const parent = safeTasks.find(t => t.id === depId);
-      return parent && parent.status !== 'DONE';
-    });
-  };
-
-  const getBlockerName = (task: Task) => {
-    if (!task.dependsOn || !task.dependsOn.length) return '';
-    const firstBlockerId = task.dependsOn.find(depId => {
-        const parent = safeTasks.find(t => t.id === depId);
-        return parent && parent.status !== 'DONE';
-    });
-    if (!firstBlockerId) return '';
-    const parent = safeTasks.find(t => t.id === firstBlockerId);
-    return parent ? parent.title : 'Unknown Task';
-  };
-
-  const sortedTasks = [...safeTasks].sort((a, b) => {
-    const aBlocked = isBlocked(a);
-    const bBlocked = isBlocked(b);
-    if (a.status === b.status) {
-       if (a.status === 'PENDING') {
-         if (aBlocked !== bBlocked) return aBlocked ? 1 : -1;
-       }
-       return 0;
-    }
-    return a.status === 'DONE' ? 1 : -1;
-  });
-
+  const sortedTasks = CaseLogic.sortTasks(safeTasks);
   const availableDependencies = safeTasks.filter(t => t.status !== 'DONE');
   const progress = safeTasks.length ? Math.round((safeTasks.filter(t => t.status === 'DONE').length / safeTasks.length) * 100) : 0;
 
@@ -95,8 +66,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({ tasks, onAdd, onToggle }) => 
 
       <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
         {sortedTasks.map(task => {
-          const blocked = isBlocked(task);
-          const blockerName = blocked ? getBlockerName(task) : '';
+          const blocked = CaseLogic.isTaskBlocked(task, safeTasks);
+          const blockerName = blocked ? CaseLogic.getTaskBlockerName(task, safeTasks) : '';
           const isDone = task.status === 'DONE';
 
           return (

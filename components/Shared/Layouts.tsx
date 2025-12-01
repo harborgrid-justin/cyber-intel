@@ -43,16 +43,23 @@ interface MasterDetailLayoutProps {
   isDetailOpen: boolean;
   onBack?: () => void;
   actions?: React.ReactNode;
+  modules?: string[];
+  activeModule?: string;
+  onModuleChange?: (module: string) => void;
 }
 
 export const MasterDetailLayout: React.FC<MasterDetailLayoutProps> = ({
-  title, subtitle, listContent, detailContent, isDetailOpen, onBack, actions
+  title, subtitle, listContent, detailContent, isDetailOpen, onBack, actions, modules, activeModule, onModuleChange
 }) => {
   return (
     <PageContainer noPadding>
       <HeaderContainer>
          <PageHeader title={title} subtitle={subtitle} actions={actions} />
       </HeaderContainer>
+
+      {modules && activeModule && onModuleChange && (
+        <SubModuleNav modules={modules} activeModule={activeModule} onChange={onModuleChange} />
+      )}
       
       <div className={`flex-1 flex gap-6 relative overflow-hidden min-h-0 ${STYLES.page_padding}`}>
         {/* List View - Hidden on mobile if detail is open */}

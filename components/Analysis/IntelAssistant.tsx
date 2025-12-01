@@ -7,6 +7,7 @@ import { StandardPage } from '../Shared/Layouts';
 import { Card, Button } from '../Shared/UI';
 import { CONFIG } from '../../config';
 import ChatInterface, { Message } from '../Shared/ChatInterface';
+import AttributionEngine from './AttributionEngine';
 
 const IntelAssistant: React.FC = () => {
   const [activeModule, setActiveModule] = useState(CONFIG.MODULES.INTEL_ASSISTANT[0]);
@@ -48,8 +49,8 @@ const IntelAssistant: React.FC = () => {
       activeModule={activeModule}
       onModuleChange={setActiveModule}
     >
-      <Card className="flex-1 flex flex-col min-h-0 p-0 border-slate-800 h-full">
-        {activeModule === 'Chat' ? (
+      {activeModule === 'Chat' && (
+        <Card className="flex-1 flex flex-col min-h-0 p-0 border-slate-800 h-full">
           <ChatInterface 
             messages={messages}
             onSend={handleSend}
@@ -57,12 +58,16 @@ const IntelAssistant: React.FC = () => {
             placeholder="Query threat intelligence..."
             className="flex-1 border-0 rounded-none h-full"
           />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-slate-500 uppercase tracking-widest p-12">
-            {activeModule} Module
-          </div>
-        )}
-      </Card>
+        </Card>
+      )}
+      
+      {activeModule === 'Attribution' && <AttributionEngine />}
+
+      {!['Chat', 'Attribution'].includes(activeModule) && (
+        <Card className="flex-1 flex items-center justify-center text-slate-500 uppercase tracking-widest p-12">
+          {activeModule} Module Interface
+        </Card>
+      )}
     </StandardPage>
   );
 };

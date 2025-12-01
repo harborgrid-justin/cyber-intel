@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Badge, Input } from '../Shared/UI';
+import { Button, Card, Badge, Input, FilterGroup } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import { MockAdapter, PostgresAdapter, DatabaseAdapter } from '../../services/dbAdapter';
 import { CONFIG } from '../../config';
@@ -54,10 +54,14 @@ const DatabaseConnector: React.FC = () => {
           <div className="space-y-4">
             <div>
               <label className="text-xs text-slate-500 uppercase font-bold mb-2 block">Persistence Engine</label>
-              <div className="flex gap-2">
-                <button onClick={() => setProviderType('MEMORY')} className={`flex-1 py-2 rounded border text-xs font-bold ${providerType==='MEMORY' ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>IN-MEMORY (MOCK)</button>
-                <button onClick={() => setProviderType('SQL')} className={`flex-1 py-2 rounded border text-xs font-bold ${providerType==='SQL' ? 'bg-blue-900/30 border-blue-500 text-blue-400' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>POSTGRESQL / SEQUELIZE</button>
-              </div>
+              <FilterGroup
+                value={providerType}
+                onChange={(v) => setProviderType(v as any)}
+                options={[
+                  { label: 'In-Memory (Mock)', value: 'MEMORY' },
+                  { label: 'PostgreSQL / Sequelize', value: 'SQL' }
+                ]}
+              />
             </div>
 
             {providerType === 'SQL' && (
