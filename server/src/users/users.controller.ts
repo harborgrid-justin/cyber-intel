@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { SystemUser } from '@/types';
+import { User } from '../models';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  async findAll(@Query('status') status?: string, @Query('role') role?: string): Promise<SystemUser[]> {
+  async findAll(@Query('status') status?: string, @Query('role') role?: string): Promise<User[]> {
     try {
       return await this.usersService.findAll({ status, role });
     } catch (error) {
@@ -16,7 +16,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<SystemUser> {
+  async findOne(@Param('id') id: string): Promise<User> {
     try {
       const user = await this.usersService.findOne(id);
       if (!user) {
@@ -30,7 +30,7 @@ export class UsersController {
   }
 
   @Post()
-  async create(@Body() createUserDto: Omit<SystemUser, 'id'>): Promise<SystemUser> {
+  async create(@Body() createUserDto: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
     try {
       return await this.usersService.create(createUserDto);
     } catch (error) {
@@ -39,7 +39,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: Partial<SystemUser>): Promise<SystemUser> {
+  async update(@Param('id') id: string, @Body() updateUserDto: Partial<User>): Promise<User> {
     try {
       const user = await this.usersService.update(id, updateUserDto);
       if (!user) {
@@ -67,7 +67,7 @@ export class UsersController {
   }
 
   @Post(':id/lock')
-  async lockUser(@Param('id') id: string, @Body() lockData: { reason: string; duration?: number }): Promise<SystemUser> {
+  async lockUser(@Param('id') id: string, @Body() lockData: { reason: string; duration?: number }): Promise<User> {
     try {
       return await this.usersService.lockUser(id, lockData);
     } catch (error) {
@@ -76,7 +76,7 @@ export class UsersController {
   }
 
   @Post(':id/unlock')
-  async unlockUser(@Param('id') id: string): Promise<SystemUser> {
+  async unlockUser(@Param('id') id: string): Promise<User> {
     try {
       return await this.usersService.unlockUser(id);
     } catch (error) {
@@ -93,21 +93,21 @@ export class UsersController {
     }
   }
 
-  @Get('vip/list')
-  async getVIPUsers(): Promise<SystemUser[]> {
+  @Get('active/list')
+  async getActiveUsers(): Promise<User[]> {
     try {
-      return await this.usersService.getVIPUsers();
+      return await this.usersService.getActiveUsers();
     } catch (error) {
-      throw new HttpException('Failed to retrieve VIP users', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('Failed to retrieve active users', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  @Post(':id/fatigue-check')
-  async performFatigueCheck(@Param('id') id: string): Promise<{ fatigueLevel: string; recommendations: string[] }> {
+  @Post(':id/last-login')
+  async updateLastLogin(@Param('id') id: string): Promise<User | null> {
     try {
-      return await this.usersService.performFatigueCheck(id);
+      return await this.usersService.updateLastLogin(id);
     } catch (error) {
-      throw new HttpException('Failed to perform fatigue check', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('Failed to update last login', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

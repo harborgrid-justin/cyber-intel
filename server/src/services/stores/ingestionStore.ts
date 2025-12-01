@@ -2,7 +2,10 @@ import {
   IngestionJob,
   ParserRule,
   EnrichmentModule,
-  NormalizationRule
+  NormalizationRule,
+  IngestionJobStatus,
+  ParserRuleStatus,
+  EnrichmentModuleStatus
 } from '@/types';
 
 export class IngestionStore {
@@ -12,10 +15,10 @@ export class IngestionStore {
   private normalizationRules: NormalizationRule[] = [];
 
   constructor(
-    ingestionJobs: IngestionJob[],
-    parserRules: ParserRule[],
-    enrichmentModules: EnrichmentModule[],
-    normalizationRules: NormalizationRule[]
+    ingestionJobs: IngestionJob[] = [],
+    parserRules: ParserRule[] = [],
+    enrichmentModules: EnrichmentModule[] = [],
+    normalizationRules: NormalizationRule[] = []
   ) {
     this.ingestionJobs = ingestionJobs;
     this.parserRules = parserRules;
@@ -28,19 +31,28 @@ export class IngestionStore {
     return [...this.ingestionJobs];
   }
 
+  getIngestionJob(id: string): IngestionJob | null {
+    return this.ingestionJobs.find(job => job.id === id) || null;
+  }
+
   addIngestionJob(job: IngestionJob): void {
     this.ingestionJobs.push(job);
   }
 
-  getIngestionJob(id: string): IngestionJob | undefined {
-    return this.ingestionJobs.find(j => j.id === id);
+  updateIngestionJob(id: string, updatedJob: IngestionJob): IngestionJob | null {
+    const index = this.ingestionJobs.findIndex(job => job.id === id);
+    if (index === -1) return null;
+
+    this.ingestionJobs[index] = updatedJob;
+    return updatedJob;
   }
 
-  updateIngestionJob(id: string, updates: Partial<IngestionJob>): IngestionJob | undefined {
-    const index = this.ingestionJobs.findIndex(j => j.id === id);
-    if (index === -1) return undefined;
-    this.ingestionJobs[index] = { ...this.ingestionJobs[index], ...updates };
-    return this.ingestionJobs[index];
+  deleteIngestionJob(id: string): boolean {
+    const index = this.ingestionJobs.findIndex(job => job.id === id);
+    if (index === -1) return false;
+
+    this.ingestionJobs.splice(index, 1);
+    return true;
   }
 
   // Parser Rules
@@ -48,19 +60,28 @@ export class IngestionStore {
     return [...this.parserRules];
   }
 
+  getParserRule(id: string): ParserRule | null {
+    return this.parserRules.find(rule => rule.id === id) || null;
+  }
+
   addParserRule(rule: ParserRule): void {
     this.parserRules.push(rule);
   }
 
-  getParserRule(id: string): ParserRule | undefined {
-    return this.parserRules.find(r => r.id === id);
+  updateParserRule(id: string, updatedRule: ParserRule): ParserRule | null {
+    const index = this.parserRules.findIndex(rule => rule.id === id);
+    if (index === -1) return null;
+
+    this.parserRules[index] = updatedRule;
+    return updatedRule;
   }
 
-  updateParserRule(id: string, updates: Partial<ParserRule>): ParserRule | undefined {
-    const index = this.parserRules.findIndex(r => r.id === id);
-    if (index === -1) return undefined;
-    this.parserRules[index] = { ...this.parserRules[index], ...updates };
-    return this.parserRules[index];
+  deleteParserRule(id: string): boolean {
+    const index = this.parserRules.findIndex(rule => rule.id === id);
+    if (index === -1) return false;
+
+    this.parserRules.splice(index, 1);
+    return true;
   }
 
   // Enrichment Modules
@@ -68,19 +89,28 @@ export class IngestionStore {
     return [...this.enrichmentModules];
   }
 
+  getEnrichmentModule(id: string): EnrichmentModule | null {
+    return this.enrichmentModules.find(module => module.id === id) || null;
+  }
+
   addEnrichmentModule(module: EnrichmentModule): void {
     this.enrichmentModules.push(module);
   }
 
-  getEnrichmentModule(id: string): EnrichmentModule | undefined {
-    return this.enrichmentModules.find(m => m.id === id);
+  updateEnrichmentModule(id: string, updatedModule: EnrichmentModule): EnrichmentModule | null {
+    const index = this.enrichmentModules.findIndex(module => module.id === id);
+    if (index === -1) return null;
+
+    this.enrichmentModules[index] = updatedModule;
+    return updatedModule;
   }
 
-  updateEnrichmentModule(id: string, updates: Partial<EnrichmentModule>): EnrichmentModule | undefined {
-    const index = this.enrichmentModules.findIndex(m => m.id === id);
-    if (index === -1) return undefined;
-    this.enrichmentModules[index] = { ...this.enrichmentModules[index], ...updates };
-    return this.enrichmentModules[index];
+  deleteEnrichmentModule(id: string): boolean {
+    const index = this.enrichmentModules.findIndex(module => module.id === id);
+    if (index === -1) return false;
+
+    this.enrichmentModules.splice(index, 1);
+    return true;
   }
 
   // Normalization Rules
@@ -88,41 +118,140 @@ export class IngestionStore {
     return [...this.normalizationRules];
   }
 
+  getNormalizationRule(id: string): NormalizationRule | null {
+    return this.normalizationRules.find(rule => rule.id === id) || null;
+  }
+
   addNormalizationRule(rule: NormalizationRule): void {
     this.normalizationRules.push(rule);
   }
 
-  getNormalizationRule(id: string): NormalizationRule | undefined {
-    return this.normalizationRules.find(r => r.id === id);
+  updateNormalizationRule(id: string, updatedRule: NormalizationRule): NormalizationRule | null {
+    const index = this.normalizationRules.findIndex(rule => rule.id === id);
+    if (index === -1) return null;
+
+    this.normalizationRules[index] = updatedRule;
+    return updatedRule;
   }
 
-  updateNormalizationRule(id: string, updates: Partial<NormalizationRule>): NormalizationRule | undefined {
-    const index = this.normalizationRules.findIndex(r => r.id === id);
-    if (index === -1) return undefined;
-    this.normalizationRules[index] = { ...this.normalizationRules[index], ...updates };
-    return this.normalizationRules[index];
+  deleteNormalizationRule(id: string): boolean {
+    const index = this.normalizationRules.findIndex(rule => rule.id === id);
+    if (index === -1) return false;
+
+    this.normalizationRules.splice(index, 1);
+    return true;
   }
 
-  // Analytics
-  getIngestionStats() {
+  // Analytics and Queries
+  getIngestionStats(): any {
+    const jobs = this.ingestionJobs;
+    const rules = this.parserRules;
+    const modules = this.enrichmentModules;
+
     return {
-      ingestionJobs: this.ingestionJobs.length,
-      parserRules: this.parserRules.length,
-      enrichmentModules: this.enrichmentModules.length,
-      normalizationRules: this.normalizationRules.length,
-      completedJobs: this.ingestionJobs.filter(j => j.status === 'COMPLETED').length,
-      failedJobs: this.ingestionJobs.filter(j => j.status === 'FAILED').length,
-      activeRules: this.parserRules.filter(r => r.status === 'ACTIVE').length,
-      enabledModules: this.enrichmentModules.filter(m => m.enabled).length,
-      totalRecordsProcessed: this.ingestionJobs.reduce((sum, job) => sum + job.count, 0)
+      totalJobs: jobs.length,
+      activeJobs: jobs.filter(job => job.status === IngestionJobStatus.RUNNING).length,
+      completedJobs: jobs.filter(job => job.status === IngestionJobStatus.COMPLETED).length,
+      failedJobs: jobs.filter(job => job.status === IngestionJobStatus.FAILED).length,
+      totalRecordsProcessed: jobs.reduce((sum, job) => sum + (job.recordsProcessed || 0), 0),
+      totalParserRules: rules.length,
+      activeParserRules: rules.filter(rule => rule.status === ParserRuleStatus.ACTIVE).length,
+      totalEnrichmentModules: modules.length,
+      activeEnrichmentModules: modules.filter(module => module.status === EnrichmentModuleStatus.ACTIVE).length
     };
   }
 
   getActiveIngestionJobs(): IngestionJob[] {
-    return this.ingestionJobs.filter(j => j.status === 'PROCESSING' || j.status === 'PENDING');
+    return this.ingestionJobs.filter(job => job.status === IngestionJobStatus.RUNNING);
   }
 
   getFailedParserRules(): ParserRule[] {
-    return this.parserRules.filter(r => r.status === 'ERROR');
+    return this.parserRules.filter(rule => rule.status === ParserRuleStatus.FAILED);
+  }
+
+  getIngestionJobsBySource(source: string): IngestionJob[] {
+    return this.ingestionJobs.filter(job => job.source === source);
+  }
+
+  getIngestionJobsByStatus(status: IngestionJobStatus): IngestionJob[] {
+    return this.ingestionJobs.filter(job => job.status === status);
+  }
+
+  getParserRulesByFormat(format: string): ParserRule[] {
+    return this.parserRules.filter(rule => rule.format === format);
+  }
+
+  getEnrichmentModulesByType(type: string): EnrichmentModule[] {
+    return this.enrichmentModules.filter(module => module.type === type);
+  }
+
+  // Bulk operations
+  clearAllData(): void {
+    this.ingestionJobs = [];
+    this.parserRules = [];
+    this.enrichmentModules = [];
+    this.normalizationRules = [];
+  }
+
+  // Search and filtering
+  searchIngestionJobs(query: string): IngestionJob[] {
+    const lowercaseQuery = query.toLowerCase();
+    return this.ingestionJobs.filter(job =>
+      job.id.toLowerCase().includes(lowercaseQuery) ||
+      job.source.toLowerCase().includes(lowercaseQuery) ||
+      job.description?.toLowerCase().includes(lowercaseQuery)
+    );
+  }
+
+  searchParserRules(query: string): ParserRule[] {
+    const lowercaseQuery = query.toLowerCase();
+    return this.parserRules.filter(rule =>
+      rule.id.toLowerCase().includes(lowercaseQuery) ||
+      rule.name.toLowerCase().includes(lowercaseQuery) ||
+      rule.description?.toLowerCase().includes(lowercaseQuery)
+    );
+  }
+
+  searchEnrichmentModules(query: string): EnrichmentModule[] {
+    const lowercaseQuery = query.toLowerCase();
+    return this.enrichmentModules.filter(module =>
+      module.id.toLowerCase().includes(lowercaseQuery) ||
+      module.name.toLowerCase().includes(lowercaseQuery) ||
+      module.description?.toLowerCase().includes(lowercaseQuery)
+    );
+  }
+
+  // Validation helpers
+  validateIngestionJob(job: Partial<IngestionJob>): boolean {
+    return !!(
+      job.source &&
+      job.format &&
+      typeof job.totalRecords === 'number' &&
+      job.totalRecords >= 0
+    );
+  }
+
+  validateParserRule(rule: Partial<ParserRule>): boolean {
+    return !!(
+      rule.name &&
+      rule.format &&
+      rule.pattern &&
+      Array.isArray(rule.fieldMapping)
+    );
+  }
+
+  validateEnrichmentModule(module: Partial<EnrichmentModule>): boolean {
+    return !!(
+      module.name &&
+      module.type &&
+      module.description
+    );
+  }
+
+  validateNormalizationRule(rule: Partial<NormalizationRule>): boolean {
+    return !!(
+      rule.field &&
+      rule.transformation
+    );
   }
 }

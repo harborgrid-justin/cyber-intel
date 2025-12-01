@@ -1,139 +1,63 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { SystemNode } from '@/types';
+import { InjectModel } from '@nestjs/sequelize';
+import { SystemNode } from '../models';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class SystemService {
-  private nodes: SystemNode[] = [
-    {
-      id: 'node-001',
-      name: 'Web Server 01',
-      status: 'ONLINE',
-      load: 45,
-      latency: 12,
-      type: 'Server',
-      vulnerabilities: ['vuln-001'],
-      vendor: 'Apache',
-      criticalProcess: 'httpd',
-      dependencies: ['node-002'],
-      securityControls: ['EDR', 'AV', 'DLP'],
-      dataSensitivity: 'INTERNAL',
-      dataVolumeGB: 50,
-      segment: 'DMZ',
-      networkConnections: 1250
-    },
-    {
-      id: 'node-002',
-      name: 'Database Server',
-      status: 'ONLINE',
-      load: 78,
-      latency: 8,
-      type: 'Database',
-      vulnerabilities: [],
-      vendor: 'PostgreSQL',
-      criticalProcess: 'postgres',
-      dependencies: [],
-      securityControls: ['EDR', 'FIREWALL'],
-      dataSensitivity: 'CONFIDENTIAL',
-      dataVolumeGB: 500,
-      segment: 'PROD',
-      networkConnections: 89
-    },
-    {
-      id: 'node-003',
-      name: 'Domain Controller',
-      status: 'DEGRADED',
-      load: 92,
-      latency: 45,
-      type: 'Server',
-      vulnerabilities: ['vuln-003'],
-      vendor: 'Microsoft',
-      criticalProcess: 'lsass.exe',
-      dependencies: ['node-004'],
-      securityControls: ['EDR', 'AV'],
-      dataSensitivity: 'RESTRICTED',
-      dataVolumeGB: 100,
-      segment: 'PROD',
-      networkConnections: 567
-    },
-    {
-      id: 'node-004',
-      name: 'File Server',
-      status: 'OFFLINE',
-      load: 0,
-      latency: 0,
-      type: 'Server',
-      vulnerabilities: ['vuln-002'],
-      vendor: 'Microsoft',
-      criticalProcess: 'smbd',
-      dependencies: [],
-      securityControls: ['AV'],
-      dataSensitivity: 'CONFIDENTIAL',
-      dataVolumeGB: 2000,
-      segment: 'PROD',
-      networkConnections: 0
-    }
-  ];
+  constructor(
+    @InjectModel(SystemNode)
+    private systemNodeModel: typeof SystemNode,
+  ) {}
 
   async findAllNodes(filters?: { status?: string; segment?: string }): Promise<SystemNode[]> {
-    let result = [...this.nodes];
-
+    const where: any = {};
     if (filters?.status) {
-      result = result.filter(node => node.status === filters.status);
+      where.status = filters.status;
     }
-
     if (filters?.segment) {
-      result = result.filter(node => node.segment === filters.segment);
+      where.segment = filters.segment;
     }
-
-    return result.sort((a, b) => b.load - a.load);
+    return this.systemNodeModel.findAll({ where, order: [['load', 'DESC']] });
   }
 
   async findNodeById(id: string): Promise<SystemNode | null> {
-    return this.nodes.find(node => node.id === id) || null;
+    return this.systemNodeModel.findByPk(id);
   }
 
-  async createNode(createNodeDto: Omit<SystemNode, 'id'>): Promise<SystemNode> {
-    const newNode: SystemNode = {
-      ...createNodeDto,
-      id: `node-${Date.now()}`
-    };
-
-    this.nodes.push(newNode);
-    return newNode;
+  async createNode(createNodeDto: any): Promise<SystemNode> {
+    if (!createNodeDto.id) {
+      createNodeDto.id = `node-${Date.now()}`;
+    }
+    return this.systemNodeModel.create(createNodeDto);
   }
 
-  async updateNode(id: string, updateNodeDto: Partial<SystemNode>): Promise<SystemNode | null> {
-    const index = this.nodes.findIndex(node => node.id === id);
-    if (index === -1) {
+  async updateNode(id: string, updateNodeDto: any): Promise<SystemNode | null> {
+    const [affectedCount] = await this.systemNodeModel.update(updateNodeDto, { where: { id } });
+    if (affectedCount === 0) {
       return null;
     }
-
-    this.nodes[index] = { ...this.nodes[index], ...updateNodeDto };
-    return this.nodes[index];
+    return this.systemNodeModel.findByPk(id);
   }
 
   async removeNode(id: string): Promise<boolean> {
-    const index = this.nodes.findIndex(node => node.id === id);
-    if (index === -1) {
-      return false;
-    }
-
-    this.nodes.splice(index, 1);
-    return true;
+    const affectedCount = await this.systemNodeModel.destroy({ where: { id } });
+    return affectedCount > 0;
   }
 
   async getSystemHealth(): Promise<any> {
-    const total = this.nodes.length;
-    const online = this.nodes.filter(n => n.status === 'ONLINE').length;
-    const offline = this.nodes.filter(n => n.status === 'OFFLINE').length;
-    const degraded = this.nodes.filter(n => n.status === 'DEGRADED').length;
-    const isolated = this.nodes.filter(n => n.status === 'ISOLATED').length;
+    const nodes = await this.systemNodeModel.findAll();
+    const total = nodes.length;
+    const online = nodes.filter(n => n.status === 'ONLINE').length;
+    const offline = nodes.filter(n => n.status === 'OFFLINE').length;
+    const degraded = nodes.filter(n => n.status === 'DEGRADED').length;
+    const isolated = nodes.filter(n => n.status === 'ISOLATED').length;
 
-    const avgLoad = this.nodes.reduce((sum, node) => sum + node.load, 0) / total;
-    const avgLatency = this.nodes.filter(n => n.status === 'ONLINE')
+    const avgLoad = nodes.reduce((sum, node) => sum + node.load, 0) / total;
+    const avgLatency = nodes.filter(n => n.status === 'ONLINE')
       .reduce((sum, node) => sum + node.latency, 0) / online || 0;
 
-    const segments = this.nodes.reduce((acc, node) => {
+    const segments = nodes.reduce((acc, node) => {
       if (node.segment) {
         acc[node.segment] = (acc[node.segment] || 0) + 1;
       }
@@ -150,12 +74,12 @@ export class SystemService {
       avgLoad: Math.round(avgLoad),
       avgLatency: Math.round(avgLatency),
       segments,
-      criticalNodes: this.nodes.filter(n => n.load > 80 || n.status === 'DEGRADED').length
+      criticalNodes: nodes.filter(n => n.load > 80 || n.status === 'DEGRADED').length
     };
   }
 
   async getNodesBySegment(segment: string): Promise<SystemNode[]> {
-    return this.nodes.filter(node => node.segment === segment);
+    return this.systemNodeModel.findAll({ where: { segment } });
   }
 
   async isolateNode(id: string, isolationData: { reason: string; duration?: number }): Promise<SystemNode> {
@@ -166,7 +90,7 @@ export class SystemService {
 
     return await this.updateNode(id, {
       status: 'ISOLATED',
-      // Store isolation metadata in dependencies or create a new field
+      // Store isolation metadata in dependencies
       dependencies: [...(node.dependencies || []), `ISOLATED:${isolationData.reason}:${isolationData.duration || 0}`]
     }) as SystemNode;
   }
@@ -187,17 +111,18 @@ export class SystemService {
   }
 
   async getVulnerabilitySummary(): Promise<any> {
-    const allVulnerabilities = this.nodes.flatMap(node => node.vulnerabilities || []);
+    const nodes = await this.systemNodeModel.findAll();
+    const allVulnerabilities = nodes.flatMap(node => node.vulnerabilities || []);
     const uniqueVulnerabilities = [...new Set(allVulnerabilities)];
 
-    const vulnerabilityCounts = this.nodes.reduce((acc, node) => {
+    const vulnerabilityCounts = nodes.reduce((acc, node) => {
       (node.vulnerabilities || []).forEach(vuln => {
         acc[vuln] = (acc[vuln] || 0) + 1;
       });
       return acc;
     }, {} as Record<string, number>);
 
-    const nodesWithVulnerabilities = this.nodes.filter(node =>
+    const nodesWithVulnerabilities = nodes.filter(node =>
       (node.vulnerabilities || []).length > 0
     ).length;
 
@@ -205,14 +130,14 @@ export class SystemService {
       totalVulnerabilities: uniqueVulnerabilities.length,
       affectedNodes: nodesWithVulnerabilities,
       vulnerabilityDistribution: vulnerabilityCounts,
-      riskScore: this.calculateRiskScore()
+      riskScore: this.calculateRiskScore(nodes)
     };
   }
 
-  private calculateRiskScore(): number {
+  private calculateRiskScore(nodes: SystemNode[]): number {
     let totalRisk = 0;
 
-    this.nodes.forEach(node => {
+    nodes.forEach(node => {
       let nodeRisk = 0;
 
       // Status risk
@@ -238,15 +163,18 @@ export class SystemService {
       totalRisk += nodeRisk * sensitivityMultiplier;
     });
 
-    return Math.min(100, Math.round(totalRisk / this.nodes.length));
+    return Math.min(100, Math.round(totalRisk / nodes.length));
   }
 
   async getCriticalNodes(): Promise<SystemNode[]> {
-    return this.nodes.filter(node =>
-      node.load > 80 ||
-      node.status === 'DEGRADED' ||
-      node.status === 'OFFLINE' ||
-      (node.vulnerabilities || []).length > 2
-    );
+    return this.systemNodeModel.findAll({
+      where: {
+        [Op.or]: [
+          { load: { [Op.gt]: 80 } },
+          { status: 'DEGRADED' },
+          { status: 'OFFLINE' }
+        ]
+      }
+    });
   }
 }

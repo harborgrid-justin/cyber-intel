@@ -181,7 +181,7 @@ export class OsintService {
     }, {} as Record<string, number>);
 
     return Object.entries(countryThreats)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
       .slice(0, 5)
       .map(([country, score]) => ({ country, totalThreatScore: score }));
   }

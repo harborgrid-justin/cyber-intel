@@ -11,6 +11,11 @@ export enum View {
 export enum Severity { LOW = 'LOW', MEDIUM = 'MEDIUM', HIGH = 'HIGH', CRITICAL = 'CRITICAL' }
 export enum IncidentStatus { NEW = 'NEW', INVESTIGATING = 'INVESTIGATING', CONTAINED = 'CONTAINED', CLOSED = 'CLOSED' }
 
+// Status enums for new modules
+export enum IngestionJobStatus { PENDING = 'PENDING', RUNNING = 'RUNNING', COMPLETED = 'COMPLETED', FAILED = 'FAILED' }
+export enum ParserRuleStatus { ACTIVE = 'ACTIVE', INACTIVE = 'INACTIVE', FAILED = 'FAILED' }
+export enum EnrichmentModuleStatus { ACTIVE = 'ACTIVE', DISABLED = 'DISABLED' }
+
 export interface Threat { 
   id: string; indicator: string; type: string; severity: Severity; lastSeen: string; 
   source: string; description: string; status: IncidentStatus; confidence: number; 
@@ -87,7 +92,20 @@ export interface SystemNode {
 
 export interface ChartDataPoint { name: string; value: number; fullMark?: number; }
 export interface ChatMessage { id: string; role: 'user' | 'model'; text: string; timestamp: number; }
-export interface IngestionJob { id: string; source: string; format: 'STIX'|'CSV'|'JSON'; status: 'PENDING'|'PROCESSING'|'COMPLETED'|'FAILED'; count: number; timestamp: string; }
+export interface IngestionJob {
+  id: string;
+  source: string;
+  format: 'STIX'|'CSV'|'JSON';
+  status: IngestionJobStatus;
+  totalRecords: number;
+  recordsProcessed?: number;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  failedAt?: Date;
+}
 
 export interface ChainEvent { id: string; date: string; artifactId: string; artifactName: string; action: 'CHECK_IN' | 'CHECK_OUT' | 'TRANSFER' | 'ANALYSIS' | 'ARCHIVE'; user: string; notes: string; }
 export interface Malware { id: string; name: string; family: string; hash: string; verdict: 'MALICIOUS' | 'SUSPICIOUS' | 'CLEAN'; score: number; associatedActor?: string; }
@@ -161,9 +179,40 @@ export interface NistControl { id: string; family: string; name: string; status:
 export interface AuditArtifact { id: string; controlId: string; type: 'SCREENSHOT' | 'LOG' | 'POLICY'; name: string; timestamp: string; }
 
 // Ingestion Types
-export interface ParserRule { id: string; name: string; sourceType: string; pattern: string; sampleLog: string; status: 'ACTIVE' | 'INACTIVE' | 'ERROR'; performance: 'FAST' | 'MODERATE' | 'SLOW'; }
-export interface EnrichmentModule { id: string; name: string; type: 'GEO' | 'ASN' | 'THREAT_INTEL' | 'WHOIS' | 'ASSET_DB'; provider: string; costPerRequest: number; latencyMs: number; enabled: boolean; }
-export interface NormalizationRule { id: string; sourceField: string; targetField: string; transform: 'NONE' | 'LOWERCASE' | 'UPPERCASE' | 'TRIM' | 'IP_TO_GEO'; validation: 'VALID' | 'TYPE_MISMATCH' | 'MISSING_FIELD'; }
+export interface ParserRule {
+  id: string;
+  name: string;
+  sourceType: string;
+  format: string;
+  pattern: string;
+  fieldMapping: string[];
+  sampleLog?: string;
+  status: ParserRuleStatus;
+  performance?: 'FAST' | 'MODERATE' | 'SLOW';
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export interface EnrichmentModule {
+  id: string;
+  name: string;
+  type: 'GEO' | 'ASN' | 'THREAT_INTEL' | 'WHOIS' | 'ASSET_DB' | 'geoip' | 'threat_intel' | 'domain_lookup';
+  provider: string;
+  costPerRequest?: number;
+  latencyMs?: number;
+  status: EnrichmentModuleStatus;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export interface NormalizationRule {
+  id: string;
+  field: string;
+  transformation: 'lowercase' | 'uppercase' | 'trim' | 'normalize_ip' | 'NONE' | 'LOWERCASE' | 'UPPERCASE' | 'TRIM' | 'IP_TO_GEO';
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 // Sim Builder Types
 export interface TTPDef {

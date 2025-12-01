@@ -1,5 +1,5 @@
 
-import { ChainEvent, Vulnerability, SystemNode, ThreatActor, AuditLog, Artifact, Task, SystemUser, Device, IoCFeed, OsintSocial, Playbook, NistControl } from '../../types';
+import { ChainEvent, Vulnerability, SystemNode, ThreatActor, AuditLog, Artifact, Task, SystemUser, Device, IoCFeed, OsintSocial, Playbook, NistControl } from '../src/types';
 
 export class SystemLogic {
   static validateChainOfCustody(history: ChainEvent[], newEvent: ChainEvent) { 

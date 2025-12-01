@@ -1,4 +1,4 @@
-import { ChainEvent, Malware, ForensicJob, Device, Pcap } from '../../../types';
+import { ChainEvent, Malware, ForensicJob, Device, Pcap } from '@/types';
 import { BaseStore } from './baseStore';
 import { DatabaseAdapter } from '../dbAdapter';
 import { DataMapper } from '../dataMapper';

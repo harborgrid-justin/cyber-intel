@@ -5,7 +5,7 @@ import {
   OsintGeo,
   OsintDarkWebItem,
   OsintFileMeta
-} from '../../../types';
+} from '@/types';
 
 export class OsintStore {
   private domains: OsintDomain[] = [];

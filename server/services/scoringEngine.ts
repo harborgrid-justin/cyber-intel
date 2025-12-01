@@ -1,6 +1,6 @@
 
-import { Severity } from '../types';
-import { CONFIG } from '../config';
+import { Severity } from '../src/types';
+import { CONFIG } from '../src/config';
 
 export const calculateThreatScore = (
   confidence: number,

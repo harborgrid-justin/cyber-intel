@@ -1,5 +1,5 @@
 
-import { Case, Playbook, Task } from '../../types';
+import { Case, Playbook, Task } from '../src/types';
 
 export class CaseLogic {
   static checkSLA(kase: Case) { 

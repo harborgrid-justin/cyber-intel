@@ -1,6 +1,6 @@
 
 import { DataMapper } from './dataMapper';
-import { Threat, Case, ThreatActor, IncidentStatus, Severity } from '../types';
+import { Threat, Case, ThreatActor, IncidentStatus, Severity, ForensicJob, ParserRule, EnrichmentModule, NormalizationRule } from '../src/types';
 import { DataStandardizer } from './utils/standardizer';
 import { calculateThreatScore } from './scoringEngine';
 
@@ -79,6 +79,26 @@ export class ActorMapper implements DataMapper<ThreatActor> {
   }
 
   toPersistence(domain: ThreatActor): any {
+    return domain;
+  }
+}
+
+export class DetectionMapper implements DataMapper<any> {
+  toDomain(raw: any): any {
+    return raw;
+  }
+
+  toPersistence(domain: any): any {
+    return domain;
+  }
+}
+
+export class FeedMapper implements DataMapper<any> {
+  toDomain(raw: any): any {
+    return raw;
+  }
+
+  toPersistence(domain: any): any {
     return domain;
   }
 }

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { VulnerabilitiesService } from './vulnerabilities.service';
-import { Vulnerability } from '@/types';
+import { Vulnerability } from '../models';
 
 @Controller('vulnerabilities')
 export class VulnerabilitiesController {
@@ -30,7 +30,7 @@ export class VulnerabilitiesController {
   }
 
   @Post()
-  async create(@Body() createVulnerabilityDto: Omit<Vulnerability, 'id'>): Promise<Vulnerability> {
+  async create(@Body() createVulnerabilityDto: Omit<Vulnerability, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vulnerability> {
     try {
       return await this.vulnerabilitiesService.create(createVulnerabilityDto);
     } catch (error) {
@@ -66,12 +66,12 @@ export class VulnerabilitiesController {
     }
   }
 
-  @Get(':id/affected-assets')
-  async getAffectedAssets(@Param('id') id: string): Promise<string[]> {
+  @Get(':id/affected-products')
+  async getAffectedProducts(@Param('id') id: string): Promise<string[]> {
     try {
-      return await this.vulnerabilitiesService.getAffectedAssets(id);
+      return await this.vulnerabilitiesService.getAffectedProducts(id);
     } catch (error) {
-      throw new HttpException('Failed to retrieve affected assets', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('Failed to retrieve affected products', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -90,6 +90,24 @@ export class VulnerabilitiesController {
       return await this.vulnerabilitiesService.getVulnerabilityStats();
     } catch (error) {
       throw new HttpException('Failed to retrieve vulnerability statistics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('high-risk/list')
+  async getHighRiskVulnerabilities(): Promise<Vulnerability[]> {
+    try {
+      return await this.vulnerabilitiesService.getHighRiskVulnerabilities();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve high risk vulnerabilities', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('cve/:cveId')
+  async getVulnerabilitiesByCveId(@Param('cveId') cveId: string): Promise<Vulnerability[]> {
+    try {
+      return await this.vulnerabilitiesService.getVulnerabilitiesByCveId(cveId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve vulnerabilities by CVE ID', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

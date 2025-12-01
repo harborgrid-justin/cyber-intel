@@ -1,5 +1,5 @@
 
-import { IoCFeed } from '../../types';
+import { IoCFeed } from '../src/types';
 import { BaseStore } from './baseStore';
 import { DatabaseAdapter } from '../dbAdapter';
 import { DataMapper } from '../dataMapper';

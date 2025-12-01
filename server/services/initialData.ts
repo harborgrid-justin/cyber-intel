@@ -6,8 +6,8 @@ import {
   MOCK_LAB_JOBS, MOCK_DEVICES, MOCK_PCAPS, MOCK_VENDOR_FEEDS, MOCK_SCANNERS,
   MOCK_TACTICS, MOCK_TECHNIQUES, MOCK_SUB_TECHNIQUES, MOCK_GROUPS, MOCK_SOFTWARE, MOCK_MITIGATIONS,
   MOCK_DOMAIN, MOCK_BREACH, MOCK_GEO, MOCK_SOCIAL, MOCK_INTEGRATIONS, MOCK_PATCH_STATUS
-} from '../constants';
-import { Channel, TeamMessage } from '../types';
+} from '../../../constants';
+import { Channel, TeamMessage } from '../src/types';
 
 export class InitialDataFactory {
   static getThreats() { return MOCK_THREATS; }

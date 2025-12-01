@@ -5,7 +5,7 @@ import {
   PatchPrioritization,
   SegmentationPolicy,
   TrafficFlow
-} from '../../../types';
+} from '@/types';
 
 export class OrchestratorStore {
   private responsePlans: ResponsePlan[] = [];

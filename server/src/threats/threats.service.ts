@@ -1,52 +1,66 @@
 import { Injectable } from '@nestjs/common';
-import { ThreatStore } from '../services/stores/threatStore';
-import { MockAdapter } from '../services/dbAdapter';
-import { ThreatMapper } from '../services/mappers';
-import { InitialDataFactory } from '../services/initialData';
+import { InjectModel } from '@nestjs/sequelize';
+import { Threat } from '../models/threat.model';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ThreatsService {
-  private threatStore: ThreatStore;
+  constructor(
+    @InjectModel(Threat)
+    private threatModel: typeof Threat,
+  ) {}
 
-  constructor() {
-    const adapter = new MockAdapter();
-    this.threatStore = new ThreatStore(
-      'THREATS',
-      InitialDataFactory.getThreats(),
-      adapter,
-      new ThreatMapper()
-    );
+  async findAll(sort: boolean = true): Promise<Threat[]> {
+    if (sort) {
+      return this.threatModel.findAll({
+        order: [['lastSeen', 'DESC']],
+      });
+    }
+    return this.threatModel.findAll();
   }
 
-  findAll(sort: boolean = true) {
-    return this.threatStore.getThreats(sort);
+  async findOne(id: string): Promise<Threat> {
+    return this.threatModel.findByPk(id);
   }
 
-  findOne(id: string) {
-    return this.threatStore.getById(id);
+  async create(threatData: Partial<Threat>): Promise<Threat> {
+    return this.threatModel.create(threatData);
   }
 
-  create(threat: any) {
-    this.threatStore.addThreat(threat, [], [], () => {});
+  async update(id: string, threatData: Partial<Threat>): Promise<Threat> {
+    const threat = await this.threatModel.findByPk(id);
+    if (!threat) {
+      throw new Error('Threat not found');
+    }
+    await threat.update(threatData);
     return threat;
   }
 
-  update(id: string, threat: any) {
-    this.threatStore.update(threat);
+  async remove(id: string): Promise<{ deleted: boolean }> {
+    const result = await this.threatModel.destroy({ where: { id } });
+    return { deleted: result > 0 };
+  }
+
+  async updateStatus(id: string, status: string): Promise<Threat> {
+    const threat = await this.threatModel.findByPk(id);
+    if (!threat) {
+      throw new Error('Threat not found');
+    }
+    await threat.update({ status: status as any });
     return threat;
   }
 
-  remove(id: string) {
-    this.threatStore.delete(id);
-    return { deleted: true };
+  async findByActor(threatActor: string): Promise<Threat[]> {
+    return this.threatModel.findAll({
+      where: { threatActor: { [Op.iLike]: `%${threatActor}%` } },
+    });
   }
 
-  updateStatus(id: string, status: any) {
-    this.threatStore.updateStatus(id, status, [], () => {});
-    return this.threatStore.getById(id);
+  async findBySeverity(severity: string): Promise<Threat[]> {
+    return this.threatModel.findAll({ where: { severity } });
   }
 
-  findByActor(name: string) {
-    return this.threatStore.getByActor(name);
+  async findByType(type: string): Promise<Threat[]> {
+    return this.threatModel.findAll({ where: { type } });
   }
 }

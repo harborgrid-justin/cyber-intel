@@ -1,5 +1,5 @@
 
-import { Threat, ThreatActor, IncidentStatus, Severity } from '../../types';
+import { Threat, ThreatActor, IncidentStatus, Severity } from '../src/types';
 
 interface AttributionResult {
   actor: ThreatActor;

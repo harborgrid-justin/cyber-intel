@@ -1,43 +1,61 @@
 import { Injectable } from '@nestjs/common';
-import { ActorStore } from '../services/stores/actorStore';
-import { MockAdapter } from '../services/dbAdapter';
-import { ActorMapper } from '../services/mappers';
-import { InitialDataFactory } from '../services/initialData';
+import { InjectModel } from '@nestjs/sequelize';
+import { Actor } from '../models/actor.model';
 
 @Injectable()
 export class ActorsService {
-  private actorStore: ActorStore;
+  constructor(
+    @InjectModel(Actor)
+    private actorModel: typeof Actor,
+  ) {}
 
-  constructor() {
-    const adapter = new MockAdapter();
-    this.actorStore = new ActorStore(
-      'ACTORS',
-      InitialDataFactory.getActors(),
-      adapter,
-      new ActorMapper()
-    );
+  async findAll(): Promise<Actor[]> {
+    return this.actorModel.findAll({
+      include: ['campaignRelations'],
+      order: [['createdAt', 'DESC']],
+    });
   }
 
-  findAll() {
-    return this.actorStore.getAll();
+  async findOne(id: string): Promise<Actor> {
+    return this.actorModel.findByPk(id, {
+      include: ['campaignRelations'],
+    });
   }
 
-  findOne(id: string) {
-    return this.actorStore.getById(id);
+  async create(actorData: Partial<Actor>): Promise<Actor> {
+    return this.actorModel.create(actorData);
   }
 
-  create(actor: any) {
-    this.actorStore.add(actor);
+  async update(id: string, actorData: Partial<Actor>): Promise<Actor> {
+    const actor = await this.actorModel.findByPk(id);
+    if (!actor) {
+      throw new Error('Actor not found');
+    }
+    await actor.update(actorData);
     return actor;
   }
 
-  update(id: string, actor: any) {
-    this.actorStore.update(actor);
-    return actor;
+  async remove(id: string): Promise<{ deleted: boolean }> {
+    const result = await this.actorModel.destroy({ where: { id } });
+    return { deleted: result > 0 };
   }
 
-  remove(id: string) {
-    this.actorStore.delete(id);
-    return { deleted: true };
+  async findByCountry(country: string): Promise<Actor[]> {
+    return this.actorModel.findAll({
+      where: { origin: country },
+      include: ['campaignRelations'],
+    });
+  }
+
+  async findByMotivation(motivation: string): Promise<Actor[]> {
+    // Since motivation is not a separate field, search in description
+    return this.actorModel.findAll({
+      where: {
+        description: {
+          [require('sequelize').Op.iLike]: `%${motivation}%`
+        }
+      },
+      include: ['campaignRelations'],
+    });
   }
 }

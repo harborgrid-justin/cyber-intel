@@ -1,8 +1,8 @@
 
-import { Threat, IncidentStatus, ThreatActor, Case } from '../../types';
+import { Threat, IncidentStatus, ThreatActor, Case } from '../src/types';
 import { BaseStore } from './baseStore';
 import { LogicEngine } from '../logicEngine';
-import { CONFIG } from '../../config';
+import { CONFIG } from '../src/config';
 import { DatabaseAdapter } from '../dbAdapter';
 import { DataMapper } from '../dataMapper';
 

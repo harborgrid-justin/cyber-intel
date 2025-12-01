@@ -1,43 +1,64 @@
 import { Injectable } from '@nestjs/common';
-import { CaseStore } from '../services/stores/caseStore';
-import { MockAdapter } from '../services/dbAdapter';
-import { CaseMapper } from '../services/mappers';
-import { InitialDataFactory } from '../services/initialData';
+import { InjectModel } from '@nestjs/sequelize';
+import { Case } from '../models/case.model';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class CasesService {
-  private caseStore: CaseStore;
+  constructor(
+    @InjectModel(Case)
+    private caseModel: typeof Case,
+  ) {}
 
-  constructor() {
-    const adapter = new MockAdapter();
-    this.caseStore = new CaseStore(
-      'CASES',
-      InitialDataFactory.getCases(),
-      adapter,
-      new CaseMapper()
-    );
+  async findAll(): Promise<Case[]> {
+    return this.caseModel.findAll({
+      include: ['threat', 'evidence'],
+      order: [['createdAt', 'DESC']],
+    });
   }
 
-  findAll() {
-    return this.caseStore.getCases();
+  async findOne(id: string): Promise<Case> {
+    return this.caseModel.findByPk(id, {
+      include: ['threat', 'evidence'],
+    });
   }
 
-  findOne(id: string) {
-    return this.caseStore.getById(id);
+  async create(caseData: Partial<Case>): Promise<Case> {
+    return this.caseModel.create(caseData);
   }
 
-  create(caseData: any) {
-    this.caseStore.addCase(caseData, [], () => {});
-    return caseData;
+  async update(id: string, caseData: Partial<Case>): Promise<Case> {
+    const caseItem = await this.caseModel.findByPk(id);
+    if (!caseItem) {
+      throw new Error('Case not found');
+    }
+    await caseItem.update(caseData);
+    return caseItem;
   }
 
-  update(id: string, caseData: any) {
-    this.caseStore.update(caseData);
-    return caseData;
+  async remove(id: string): Promise<{ deleted: boolean }> {
+    const result = await this.caseModel.destroy({ where: { id } });
+    return { deleted: result > 0 };
   }
 
-  remove(id: string) {
-    this.caseStore.delete(id);
-    return { deleted: true };
+  async findByStatus(status: string): Promise<Case[]> {
+    return this.caseModel.findAll({
+      where: { status },
+      include: ['threat', 'evidence'],
+    });
+  }
+
+  async findByPriority(priority: string): Promise<Case[]> {
+    return this.caseModel.findAll({
+      where: { priority },
+      include: ['threat', 'evidence'],
+    });
+  }
+
+  async findByAssignedTo(assignedTo: string): Promise<Case[]> {
+    return this.caseModel.findAll({
+      where: { assignee: { [Op.iLike]: `%${assignedTo}%` } },
+      include: ['evidence'],
+    });
   }
 }
