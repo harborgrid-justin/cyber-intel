@@ -12,6 +12,7 @@ import { ReportStore } from './stores/reportStore';
 import { UserStore } from './stores/userStore';
 import { BaseStore } from './stores/baseStore';
 import { VendorStore } from './stores/vendorStore';
+import { MessagingStore } from './stores/messagingStore';
 import { startBackgroundJobs } from './jobs';
 import { 
   MOCK_THREATS, MOCK_CASES, MOCK_FEEDS, MOCK_ACTORS, MOCK_PLAYBOOKS, 
@@ -21,8 +22,21 @@ import {
   MOCK_DOMAIN, MOCK_BREACH, MOCK_GEO, MOCK_DARKWEB, MOCK_META, MOCK_SOCIAL, MOCK_INTEGRATIONS, MOCK_CAMPAIGNS,
   SYSTEM_NODES, MOCK_PATCH_STATUS, MOCK_SCANNERS, MOCK_VENDOR_FEEDS, MOCK_TEMPLATES, MOCK_VENDORS
 } from '../constants';
-import { IncidentStatus, Threat, Case, ThreatActor, Playbook, Artifact, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, SystemUser, IncidentReport, Campaign, SystemNode, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus, Vendor, NistControl } from '../types';
+import { IncidentStatus, Threat, Case, ThreatActor, Playbook, Artifact, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, SystemUser, IncidentReport, Campaign, SystemNode, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus, Vendor, NistControl, Channel, TeamMessage } from '../types';
 import { SupplyChainLogic } from './logic/SupplyChainLogic';
+
+// Mock Data for Messaging
+const MOCK_CHANNELS: Channel[] = [
+  { id: 'C1', name: 'general', type: 'PUBLIC', members: ['ALL'], topic: 'Company-wide announcements' },
+  { id: 'C2', name: 'incidents-critical', type: 'WAR_ROOM', members: ['SOC', 'ADMIN'], topic: 'Active P1 Incidents' },
+  { id: 'C3', name: 'intel-sharing', type: 'PUBLIC', members: ['ALL'], topic: 'IOCs and OSINT findings' },
+  { id: 'C4', name: 'shift-handoff', type: 'PRIVATE', members: ['SOC'], topic: 'Shift logs' }
+];
+
+const MOCK_MESSAGES: TeamMessage[] = [
+  { id: 'M1', channelId: 'C1', userId: 'System', content: 'Welcome to Sentinel Chat. All comms are logged.', timestamp: new Date(Date.now() - 86400000).toISOString(), type: 'SYSTEM' },
+  { id: 'M2', channelId: 'C2', userId: 'J. Doe', content: 'Tracking lateral movement on FIN-DB-02.', timestamp: new Date(Date.now() - 3600000).toISOString(), type: 'TEXT' }
+];
 
 export class DataLayer {
   public adapter: DatabaseAdapter = new MockAdapter();
@@ -39,6 +53,7 @@ export class DataLayer {
   public reportStore: ReportStore;
   public userStore: UserStore;
   public vendorStore: VendorStore;
+  public messagingStore: MessagingStore;
   
   // Generic Stores
   public playbookStore: BaseStore<Playbook>;
@@ -92,6 +107,7 @@ export class DataLayer {
     this.reportStore = new ReportStore('REPORTS', MOCK_INCIDENT_REPORTS, this.adapter);
     this.userStore = new UserStore('USERS', MOCK_USERS, this.adapter);
     this.vendorStore = new VendorStore('VENDORS', MOCK_VENDORS, this.adapter);
+    this.messagingStore = new MessagingStore('CHANNELS', MOCK_CHANNELS, MOCK_MESSAGES, this.adapter);
     
     // Initialize Generic Stores
     this.playbookStore = new BaseStore('PLAYBOOKS', MOCK_PLAYBOOKS, this.adapter);
@@ -128,7 +144,7 @@ export class DataLayer {
     this.adapter = adapter;
     const stores = [
       this.threatStore, this.caseStore, this.actorStore, this.campaignStore,
-      this.feedStore, this.logStore, this.vulnStore, this.nodeStore, this.reportStore, this.userStore, this.vendorStore,
+      this.feedStore, this.logStore, this.vulnStore, this.nodeStore, this.reportStore, this.userStore, this.vendorStore, this.messagingStore,
       this.playbookStore, this.chainStore, this.malwareStore, this.jobStore, 
       this.deviceStore, this.pcapStore,
       this.vendorFeedStore, this.scannerStore,
@@ -183,6 +199,8 @@ export class DataLayer {
   reprioritizeCases() { this.caseStore.getCases(); }
   transferCase(cid: string, agency: string) { const c = this.getCase(cid); if(c) { c.agency = agency; this.caseStore.update(c); } }
   shareCase(cid: string, agency: string) { const c = this.getCase(cid); if(c) { c.sharedWith.push(agency); this.caseStore.update(c); } }
+  linkCases(sourceId: string, targetId: string) { this.caseStore.linkCases(sourceId, targetId); }
+  unlinkCases(sourceId: string, targetId: string) { this.caseStore.unlinkCases(sourceId, targetId); }
 
   // --- Campaign Management ---
   getCampaigns() { return this.campaignStore.getAll(); }
@@ -229,6 +247,12 @@ export class DataLayer {
         }
     });
   }
+
+  // --- Messaging ---
+  getChannels() { return this.messagingStore.getChannels(); }
+  getMessages(channelId: string) { return this.messagingStore.getMessages(channelId); }
+  sendMessage(msg: TeamMessage) { this.messagingStore.sendMessage(msg); }
+  createChannel(c: Channel) { this.messagingStore.createChannel(c); }
 
   // --- System & Evidence ---
   getChainOfCustody() { return this.chainStore.getAll(); }
@@ -290,8 +314,8 @@ export class DataLayer {
   getOsintBreaches() { return this.osintBreachStore.getAll(); }
   getOsintGeo() { return this.osintGeoStore.getAll(); }
   getOsintSocial() { return this.osintSocialStore.getAll(); }
-  getOsintDarkWeb() { return MOCK_DARKWEB; } // No store for unstructured darkweb yet
-  getOsintMeta() { return MOCK_META; } // No store for meta yet
+  getOsintDarkWeb() { return MOCK_DARKWEB; } 
+  getOsintMeta() { return MOCK_META; } 
   
   sync(action: 'CREATE' | 'UPDATE' | 'DELETE', collection: string, data: any) { 
     this.adapter.execute(action, collection, data);

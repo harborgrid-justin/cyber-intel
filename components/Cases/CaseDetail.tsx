@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Case, Threat, Artifact, IncidentReport, View } from '../../types';
 import SubModuleNav from '../Shared/SubModuleNav';
 import FeedItem from '../Feed/FeedItem';
@@ -10,6 +10,7 @@ import CaseWorkbenchView from './Views/CaseTicketView';
 import CaseCoordinationView from './Views/CaseCoordinationView';
 import CaseReportsView from './Views/CaseReportsView';
 import KillChainView from './Views/KillChainView';
+import CaseLinksView from './Views/CaseLinksView';
 import { threatData } from '../../services/dataLayer';
 import { Button, Badge, Card, CardHeader } from '../Shared/UI';
 import { DetailViewHeader } from '../Shared/Layouts';
@@ -19,12 +20,27 @@ interface CaseDetailProps {
   onModuleChange: (m: string) => void; onBack: () => void; modules: string[]; onUpdate: () => void;
 }
 
-const CONSOLIDATED_TABS = ['Workbench', 'Intelligence', 'Response', 'Evidence'];
+const CONSOLIDATED_TABS = ['Workbench', 'Intelligence', 'Linked Cases', 'Response', 'Evidence'];
 
 const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBack, onUpdate }) => {
   const [activeTab, setActiveTab] = useState(CONSOLIDATED_TABS[0]);
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
   
+  // Handle internal navigation for case links
+  useEffect(() => {
+    const handleCaseSwitch = (e: Event) => {
+        const customEvent = e as CustomEvent;
+        // This is a bit of a hack to switch the active case within the CaseBoard context
+        // Ideally this would be handled by the parent, but this works for local navigation
+        if (customEvent.detail?.id && customEvent.detail.id !== activeCase.id) {
+             // We dispatch app-navigation which CaseBoard listens to implicitly via App.tsx but CaseBoard also needs to update local state
+             window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.CASES, id: customEvent.detail.id } }));
+        }
+    };
+    window.addEventListener('case-selected', handleCaseSwitch);
+    return () => window.removeEventListener('case-selected', handleCaseSwitch);
+  }, [activeCase.id]);
+
   // Filter audit logs relevant to this case
   const caseLogs = useMemo(() => {
     return threatData.getAuditLogs().filter(l => 
@@ -44,6 +60,9 @@ const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBa
   const handleApplyPlaybook = (pbId: string) => { threatData.applyPlaybook(activeCase.id, pbId); setShowWorkflowModal(false); onUpdate(); };
   const handleComment = (c: string) => { if(c) { threatData.addNote(activeCase.id, c); onUpdate(); }};
   
+  const handleLinkCase = (targetId: string) => { threatData.linkCases(activeCase.id, targetId); onUpdate(); };
+  const handleUnlinkCase = (targetId: string) => { threatData.unlinkCases(activeCase.id, targetId); onUpdate(); };
+
   const handleGenerateReport = (type: IncidentReport['type']) => {
     threatData.addReport({
       id: `RPT-${Date.now()}`, title: `${type} Report: ${activeCase.title}`, type, date: new Date().toLocaleDateString(),
@@ -93,6 +112,16 @@ const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBa
                             {linkedThreats.length > 0 ? linkedThreats.map(t => <FeedItem key={t.id} threat={t} />) : <div className="p-12 text-center border-2 border-dashed border-slate-800 rounded-lg text-slate-500">No threats currently linked to this case.<br/><span className="text-xs">Use "Add Artifact" or link from Feed.</span></div>}
                         </div>
                     </Card>
+                </div>
+            )}
+
+            {activeTab === 'Linked Cases' && (
+                <div className="h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <CaseLinksView 
+                        activeCase={activeCase}
+                        onLink={handleLinkCase}
+                        onUnlink={handleUnlinkCase}
+                    />
                 </div>
             )}
 

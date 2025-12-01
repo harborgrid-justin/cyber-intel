@@ -52,4 +52,33 @@ export class CaseStore extends BaseStore<Case> {
       this.update(c);
     }
   }
+
+  linkCases(sourceId: string, targetId: string) {
+    const source = this.getById(sourceId);
+    const target = this.getById(targetId);
+    if (source && target && sourceId !== targetId) {
+      // Bi-directional linking
+      if (!source.linkedCaseIds?.includes(targetId)) {
+        source.linkedCaseIds = [...(source.linkedCaseIds || []), targetId];
+        this.update(source);
+      }
+      if (!target.linkedCaseIds?.includes(sourceId)) {
+        target.linkedCaseIds = [...(target.linkedCaseIds || []), sourceId];
+        this.update(target);
+      }
+    }
+  }
+
+  unlinkCases(sourceId: string, targetId: string) {
+    const source = this.getById(sourceId);
+    const target = this.getById(targetId);
+    if (source) {
+        source.linkedCaseIds = (source.linkedCaseIds || []).filter(id => id !== targetId);
+        this.update(source);
+    }
+    if (target) {
+        target.linkedCaseIds = (target.linkedCaseIds || []).filter(id => id !== sourceId);
+        this.update(target);
+    }
+  }
 }

@@ -21,6 +21,7 @@ import SupplyChainMonitor from './components/SupplyChain/SupplyChainMonitor';
 import BreachSimulator from './components/Simulation/BreachSimulator';
 import Orchestrator from './components/Response/Orchestrator';
 import ExecutiveProtection from './components/Osint/ExecutiveProtection';
+import MessagingPlatform from './components/Messaging/MessagingPlatform';
 import { View } from './types';
 
 const App: React.FC = () => {
@@ -63,6 +64,7 @@ const App: React.FC = () => {
       case View.SIMULATION: return <BreachSimulator />;
       case View.ORCHESTRATOR: return <Orchestrator />;
       case View.VIP_PROTECTION: return <ExecutiveProtection />;
+      case View.MESSAGING: return <MessagingPlatform />;
       default: return <Dashboard />;
     }
   };

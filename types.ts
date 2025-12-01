@@ -5,7 +5,7 @@ export enum View {
   REPORTS = 'REPORTS', AUDIT = 'AUDIT', SYSTEM = 'SYSTEM',
   VULNERABILITIES = 'VULNERABILITIES', MITRE = 'MITRE', OSINT = 'OSINT', EVIDENCE = 'EVIDENCE',
   CAMPAIGNS = 'CAMPAIGNS', SUPPLY_CHAIN = 'SUPPLY_CHAIN', SIMULATION = 'SIMULATION',
-  ORCHESTRATOR = 'ORCHESTRATOR', VIP_PROTECTION = 'VIP_PROTECTION'
+  ORCHESTRATOR = 'ORCHESTRATOR', VIP_PROTECTION = 'VIP_PROTECTION', MESSAGING = 'MESSAGING'
 }
 
 export enum Severity { LOW = 'LOW', MEDIUM = 'MEDIUM', HIGH = 'HIGH', CRITICAL = 'CRITICAL' }
@@ -30,8 +30,11 @@ export interface Case {
   notes: Note[]; artifacts: Artifact[]; timeline: TimelineEvent[];
   agency: string; sharingScope: 'INTERNAL' | 'JOINT_TASK_FORCE' | 'PUBLIC'; sharedWith: string[];
   dueDate?: string; labels: string[]; tlp: 'RED' | 'AMBER' | 'GREEN' | 'CLEAR';
-  slaBreach?: boolean; region?: string; 
+  slaBreach?: boolean; region?: string; linkedCaseIds?: string[];
 }
+
+export interface Channel { id: string; name: string; type: 'PUBLIC' | 'PRIVATE' | 'DM' | 'WAR_ROOM'; members: string[]; topic?: string; }
+export interface TeamMessage { id: string; channelId: string; userId: string; content: string; timestamp: string; type: 'TEXT' | 'SYSTEM' | 'ALERT'; }
 
 export interface Playbook { id: string; name: string; description: string; tasks: string[]; triggerLabel?: string; usageCount?: number; skipCount?: number; status?: 'ACTIVE' | 'DEPRECATED'; estimatedDuration?: string; riskLevel?: 'LOW' | 'MODERATE' | 'HIGH'; }
 export interface IoCFeed { 
