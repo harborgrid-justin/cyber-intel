@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Card, Badge, ProgressBar, FilterGroup, Grid, Button, CardHeader } from '../Shared/UI';
+import { Card, Badge, FilterGroup, Grid, Button } from '../Shared/UI';
 import { Icons } from '../Shared/Icons';
 import { threatData } from '../../services/dataLayer';
 import { DefenseLogic } from '../../services/logic/DefenseLogic';
@@ -8,6 +8,8 @@ import { StandardPage } from '../Shared/Layouts';
 import { MOCK_VENDORS } from '../../constants';
 import { Vendor } from '../../types';
 import ResponsiveTable from '../Shared/ResponsiveTable';
+import { RiskRadar } from './Views/RiskRadar';
+import { SbomInspector } from './Views/SbomInspector';
 
 const SupplyChainMonitor: React.FC = () => {
   const [activeModule, setActiveModule] = useState('RISK_RADAR');
@@ -41,59 +43,7 @@ const SupplyChainMonitor: React.FC = () => {
            <FilterGroup value={activeModule} onChange={setActiveModule} options={MODULES} />
         </div>
 
-        {activeModule === 'RISK_RADAR' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-             <Card className="lg:col-span-2 p-0 overflow-hidden">
-                <CardHeader 
-                  title="Critical Vendor Watchlist" 
-                  action={
-                    <div className="flex gap-2">
-                      <span className="text-[10px] text-red-500 font-bold flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>High Risk</span>
-                      <span className="text-[10px] text-green-500 font-bold flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full"></span>Stable</span>
-                    </div>
-                  }
-                />
-                <div className="divide-y divide-slate-800">
-                   {riskData.map((v, i) => (
-                     <div key={v.id} className="p-4 flex items-center gap-4 hover:bg-slate-900/50 transition-colors group cursor-pointer" onClick={() => setSelectedVendorId(v.id)}>
-                        <div className="text-sm font-mono text-slate-600 w-6">0{i+1}</div>
-                        <div className="flex-1">
-                           <div className="flex justify-between mb-1">
-                              <span className="font-bold text-white text-base">{v.name}</span>
-                              <span className={`font-mono font-bold ${v.riskScore > 80 ? 'text-red-500' : 'text-green-500'}`}>{v.riskScore}/100</span>
-                           </div>
-                           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-2">
-                              <div className={`h-full ${v.riskScore > 80 ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${v.riskScore}%` }}></div>
-                           </div>
-                           <div className="flex gap-4 text-[10px] text-slate-500 uppercase font-bold">
-                              <span>{v.tier}</span>
-                              <span>{v.category}</span>
-                              <span className={v.hqLocation === 'Russia' ? 'text-red-400' : ''}>{v.hqLocation}</span>
-                           </div>
-                        </div>
-                     </div>
-                   ))}
-                </div>
-             </Card>
-             <div className="space-y-4">
-                <Card className="p-6 border-l-4 border-l-red-600">
-                   <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest">Aggregate Exposure</h3>
-                      <Icons.Activity className="w-5 h-5 text-red-500" />
-                   </div>
-                   <div className="text-4xl font-mono font-bold text-white mb-2">CRITICAL</div>
-                   <p className="text-xs text-slate-400">3 Strategic vendors have active zero-day vulnerabilities affecting internal systems.</p>
-                </Card>
-                <Card className="p-4">
-                   <h3 className="text-xs font-bold text-slate-500 uppercase mb-3">Top Vulnerable Software</h3>
-                   <div className="space-y-2">
-                      <div className="flex justify-between text-xs text-slate-300"><span>Log4j (SolarWinds)</span><span className="text-red-500 font-bold">CVE-2021-44228</span></div>
-                      <div className="flex justify-between text-xs text-slate-300"><span>OpenSSL (Azure)</span><span className="text-orange-500 font-bold">CVE-2023-0286</span></div>
-                   </div>
-                </Card>
-             </div>
-          </div>
-        )}
+        {activeModule === 'RISK_RADAR' && <RiskRadar riskData={riskData} onSelect={setSelectedVendorId} />}
 
         {activeModule === 'INVENTORY' && (
            <ResponsiveTable<Vendor> 
@@ -111,41 +61,9 @@ const SupplyChainMonitor: React.FC = () => {
            />
         )}
 
-        {activeModule === 'SBOM' && (
-           <div className="flex h-full gap-6">
-              <div className="w-64 space-y-2 shrink-0">
-                 {riskData.map(v => (
-                    <div key={v.id} onClick={() => setSelectedVendorId(v.id)} className={`p-3 rounded cursor-pointer border ${selectedVendor.id === v.id ? 'bg-cyan-900/20 border-cyan-500 text-cyan-400' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'}`}>
-                       <div className="font-bold text-sm">{v.name}</div>
-                       <div className="text-[10px] uppercase">{v.product}</div>
-                    </div>
-                 ))}
-              </div>
-              <Card className="flex-1 p-0 overflow-hidden flex flex-col">
-                 <CardHeader title={`Software Bill of Materials: ${selectedVendor.product}`} />
-                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                    {selectedVendor.sbom.length > 0 ? selectedVendor.sbom.map((comp, i) => (
-                       <div key={i} className="flex justify-between items-center p-3 bg-slate-900/50 border border-slate-800 rounded hover:border-slate-600">
-                          <div className="flex items-center gap-3">
-                             <Icons.Box className="w-4 h-4 text-slate-500" />
-                             <div>
-                                <div className="text-sm font-mono text-cyan-400 font-bold">{comp.name}</div>
-                                <div className="text-[10px] text-slate-500">v{comp.version} • {comp.license}</div>
-                             </div>
-                          </div>
-                          {comp.critical ? (
-                             <Badge color="red">CRITICAL VULN FOUND</Badge>
-                          ) : (
-                             <Badge color="green">SECURE</Badge>
-                          )}
-                       </div>
-                    )) : <div className="text-center py-12 text-slate-500 italic">No SBOM data available for this vendor.</div>}
-                 </div>
-              </Card>
-           </div>
-        )}
+        {activeModule === 'SBOM' && <SbomInspector riskData={riskData} selectedVendor={selectedVendor} onSelect={setSelectedVendorId} />}
 
-        {/* ... (Other modules kept simple for brevity but would follow same pattern) ... */}
+        {/* ... Other modules can be similarly extracted ... */}
         {activeModule === 'GRAPH' && (
            <div className="h-full bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden flex items-center justify-center">
               <div className="absolute top-4 left-4 z-10 bg-slate-900/80 p-2 rounded border border-slate-700">
