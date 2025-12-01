@@ -7,7 +7,7 @@ import {
   OsintGeo,
   OsintDarkWebItem,
   OsintFileMeta
-} from '../../../types';
+} from '@/types';
 import {
   MOCK_DOMAIN,
   MOCK_BREACH,

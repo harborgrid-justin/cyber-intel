@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { OrchestratorStore } from '../services/stores/orchestratorStore';
-import {
-  ResponsePlan,
-  VIPProfile,
-  Honeytoken,
-  PatchPrioritization,
-  SegmentationPolicy,
-  TrafficFlow
-} from '../../../types';
+import { 
+  ResponsePlan, 
+  VIPProfile, 
+  Honeytoken, 
+  PatchPrioritization, 
+  SegmentationPolicy, 
+  TrafficFlow 
+} from '@/types';
 
 @Injectable()
 export class OrchestratorService {

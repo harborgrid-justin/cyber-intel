@@ -1,4 +1,4 @@
-import { Threat, Severity, IncidentStatus } from '../../../types';
+import { Threat, Severity, IncidentStatus } from '@/types';
 import { calculateThreatScore } from './scoringEngine';
 
 const PATTERNS = {

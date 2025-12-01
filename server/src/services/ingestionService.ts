@@ -1,5 +1,5 @@
 
-import { Threat, Severity, IngestionJob, IncidentStatus, VendorFeedItem, Vulnerability, ScannerStatus } from '../../../types';
+import { Threat, Severity, IngestionJob, IncidentStatus, VendorFeedItem, Vulnerability, ScannerStatus, IngestionJobStatus } from '@/types';
 import { calculateThreatScore } from './scoringEngine';
 
 const generateRandomIP = () => Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
@@ -83,8 +83,37 @@ export const mockParseVulnScan = (source: string): { findings: Vulnerability[], 
   return { findings, status };
 };
 
-export const getRecentJobs = (): IngestionJob[] => [
-  { id: '1', source: 'AlienVault OTX', format: 'STIX', status: 'COMPLETED', count: 1420, timestamp: '10:00 AM' },
-  { id: '2', source: 'CrowdStrike Feed', format: 'JSON', status: 'PROCESSING', count: 450, timestamp: '10:15 AM' },
-  { id: '3', source: 'Manual_Blocklist.csv', format: 'CSV', status: 'COMPLETED', count: 58, timestamp: '09:30 AM' },
-];
+export const getRecentJobs = (): IngestionJob[] => {
+  const now = Date.now();
+  return [
+    {
+      id: '1',
+      source: 'AlienVault OTX',
+      format: 'STIX',
+      status: IngestionJobStatus.COMPLETED,
+      totalRecords: 1420,
+      createdAt: new Date(now - 90 * 60 * 1000),
+      startedAt: new Date(now - 70 * 60 * 1000),
+      completedAt: new Date(now - 60 * 60 * 1000)
+    },
+    {
+      id: '2',
+      source: 'CrowdStrike Feed',
+      format: 'JSON',
+      status: IngestionJobStatus.RUNNING,
+      totalRecords: 450,
+      createdAt: new Date(now - 45 * 60 * 1000),
+      startedAt: new Date(now - 30 * 60 * 1000)
+    },
+    {
+      id: '3',
+      source: 'Manual_Blocklist.csv',
+      format: 'CSV',
+      status: IngestionJobStatus.COMPLETED,
+      totalRecords: 58,
+      createdAt: new Date(now - 180 * 60 * 1000),
+      startedAt: new Date(now - 150 * 60 * 1000),
+      completedAt: new Date(now - 140 * 60 * 1000)
+    }
+  ];
+};

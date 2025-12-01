@@ -16,7 +16,7 @@ import {
   OsintGeo,
   OsintDarkWebItem,
   OsintFileMeta
-} from '../../../types';
+} from '@/types';
 
 @ApiTags('osint')
 @Controller('osint')

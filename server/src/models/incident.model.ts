@@ -1,5 +1,4 @@
-import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
-import { Case } from './case.model';
+import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 @Table({
   tableName: 'incidents',
@@ -77,7 +76,4 @@ export class Incident extends Model<Incident> {
     allowNull: true,
   })
   resolvedAt?: Date;
-
-  @HasMany(() => Case)
-  cases: Case[];
 }

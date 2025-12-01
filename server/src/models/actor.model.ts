@@ -1,5 +1,4 @@
-import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
-import { Campaign } from './campaign.model';
+import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 @Table({
   tableName: 'actors',
@@ -102,7 +101,4 @@ export class Actor extends Model<Actor> {
     allowNull: true,
   })
   evasionTechniques?: string[];
-
-  @HasMany(() => Campaign)
-  campaignRelations: Campaign[];
 }

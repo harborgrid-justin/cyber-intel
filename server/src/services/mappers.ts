@@ -1,6 +1,6 @@
 
 import { DataMapper } from './dataMapper';
-import { Threat, Case, ThreatActor, IncidentStatus, Severity, Channel } from '../../../types';
+import { Threat, Case, ThreatActor, IncidentStatus, Severity, Channel } from '@/types';
 import { DataStandardizer } from './utils/standardizer';
 import { calculateThreatScore } from './scoringEngine';
 

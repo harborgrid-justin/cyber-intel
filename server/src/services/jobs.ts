@@ -1,7 +1,7 @@
 
 import { DataLayer } from './dataLayer';
 import { LogicEngine } from './logicEngine';
-import { Severity, IncidentStatus } from '../../../types';
+import { Severity, IncidentStatus } from '@/types';
 import { mockParseSTIX, mockParseVendorAdvisory, mockParseVulnScan } from './ingestionService';
 
 export const startBackgroundJobs = (layer: DataLayer) => {

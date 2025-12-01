@@ -1,5 +1,5 @@
 
-import { Severity } from '../../../types';
+import { Severity } from '@/types';
 import { CONFIG } from '@/config';
 
 export const calculateThreatScore = (

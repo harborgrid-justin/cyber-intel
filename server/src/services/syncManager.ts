@@ -1,7 +1,7 @@
 
 import { DataLayer } from './dataLayer';
 import { LogicEngine } from './logicEngine';
-import { Severity, IncidentStatus, View } from '../../../types';
+import { Severity, IncidentStatus, View } from '@/types';
 import { mockParseSTIX, mockParseVendorAdvisory, mockParseVulnScan } from './ingestionService';
 
 export class SyncManager {

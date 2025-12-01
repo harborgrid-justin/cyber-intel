@@ -13,14 +13,7 @@ import {
   CreateTrafficFlowDto,
   AutomatedResponseDto,
 } from './dto';
-import {
-  ResponsePlan,
-  VIPProfile,
-  Honeytoken,
-  PatchPrioritization,
-  SegmentationPolicy,
-  TrafficFlow
-} from '../../../types';
+import { ResponsePlan, VIPProfile, Honeytoken, PatchPrioritization, SegmentationPolicy, TrafficFlow } from '@/types';
 
 @ApiTags('orchestrator')
 @Controller('orchestrator')

@@ -18,7 +18,7 @@ import {
   Malware, ForensicJob, Device, Pcap, SystemUser, IncidentReport, 
   Campaign, ChartDataPoint, VendorFeedItem, ScannerStatus, MitreItem, OsintDomain, 
   OsintBreach, OsintGeo, OsintSocial, Integration, PatchStatus, Vendor, Channel, TeamMessage 
-} from '../../../types';
+} from '@/types';
 import { SupplyChainLogic } from './logic/SupplyChainLogic';
 import { InitialDataFactory } from './initialData';
 import { ThreatMapper, CaseMapper, ActorMapper } from './mappers';
