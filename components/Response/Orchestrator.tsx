@@ -1,13 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
-import { Button, FilterGroup } from '../Shared/UI';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Button } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import { ResponseLogic } from '../../services/logic/ResponseLogic';
-import { DefenseLogic } from '../../services/logic/DefenseLogic';
 import { OrchestratorLogic } from '../../services/logic/OrchestratorLogic';
 import { StandardPage } from '../Shared/Layouts';
 import { ResponsePlan, Honeytoken } from '../../types';
-import { Icons } from '../Shared/Icons';
 import { ResponseTopology } from './Views/ResponseTopology';
 import { DeceptionOps } from './Views/DeceptionOps';
 import { PatchStrategy } from './Views/PatchStrategy';
@@ -15,10 +13,11 @@ import { SegmentationView } from './Views/SegmentationView';
 import { CONFIG } from '../../config';
 
 const Orchestrator: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'RESPONSE' | 'DECEPTION' | 'SEGMENT' | 'PATCH'>('RESPONSE');
+  const [activeTab, setActiveTab] = useState('Response Topology');
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [generatedPlan, setGeneratedPlan] = useState<ResponsePlan | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); 
   
   const [honeytokens, setHoneytokens] = useState<Honeytoken[]>([
      { id: 'h1', name: 'admin_creds_backup.txt', type: 'FILE', location: 'FileShare-01', status: 'ACTIVE', effectiveness: 85 },
@@ -29,10 +28,14 @@ const Orchestrator: React.FC = () => {
   const nodes = threatData.getSystemNodes();
   const playbooks = threatData.getPlaybooks();
   const vulns = threatData.getVulnerabilities();
+  const threats = threatData.getThreats();
 
-  // --- Logic Integration ---
+  useEffect(() => {
+      const handleUpdate = () => setRefreshTrigger(prev => prev + 1);
+      window.addEventListener('data-update', handleUpdate);
+      return () => window.removeEventListener('data-update', handleUpdate);
+  }, []);
 
-  // 1. Response Topology Logic
   const handleSimulate = (pbId: string) => {
     const node = nodes.find(n => n.id === selectedNodeId);
     const pb = playbooks.find(p => p.id === pbId);
@@ -40,10 +43,7 @@ const Orchestrator: React.FC = () => {
     
     setIsSimulating(true);
     setTimeout(() => {
-      // Use basic logic for plan generation
       const basicPlan = ResponseLogic.generateResponsePlan(pb, node, nodes);
-      
-      // Enhance with Advanced Orchestrator Logic
       const blastRadius = OrchestratorLogic.calculateBlastRadius(node.id, nodes);
       const authorized = OrchestratorLogic.validateResponseAuthority(basicPlan, CONFIG.USER.CLEARANCE);
       const ttr = OrchestratorLogic.estimateTimeToRecovery(node);
@@ -51,7 +51,11 @@ const Orchestrator: React.FC = () => {
       setGeneratedPlan({
         ...basicPlan,
         collateralDamageScore: blastRadius.riskScore,
-        businessImpact: [...basicPlan.businessImpact, `Affected Nodes: ${blastRadius.affectedNodes.length}`, `Est. Recovery: ${ttr}`],
+        businessImpact: [
+            ...basicPlan.businessImpact, 
+            `Affected Downstream Nodes: ${blastRadius.affectedNodes.length - 1}`, 
+            `Est. Recovery Time: ${ttr}`
+        ],
         requiredAuth: authorized ? 'Authorized' : 'ELEVATION_REQUIRED'
       });
       
@@ -68,16 +72,17 @@ const Orchestrator: React.FC = () => {
     setGeneratedPlan({ ...generatedPlan, status: 'EXECUTING' });
     setTimeout(() => {
       setGeneratedPlan({ ...generatedPlan, status: 'COMPLETED' });
+      if (generatedPlan.type === 'ISOLATION') {
+          generatedPlan.targetNodes.forEach(nid => threatData.nodeStore.isolateNode(nid));
+      }
       alert(`Orchestration Complete: ${generatedPlan.name}`);
     }, 2000);
   };
 
-  // 2. Patch Strategy Logic (Advanced Context)
   const prioritizedPatches = useMemo(() => {
-      // Use the advanced contextual scoring from OrchestratorLogic
       return vulns.map(v => {
           const node = nodes.find(n => n.vulnerabilities?.includes(v.id));
-          if (!node) return null;
+          if (!node || v.status === 'PATCHED') return null; 
           
           const riskScore = OrchestratorLogic.calculateContextualPatchRisk(v, node);
           const window = OrchestratorLogic.determinePatchWindow(node);
@@ -86,39 +91,28 @@ const Orchestrator: React.FC = () => {
               vulnId: v.id,
               assetId: node.id,
               score: riskScore,
-              reason: `Window: ${window}`,
+              reason: `Window: ${window}${v.exploited ? ' | KEV' : ''}`,
               cvss: v.score,
               businessCriticality: riskScore > 80 ? 'CRITICAL' : riskScore > 50 ? 'HIGH' : 'MEDIUM'
           };
       }).filter(Boolean) as any[];
-  }, [vulns, nodes]);
+  }, [vulns, nodes, refreshTrigger]);
 
-  // 3. Deception Logic (Recommendations)
-  // This would typically trigger a "Recommended Decoys" modal, simulated here by updating state if empty
-  useMemo(() => {
-      if (activeTab === 'DECEPTION' && honeytokens.length < 5) {
-          const recs = OrchestratorLogic.recommendDecoyPlacement(nodes);
-          // In a real app, we'd show these as suggestions.
-          console.log("Decoy Recommendations:", recs);
-      }
-  }, [activeTab, nodes, honeytokens.length]);
+  const MODULES = ['Response Topology', 'Deception Ops', 'Segmentation', 'Patch Strategy'];
 
   return (
-    <StandardPage title="Active Defense Orchestrator" subtitle="SOAR & Defensive Operations" modules={[]} activeModule="" onModuleChange={() => {}}>
-      <div className="flex flex-col lg:h-full h-auto gap-6">
-        <div className="bg-slate-900 border-b border-slate-800 pb-0 shrink-0">
-           <FilterGroup value={activeTab} onChange={(v: any) => setActiveTab(v)} options={[
-              { label: 'Response Topology', value: 'RESPONSE', icon: <Icons.Network className="w-3 h-3" /> },
-              { label: 'Deception Ops', value: 'DECEPTION', icon: <Icons.Target className="w-3 h-3" /> },
-              { label: 'Segmentation', value: 'SEGMENT', icon: <Icons.Grid className="w-3 h-3" /> },
-              { label: 'Patch Strategy', value: 'PATCH', icon: <Icons.Refresh className="w-3 h-3" /> }
-           ]} />
-        </div>
-
+    <StandardPage 
+        title="Active Defense Orchestrator" 
+        subtitle="SOAR & Defensive Operations" 
+        modules={MODULES} 
+        activeModule={activeTab} 
+        onModuleChange={setActiveTab}
+    >
         <div className="flex-1 min-h-0 lg:overflow-hidden">
-           {activeTab === 'RESPONSE' && (
+           {activeTab === 'Response Topology' && (
              <ResponseTopology 
-                nodes={nodes} 
+                nodes={nodes}
+                activeThreats={threats.filter(t => t.status !== 'CLOSED')}
                 selectedNodeId={selectedNodeId} 
                 onSelectNode={(id) => { setSelectedNodeId(id); setGeneratedPlan(null); }}
                 generatedPlan={generatedPlan}
@@ -129,13 +123,12 @@ const Orchestrator: React.FC = () => {
              />
            )}
 
-           {activeTab === 'DECEPTION' && <DeceptionOps honeytokens={honeytokens} />}
+           {activeTab === 'Deception Ops' && <DeceptionOps honeytokens={honeytokens} />}
 
-           {activeTab === 'SEGMENT' && <SegmentationView />}
+           {activeTab === 'Segmentation' && <SegmentationView />}
 
-           {activeTab === 'PATCH' && <PatchStrategy prioritizedPatches={prioritizedPatches} />}
+           {activeTab === 'Patch Strategy' && <PatchStrategy prioritizedPatches={prioritizedPatches} />}
         </div>
-      </div>
     </StandardPage>
   );
 };

@@ -1,23 +1,7 @@
 
-export interface TTPDef {
-  id: string;
-  name: string;
-  stage: 'Recon' | 'Access' | 'Execution' | 'Persistence' | 'C2' | 'Exfil';
-  noise: number; 
-  cost: number; 
-  baseSuccess: number;
-  mitreId: string;
-  desc: string;
-  requires?: string[]; // IDs of TTPs required before this one
-  synergy?: string[]; // IDs of TTPs that boost this one
-}
+import { CampaignStep, TTPDef } from '../../types';
 
-export interface CampaignStep {
-  uuid: string; // Unique instance ID
-  ttpId: string;
-  notes?: string;
-  config?: { target?: string; tool?: string; duration?: number };
-}
+export { CampaignStep };
 
 export const TTP_LIBRARY: Record<string, TTPDef> = {
   'Recon: Phishing': { id: 't1', name: 'Recon: Phishing', stage: 'Recon', noise: 20, cost: 500, baseSuccess: 0.65, mitreId: 'T1566', desc: 'Targeted email campaign' },
@@ -57,26 +41,17 @@ export class SimBuilderLogic {
     const stages = ['Recon', 'Access', 'Execution', 'Persistence', 'C2', 'Exfil'];
     let lastStageIdx = stages.indexOf(stepDefs[0].stage);
 
-    // Track completed TTP IDs for requirement checking
     const completedTTPs = new Set<string>([stepDefs[0].id]);
 
     for (let i = 1; i < stepDefs.length; i++) {
         const curr = stepDefs[i];
         const currStageIdx = stages.indexOf(curr.stage);
         
-        // 1. Requirement Check
         if (curr.requires) {
-            // Check if ANY required TTP ID (or name) is in the completed set
             const reqMet = curr.requires.some(req => completedTTPs.has(req) || steps.slice(0,i).some(s => s.ttpId === req || this.getDef(s.ttpId)?.id === req));
             if (!reqMet) {
                 invalidIndices.push(i);
-                // We assume validation failure here but continue to find other errors
             }
-        }
-
-        // 2. Logical Flow Check (Soft check)
-        if (currStageIdx < lastStageIdx - 1) { 
-            // Jumping back is allowed in advanced logic (looping), but warn if illogical
         }
         
         lastStageIdx = currStageIdx;
@@ -92,7 +67,6 @@ export class SimBuilderLogic {
 
   static autoOptimize(steps: CampaignStep[]): CampaignStep[] {
     const stages = ['Recon', 'Access', 'Execution', 'Persistence', 'C2', 'Exfil'];
-    // Simple sort by stage
     return [...steps].sort((a, b) => {
       const stageA = stages.indexOf(this.getDef(a.ttpId)!.stage);
       const stageB = stages.indexOf(this.getDef(b.ttpId)!.stage);
@@ -111,21 +85,13 @@ export class SimBuilderLogic {
       const def = this.getDef(s.ttpId);
       if(def) {
         cost += def.cost;
-        
-        // Synergy Bonus
         let successMod = def.baseSuccess;
         if (def.synergy && def.synergy.some(id => executedTTPs.has(id))) {
-            successMod = Math.min(0.99, successMod + 0.15); // 15% Boost
+            successMod = Math.min(0.99, successMod + 0.15); 
         }
-        
-        // Noise Penalty (Previous noise makes current step harder)
         if (noise > 50) successMod *= 0.8; 
-
         prob *= successMod;
-        
-        // Noise Accumulation with Decay (simulating time passing reduces noise slightly, but active steps add it)
         noise = Math.max(noise * 0.9, def.noise); 
-        
         iocs.push(`${def.mitreId}: ${def.stage}`);
         executedTTPs.add(def.id);
       }

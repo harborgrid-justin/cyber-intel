@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button, FilterGroup } from '../Shared/UI';
+import { Button } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import { Case, ChainEvent, Malware, ForensicJob, Device, Pcap, View } from '../../types';
 import { StandardPage } from '../Shared/Layouts';
@@ -39,12 +39,17 @@ const EvidencePortal: React.FC = () => {
     const a = document.createElement('a'); a.href = url; a.download = 'chain_of_custody_full.csv'; a.click();
   };
 
+  const MODULES = ['Inventory', 'Chain of Custody', 'Malware Vault', 'Forensics Lab', 'Network Captures', 'Device Locker', 'Storage'];
+
   return (
-    <StandardPage title="Evidence Management" subtitle="Chain of Custody & Forensics" actions={<Button onClick={handleExportCustody} variant="secondary">EXPORT CUSTODY LOGS</Button>} modules={[]} activeModule="" onModuleChange={() => {}}>
-      <div className="flex flex-col h-full gap-6">
-        <div className="bg-slate-900 border-b border-slate-800 pb-0 shrink-0 overflow-x-auto">
-           <FilterGroup value={activeModule} onChange={setActiveModule} options={['Inventory', 'Chain of Custody', 'Malware Vault', 'Forensics Lab', 'Network Captures', 'Device Locker', 'Storage'].map(l => ({ label: l, value: l }))} />
-        </div>
+    <StandardPage 
+        title="Evidence Management" 
+        subtitle="Chain of Custody & Forensics" 
+        actions={<Button onClick={handleExportCustody} variant="secondary">EXPORT CUSTODY LOGS</Button>} 
+        modules={MODULES} 
+        activeModule={activeModule} 
+        onModuleChange={setActiveModule}
+    >
         <div className="flex-1 min-h-0 overflow-hidden">
             {activeModule === 'Inventory' && <EvidenceInventory artifacts={allArtifacts} handleNavigateCase={handleNavigateCase} />}
             {activeModule === 'Chain of Custody' && <CustodyChainView data={chain} artifacts={allArtifacts} />}
@@ -54,7 +59,6 @@ const EvidencePortal: React.FC = () => {
             {activeModule === 'Network Captures' && <NetworkCapturesView pcaps={pcaps} />}
             {activeModule === 'Storage' && <StorageOpsView artifacts={allArtifacts} />}
         </div>
-      </div>
     </StandardPage>
   );
 };

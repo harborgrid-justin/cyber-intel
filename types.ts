@@ -132,7 +132,7 @@ export interface Vendor {
   sbom: SbomComponent[];
   compliance: ComplianceCert[];
   access: VendorAccess[];
-  subcontractors: string[]; // IDs of other vendors or names
+  subcontractors: string[]; 
 }
 
 export interface AttackStep { id: string; stage: string; node?: string; method: string; successProbability: number; description: string; detectionRisk?: number; }
@@ -164,3 +164,36 @@ export interface AuditArtifact { id: string; controlId: string; type: 'SCREENSHO
 export interface ParserRule { id: string; name: string; sourceType: string; pattern: string; sampleLog: string; status: 'ACTIVE' | 'INACTIVE' | 'ERROR'; performance: 'FAST' | 'MODERATE' | 'SLOW'; }
 export interface EnrichmentModule { id: string; name: string; type: 'GEO' | 'ASN' | 'THREAT_INTEL' | 'WHOIS' | 'ASSET_DB'; provider: string; costPerRequest: number; latencyMs: number; enabled: boolean; }
 export interface NormalizationRule { id: string; sourceField: string; targetField: string; transform: 'NONE' | 'LOWERCASE' | 'UPPERCASE' | 'TRIM' | 'IP_TO_GEO'; validation: 'VALID' | 'TYPE_MISMATCH' | 'MISSING_FIELD'; }
+
+// Sim Builder Types
+export interface TTPDef {
+  id: string;
+  name: string;
+  stage: 'Recon' | 'Access' | 'Execution' | 'Persistence' | 'C2' | 'Exfil';
+  noise: number; 
+  cost: number; 
+  baseSuccess: number;
+  mitreId: string;
+  desc: string;
+  requires?: string[]; 
+  synergy?: string[];
+}
+
+export interface CampaignStep {
+  uuid: string; 
+  ttpId: string;
+  notes?: string;
+  config?: { target?: string; tool?: string; duration?: number };
+}
+
+// Sim Exfil Types
+export interface ExfilConfig {
+  protocol: 'DNS' | 'HTTPS' | 'ICMP' | 'FTP' | 'SMB';
+  encryption: 'NONE' | 'AES' | 'XOR';
+  chunkSize: number; 
+  jitter: number; 
+  bandwidthLimit: number; 
+}
+
+// Timeline
+export interface HistoryEventInput { date: string; title: string; description: string; }

@@ -10,12 +10,12 @@ import { CONFIG } from '../../config';
 import ParsersView from './ParsersView';
 import EnrichmentView from './EnrichmentView';
 import NormalizationView from './NormalizationView';
+import CreateFeedForm from './CreateFeedForm';
 
 const IngestionManager: React.FC = () => {
   const [activeModule, setActiveModule] = useState(CONFIG.MODULES.INGESTION[0]);
   const [feeds, setFeeds] = useState(threatData.getFeeds());
   const [isCreating, setIsCreating] = useState(false);
-  const [newFeedName, setNewFeedName] = useState('');
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const jobs = getRecentJobs();
 
@@ -30,25 +30,16 @@ const IngestionManager: React.FC = () => {
   
   const handleSync = async (feed: IoCFeed) => {
     setSyncingId(feed.id);
-    // Simulate network delay
     await new Promise(r => setTimeout(r, 1200));
     
-    // Ingest mocked data
     const newThreats = mockParseSTIX('', feed.name);
     newThreats.forEach(t => threatData.addThreat(t));
     
-    // Update feed status
     feed.lastSync = 'Just now';
     threatData.feedStore.update(feed);
     
     setSyncingId(null);
     alert(`Ingested ${newThreats.length} new indicators from ${feed.name}`);
-  };
-
-  const handleAdd = () => {
-    if(!newFeedName) return;
-    threatData.addFeed({ id: `FEED-${Date.now()}`, name: newFeedName, url: 'http://...', type: 'JSON_FEED', status: 'ACTIVE', interval: 60, lastSync: 'Never' });
-    setIsCreating(false); setNewFeedName('');
   };
 
   const handleConnectSource = (sourceName: string) => {
@@ -62,10 +53,7 @@ const IngestionManager: React.FC = () => {
   return (
     <StandardPage title="Data Ingestion Hub" subtitle="Connect and Manage Intelligence Sources" actions={<Button onClick={() => setIsCreating(true)}>+ ADD SOURCE</Button>} modules={CONFIG.MODULES.INGESTION} activeModule={activeModule} onModuleChange={setActiveModule}>
       {isCreating && (
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex gap-4 items-center mb-6">
-           <input className="flex-1 bg-slate-950 border border-slate-800 p-2 rounded text-white outline-none focus:border-cyan-500" placeholder="New Feed Name" value={newFeedName} onChange={e => setNewFeedName(e.target.value)} />
-           <Button onClick={handleAdd}>SAVE</Button><Button onClick={() => setIsCreating(false)} variant="text">CANCEL</Button>
-        </div>
+        <CreateFeedForm onCancel={() => setIsCreating(false)} onSuccess={() => setIsCreating(false)} />
       )}
 
       {activeModule === 'Status' && (
@@ -111,7 +99,6 @@ const IngestionManager: React.FC = () => {
         </Card>
       )}
       
-      {/* New Modules */}
       {activeModule === 'Parsers' && <ParsersView />}
       {activeModule === 'Enrichment' && <EnrichmentView />}
       {activeModule === 'Normalization' && <NormalizationView />}
