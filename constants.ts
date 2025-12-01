@@ -121,7 +121,7 @@ export const SYSTEM_NODES: SystemNode[] = [
       securityControls: ['EDR', 'DLP'], dataSensitivity: 'RESTRICTED', dataVolumeGB: 5000 
     },
     { 
-      id: 'n3', name: 'HQ-DC-01', status: 'ONLINE', load: 32, latency: 4, type: 'Server', vendor: 'Microsoft', vulnerabilities: ['CVE-2023-23397'], criticalProcess: 'AUTH_SERVICE', dependencies: [], 
+      id: 'n3', name: 'HQ-DC-01', status: 'ONLINE', load: 32, latency: 4, type: 'Server', vendor: 'Microsoft', vulnerabilities: ['CVE-2023-23397'], criticalProcess: 'AUTH_SERVICE', dependencies: ['n2'], 
       securityControls: ['EDR', 'SIEM_AGENT'], dataSensitivity: 'CONFIDENTIAL', dataVolumeGB: 50 
     },
     { 
@@ -131,6 +131,10 @@ export const SYSTEM_NODES: SystemNode[] = [
     { 
       id: 'n5', name: 'WEB-EXT-01', status: 'OFFLINE', load: 0, latency: 0, type: 'Server', vendor: 'Apache', dependencies: ['n3'], 
       securityControls: ['FIREWALL', 'AV'], dataSensitivity: 'PUBLIC', dataVolumeGB: 20 
+    },
+    { 
+      id: 'n6', name: 'WS-ADMIN-01', status: 'ONLINE', load: 15, latency: 5, type: 'Workstation', vendor: 'Microsoft', dependencies: ['n5'], 
+      securityControls: ['AV', 'EDR'], dataSensitivity: 'INTERNAL', dataVolumeGB: 250 
     },
 ];
 export const THREAT_TRENDS = [{ name: '00:00', value: 12 }, { name: '04:00', value: 35 }, { name: '08:00', value: 24 }, { name: '12:00', value: 89 }, { name: '16:00', value: 54 }, { name: '20:00', value: 18 }];
