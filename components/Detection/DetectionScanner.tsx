@@ -1,104 +1,56 @@
 
 import React, { useState } from 'react';
-import { scanTextForIoCs } from '../../services/detectionEngine';
-import { Threat } from '../../types';
-import FeedItem from '../Feed/FeedItem';
-import { threatData } from '../../services/dataLayer';
-import { Card, Button, TextArea, Grid, CardHeader } from '../Shared/UI';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
+import { Card, FilterGroup } from '../Shared/UI';
+import { RuleViews } from './Views/RuleViews';
+import { ForensicViews } from './Views/ForensicViews';
+import { AdvancedViews } from './Views/AdvancedViews';
+import { Icons } from '../Shared/Icons';
 
 const DetectionScanner: React.FC = () => {
   const [activeModule, setActiveModule] = useState(CONFIG.MODULES.DETECTION[0]);
-  const [logInput, setLogInput] = useState('');
-  const [results, setResults] = useState<Threat[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
-  const [yaraRule, setYaraRule] = useState('rule example_rule {\n  meta:\n    description = "Detects suspicious string"\n  strings:\n    $a = "evil_string"\n  condition:\n    $a\n}');
 
-  const handleScan = () => {
-    setIsScanning(true);
-    setTimeout(() => {
-      setResults(scanTextForIoCs(logInput));
-      setIsScanning(false);
-    }, 800);
-  };
-
-  const handlePromoteAll = () => {
-    if(results.length === 0) return;
-    
-    results.forEach(t => threatData.addThreat(t));
-
-    threatData.addCase({
-      id: `CASE-${Date.now()}`, title: `Log Analysis Batch: ${results.length} IoCs`, description: `Batch promotion of IoCs detected from log analysis.\n\nIndicators:\n${results.map(r => r.indicator).join('\n')}`,
-      status: 'OPEN', priority: 'HIGH', assignee: 'Unassigned', reporter: 'Detection_Scanner', tasks: [], findings: '', relatedThreatIds: results.map(r => r.id), created: new Date().toLocaleDateString(),
-      notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Detection', 'Batch'], tlp: 'AMBER'
-    });
-    
-    alert(`Promoted ${results.length} findings to Threat Feed and created Case.`);
-    setResults([]); 
+  const renderContent = () => {
+    switch (activeModule) {
+      // Rule Development
+      case 'Log Analysis': return <RuleViews.LogAnalysis />;
+      case 'YARA': return <RuleViews.YaraEditor />;
+      case 'Sigma': return <RuleViews.SigmaBuilder />;
+      
+      // Forensics
+      case 'Network': return <ForensicViews.Network />;
+      case 'Memory': return <ForensicViews.Memory />;
+      case 'Disk': return <ForensicViews.Disk />;
+      
+      // Advanced / Behavior
+      case 'User Behavior': return <AdvancedViews.Ueba />;
+      case 'Anomaly': return <AdvancedViews.Anomaly />;
+      case 'Decryption': return <AdvancedViews.Decryption />;
+      
+      // Default / Legacy
+      case 'Scanner': 
+      default: return (
+        <Card className="p-12 flex flex-col items-center justify-center text-slate-500 border-dashed">
+           <Icons.Monitor className="w-16 h-16 mb-4 opacity-20" />
+           <div className="text-lg font-bold">Standard Scanner</div>
+           <p className="text-xs">Select a specialized module from the navigation bar.</p>
+        </Card>
+      );
+    }
   };
 
   return (
     <StandardPage 
-      title="Detection & Analysis" 
-      subtitle="Log Sandbox & YARA Rule Development"
+      title="Detection Engineering Lab" 
+      subtitle="Advanced Threat Hunting & Forensic Analysis"
       modules={CONFIG.MODULES.DETECTION} 
       activeModule={activeModule} 
       onModuleChange={setActiveModule}
     >
-      {activeModule === 'Scanner' && (
-        <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0">
-          <Card className="flex-1 flex flex-col p-0 overflow-hidden">
-            <CardHeader 
-              title="Log Analysis Sandbox" 
-              action={<Button onClick={handleScan} disabled={isScanning}>{isScanning ? 'SCANNING...' : 'SCAN LOGS'}</Button>} 
-            />
-            {/* Standardized TextArea style */}
-            <TextArea 
-              value={logInput} 
-              onChange={(e) => setLogInput(e.target.value)} 
-              placeholder="Paste raw server logs, headers, or text dumps here..." 
-              className="flex-1 w-full border-none focus:ring-0 rounded-none p-4 font-mono text-sm resize-none bg-slate-950 text-slate-300"
-            />
-          </Card>
-          
-          <Card className="lg:w-96 flex flex-col p-0 overflow-hidden h-96 lg:h-auto">
-            <CardHeader 
-              title="Results" 
-              action={results.length > 0 && <Button onClick={handlePromoteAll} variant="secondary" className="px-2 py-1 text-[10px]">PROMOTE ALL</Button>} 
-            />
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-900/50 custom-scrollbar">
-              {results.length === 0 ? (
-                <div className="text-center text-slate-500 text-xs mt-10">Run scan to see results.</div>
-              ) : (
-                results.map((threat) => <FeedItem key={threat.id} threat={threat} />)
-              )}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {activeModule === 'YARA' && (
-        <Card className="flex-1 p-0 flex flex-col overflow-hidden">
-           <CardHeader 
-             title="YARA Rule Editor" 
-             action={<div className="flex gap-2"><Button variant="secondary">Validate</Button><Button variant="primary">Save Rule</Button></div>}
-           />
-           {/* Standardized Editor style */}
-           <TextArea 
-             className="flex-1 bg-slate-950 text-green-400 font-mono p-4 focus:outline-none resize-none border-none text-sm" 
-             value={yaraRule}
-             onChange={(e) => setYaraRule(e.target.value)}
-             spellCheck={false}
-           />
-        </Card>
-      )}
-
-      {!['Scanner', 'YARA'].includes(activeModule) && (
-        <div className="flex-1 flex items-center justify-center p-12 border-2 border-dashed border-slate-800 rounded-xl text-slate-500 uppercase tracking-widest">
-          {activeModule} Module Interface
-        </div>
-      )}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {renderContent()}
+      </div>
     </StandardPage>
   );
 };

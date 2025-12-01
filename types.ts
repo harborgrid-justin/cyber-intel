@@ -79,6 +79,7 @@ export interface SystemNode {
   dataSensitivity: 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED';
   dataVolumeGB: number;
   segment?: 'DMZ' | 'PROD' | 'DEV' | 'CORP';
+  networkConnections?: number;
 }
 
 export interface ChartDataPoint { name: string; value: number; fullMark?: number; }
@@ -99,6 +100,9 @@ export interface OsintDomain { id: string; domain: string; registrar: string; cr
 export interface OsintBreach { id: string; email: string; breach: string; date: string; data: string; hash: string; source: string; }
 export interface OsintSocial { id: string; handle: string; platform: string; status: string; followers: number; lastPost: string; sentiment: string; bio: string; priorityScore?: number; } 
 export interface OsintGeo { id: string; ip: string; city: string; country: string; isp: string; asn: string; coords: string; ports: number[]; threatScore: number; }
+export interface OsintDarkWebItem { source: string; title: string; date: string; author: string; status: string; price: string; }
+export interface OsintFileMeta { name: string; size: string; type: string; author: string; created: string; gps: string; }
+
 export interface SystemUser { id: string; name: string; role: string; clearance: string; status: 'Online' | 'Offline' | 'Busy' | 'LOCKED' | 'FATIGUED'; lastLogin?: string; casesResolved24h?: number; email?: string; isVIP?: boolean; }
 export interface Integration { id: string; name: string; status: 'Connected' | 'Disconnected' | 'Limited'; type: string; }
 
