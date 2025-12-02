@@ -3,8 +3,8 @@ import React from 'react';
 import { Card, CardHeader, Badge, Button, ProgressBar, Grid } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
 import { Device, Pcap, Artifact } from '../../../types';
-import { ForensicsLogic } from '../../services-frontend/logic/ForensicsLogic';
-import { threatData } from '../../services-frontend/dataLayer'; // Needed for updates
+import { ForensicsLogic } from '../../../services-frontend/logic/ForensicsLogic';
+import { threatData } from '../../../services-frontend/dataLayer'; // Needed for updates
 
 // --- Device Locker ---
 export const DeviceLockerView: React.FC<{ devices: Device[] }> = ({ devices }) => (

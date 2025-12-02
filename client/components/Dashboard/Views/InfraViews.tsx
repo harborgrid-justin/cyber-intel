@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Card, CardHeader, Grid, ProgressBar, Badge } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
-import { HealthLogic, NetworkOpsLogic, CloudSecLogic } from '../../services-frontend/logic/dashboard/InfraLogic';
+import { threatData } from '../../../services-frontend/dataLayer';
+import { HealthLogic, NetworkOpsLogic, CloudSecLogic } from '../../../services-frontend/logic/dashboard/InfraLogic';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
 import { Icons } from '../../Shared/Icons';
 

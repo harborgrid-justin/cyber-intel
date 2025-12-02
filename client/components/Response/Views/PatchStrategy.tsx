@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, Badge, Button } from '../../Shared/UI';
 import { PatchPrioritization } from '../../../types';
-import { threatData } from '../../services-frontend/dataLayer';
+import { threatData } from '../../../services-frontend/dataLayer';
 
 interface Props {
   prioritizedPatches: PatchPrioritization[];

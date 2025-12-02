@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Card } from '../Shared/UI';
 import { Threat } from '../../types';
-import { GeoLogic } from '../services-frontend/logic/dashboard/CoreLogic';
+import { GeoLogic } from '../../services-frontend/logic/dashboard/CoreLogic';
 
 interface GeoMapProps {
   threats?: Threat[];

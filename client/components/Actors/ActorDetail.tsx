@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ThreatActor, View } from '../../types';
 import SubModuleNav from '../Shared/SubModuleNav';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { DetailViewHeader } from '../Shared/Layouts';
 import { Button, Card, Badge } from '../Shared/UI';
 import { useActorManagement } from '../../hooks/useActorManagement';

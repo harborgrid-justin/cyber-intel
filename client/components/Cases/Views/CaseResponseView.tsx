@@ -2,8 +2,8 @@
 import React from 'react';
 import { Case, IncidentReport, View } from '../../../types';
 import { Button, Card, CardHeader, Badge } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
-import { CaseLogic } from '../../services-frontend/logic/CaseLogic';
+import { threatData } from '../../../services-frontend/dataLayer';
+import { CaseLogic } from '../../../services-frontend/logic/CaseLogic';
 
 interface CaseResponseViewProps {
   activeCase: Case;

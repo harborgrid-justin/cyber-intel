@@ -2,9 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, Badge, Button, Grid, Input, Select, Label } from '../../Shared/UI';
 import { SegmentationPolicy, TrafficFlow } from '../../../types';
-import { OrchestratorLogic } from '../../services-frontend/logic/OrchestratorLogic';
+import { OrchestratorLogic } from '../../../services-frontend/logic/OrchestratorLogic';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
-import { threatData } from '../../services-frontend/dataLayer';
+import { threatData } from '../../../services-frontend/dataLayer';
 
 const MOCK_POLICIES: SegmentationPolicy[] = [
   { id: 'pol-1', name: 'Isolate Payment DB', source: '*', destination: 'PROD-DB-PAYMENT', port: '5432', action: 'DENY', status: 'ACTIVE' },

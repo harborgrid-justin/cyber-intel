@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 import { Campaign } from '../../types';
 import CampaignList from './CampaignList';
 import CampaignDetail from './CampaignDetail';

@@ -1,12 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, Button, Badge, Select, FilterGroup, ProgressBar, CardHeader, Label, Input, Grid } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { StandardPage } from '../Shared/Layouts';
 import { Icons } from '../Shared/Icons';
-import { SimPathLogic } from '../services-frontend/logic/SimPathLogic';
-import { SimEvasionLogic } from '../services-frontend/logic/SimEvasionLogic';
-import { SimExfilLogic, ExfilConfig } from '../services-frontend/logic/SimExfilLogic';
+import { SimPathLogic } from '../../services-frontend/logic/SimPathLogic';
+import { SimEvasionLogic } from '../../services-frontend/logic/SimEvasionLogic';
+import { SimExfilLogic, ExfilConfig } from '../../services-frontend/logic/SimExfilLogic';
 import CampaignBuilder from './CampaignBuilder';
 
 const BreachSimulator: React.FC = () => {

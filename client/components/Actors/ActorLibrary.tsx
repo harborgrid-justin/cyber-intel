@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { ThreatActor } from '../../types';
 import ActorList from './ActorList';
 import ActorDetail from './ActorDetail';

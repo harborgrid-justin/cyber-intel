@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Card, CardHeader, Badge, Button, Input, Select, Label } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
 import { ChainEvent, Artifact } from '../../../types';
-import { ForensicsLogic } from '../../services-frontend/logic/ForensicsLogic';
-import { threatData } from '../../services-frontend/dataLayer';
+import { ForensicsLogic } from '../../../services-frontend/logic/ForensicsLogic';
+import { threatData } from '../../../services-frontend/dataLayer';
 
 interface Props { data: ChainEvent[]; artifacts: Artifact[]; }
 

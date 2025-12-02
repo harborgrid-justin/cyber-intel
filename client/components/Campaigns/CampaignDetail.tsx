@@ -5,7 +5,7 @@ import SubModuleNav from '../Shared/SubModuleNav';
 import { DetailViewHeader } from '../Shared/Layouts';
 import { Button, Card, Badge } from '../Shared/UI';
 import { CampaignBriefingView, CampaignTechnicalView, CampaignTimeline, CampaignAttribution } from './CampaignViews';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 
 interface CampaignDetailProps {
   campaign: Campaign; 

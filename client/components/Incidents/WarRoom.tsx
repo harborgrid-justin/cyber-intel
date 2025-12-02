@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Threat, Case, Severity } from '../../types';
 import { Button, Card, Badge, CardHeader, HeaderContainer } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
-import { IncidentLogic } from '../services-frontend/logic/IncidentLogic';
+import { threatData } from '../../services-frontend/dataLayer';
+import { IncidentLogic } from '../../services-frontend/logic/IncidentLogic';
 import ChatInterface, { Message } from '../Shared/ChatInterface';
 import GeoMap from '../Dashboard/GeoMap';
 import Modal from '../Shared/Modal';

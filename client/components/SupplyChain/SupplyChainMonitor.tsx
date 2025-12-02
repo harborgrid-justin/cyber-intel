@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Button } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { StandardPage } from '../Shared/Layouts';
 import { RiskRadar } from './Views/RiskRadar';
 import { SbomInspector } from './Views/SbomInspector';

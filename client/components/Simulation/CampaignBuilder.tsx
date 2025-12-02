@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge, Input, CardHeader } from '../Shared/UI';
 import { Icons } from '../Shared/Icons';
-import { SimBuilderLogic, CampaignStep } from '../services-frontend/logic/SimBuilderLogic';
+import { SimBuilderLogic, CampaignStep } from '../../services-frontend/logic/SimBuilderLogic';
 
 const CampaignBuilder: React.FC = () => {
   const [chain, setChain] = useState<CampaignStep[]>([]);

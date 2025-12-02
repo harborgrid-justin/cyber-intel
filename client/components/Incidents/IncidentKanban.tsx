@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Threat, IncidentStatus } from '../../types';
-import { threatData } from '../services-frontend/dataLayer';
-import { IncidentLogic } from '../services-frontend/logic/IncidentLogic';
+import { threatData } from '../../services-frontend/dataLayer';
+import { IncidentLogic } from '../../services-frontend/logic/IncidentLogic';
 import KanbanBoard, { KanbanColumn } from '../Shared/KanbanBoard';
 
 interface Props { threats: Threat[]; onUpdate: () => void; }

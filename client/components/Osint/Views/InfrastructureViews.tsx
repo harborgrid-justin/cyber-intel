@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, Badge, Grid, CardHeader } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
-import { threatData } from '../../services-frontend/dataLayer';
-import { OsintLogic } from '../../services-frontend/logic/OsintLogic';
+import { threatData } from '../../../services-frontend/dataLayer';
+import { OsintLogic } from '../../../services-frontend/logic/OsintLogic';
 import { Icons } from '../../Shared/Icons';
 import { OsintGeo, OsintFileMeta, OsintDarkWebItem } from '../../../types';
 

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CONFIG } from '../../config';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 
 interface HeaderProps {
   toggleSidebar: () => void;

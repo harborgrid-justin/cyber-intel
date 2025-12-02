@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Vendor } from '../../../types';
-import { SupplyChainLogic } from '../../services-frontend/logic/SupplyChainLogic';
+import { SupplyChainLogic } from 'services-frontend/logic/SupplyChainLogic';
 import { Card, Grid, Badge, Button } from '../../Shared/UI';
 
 interface Props {

@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, Badge, ProgressBar, Input, Button, Select, Grid } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
-import { DetectionLogic } from '../../services-frontend/logic/DetectionLogic';
+import { threatData } from 'services-frontend/dataLayer';
+import { DetectionLogic } from 'services-frontend/logic/DetectionLogic';
 
 export const AdvancedViews = {
   Ueba: () => {

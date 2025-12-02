@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Card, Button, Input, Badge, Grid, CardHeader, ProgressBar } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
-import { threatData } from '../../services-frontend/dataLayer';
-import { OsintLogic } from '../../services-frontend/logic/OsintLogic';
+import { threatData } from 'services-frontend/dataLayer';
+import { OsintLogic } from 'services-frontend/logic/OsintLogic';
 import { OsintBreach, OsintSocial } from '../../../types';
 
 export const IdentityViews = {

@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Case } from '../../../types';
 import { Card, CardHeader, Button, Input, Badge } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 import { Icons } from '../../Shared/Icons';
 
 interface Props {

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { Case, ChainEvent, Malware, ForensicJob, Device, Pcap, View } from '../../types';
 import { StandardPage } from '../Shared/Layouts';
 import EvidenceInventory from './EvidenceInventory';

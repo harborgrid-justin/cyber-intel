@@ -2,7 +2,7 @@
 import React from 'react';
 import { IncidentReport, View } from '../../../types';
 import { Button, Card, Badge } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 
 interface CaseReportsViewProps {
   caseId: string;

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Channel } from '../../types';
-import { MessagingLogic } from '../services-frontend/logic/MessagingLogic';
+import { MessagingLogic } from 'services-frontend/logic/MessagingLogic';
 import { Button } from '../Shared/UI';
 
 interface Props {

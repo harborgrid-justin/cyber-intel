@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Card, Grid, CardHeader, ProgressBar } from '../Shared/UI';
 import { Vulnerability, PatchStatus } from '../../types';
 import VulnTable from './VulnTable';
-import { VulnerabilityLogic } from '../services-frontend/logic/VulnerabilityLogic';
+import { VulnerabilityLogic } from 'services-frontend/logic/VulnerabilityLogic';
 
 interface VulnOverviewProps {
   vulns: Vulnerability[];

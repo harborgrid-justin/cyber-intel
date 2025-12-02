@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Card, CardHeader, Badge, ProgressBar, Grid, Button } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
-import { AuditLogic } from '../../services-frontend/logic/AuditLogic';
+import { AuditLogic } from 'services-frontend/logic/AuditLogic';
 import { AuditLog } from '../../../types';
 
 interface ViewProps { logs: AuditLog[]; }

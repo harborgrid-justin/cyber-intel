@@ -23,7 +23,7 @@ import Orchestrator from './components/Response/Orchestrator';
 import ExecutiveProtection from './components/Osint/ExecutiveProtection';
 import MessagingPlatform from './components/Messaging/MessagingPlatform';
 import { View } from './types';
-import { threatData } from './services-frontend/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);

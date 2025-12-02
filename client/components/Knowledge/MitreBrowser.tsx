@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '../Shared/UI';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { MitreMatrix } from './Views/MitreMatrix';
 import { TacticsGrid, TechniquesGrid, SoftwareGrid, MitigationsGrid, AptTable, SubTechTable } from './Views/MitreLibrary';
 

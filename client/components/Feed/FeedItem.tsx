@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Threat, Severity, IncidentStatus, View } from '../../types';
-import { getScoreColorClass } from '../services-frontend/scoringEngine';
-import { threatData } from '../services-frontend/dataLayer';
+import { getScoreColorClass } from '../../services-frontend/scoringEngine';
+import { threatData } from '../../services-frontend/dataLayer';
 import { Card, Button, Badge } from '../Shared/UI';
 
 interface FeedItemProps {

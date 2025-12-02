@@ -3,7 +3,7 @@ import React from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { CONFIG } from '../../config';
 import { Card, CardHeader } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 
 const CategoryRadarChart: React.FC = () => {
   const { CHARTS } = CONFIG.THEME;

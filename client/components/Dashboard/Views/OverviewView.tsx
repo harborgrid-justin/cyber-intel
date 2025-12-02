@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Card, Grid, ProgressBar } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
-import { OverviewLogic } from '../../services-frontend/logic/dashboard/CoreLogic';
+import { threatData } from '../../../services-frontend/dataLayer';
+import { OverviewLogic } from '../../../services-frontend/logic/dashboard/CoreLogic';
 import ThreatChart from '../ThreatChart';
 import GeoMap from '../GeoMap';
 import CategoryRadarChart from '../CategoryRadarChart';

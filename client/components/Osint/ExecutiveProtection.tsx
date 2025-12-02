@@ -1,8 +1,8 @@
 
 import React, { useMemo } from 'react';
 import { Card, Badge, Grid, ProgressBar } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
-import { IntelligenceLogic } from '../services-frontend/logic/IntelligenceLogic';
+import { threatData } from '../../services-frontend/dataLayer';
+import { IntelligenceLogic } from '../../services-frontend/logic/IntelligenceLogic';
 import { StandardPage } from '../Shared/Layouts';
 import { VIPProfile } from '../../types';
 

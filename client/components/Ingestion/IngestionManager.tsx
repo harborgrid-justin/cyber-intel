@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { getRecentJobs, mockParseSTIX } from '../services-frontend/ingestionService';
-import { threatData } from '../services-frontend/dataLayer';
+import { getRecentJobs, mockParseSTIX } from '../../services-frontend/ingestionService';
+import { threatData } from '../../services-frontend/dataLayer';
 import { IoCFeed } from '../../types';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { StandardPage } from '../Shared/Layouts';

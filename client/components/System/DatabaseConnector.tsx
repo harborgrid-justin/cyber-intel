@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, Card, Badge, Input, FilterGroup, CardHeader, ProgressBar, Switch, Grid, Label } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
-import { MockAdapter, PostgresAdapter, DatabaseAdapter, DatabaseStats } from '../services-frontend/dbAdapter';
+import { threatData } from '../../services-frontend/dataLayer';
+import { MockAdapter, PostgresAdapter, DatabaseAdapter, DatabaseStats } from '../../services-frontend/dbAdapter';
 import { CONFIG } from '../../config';
 import { Icons } from '../Shared/Icons';
 

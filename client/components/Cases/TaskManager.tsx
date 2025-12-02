@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Task } from '../../types';
 import { Button, Input, Badge, Card, Select, CardHeader, Label } from '../Shared/UI';
-import { CaseLogic } from '../services-frontend/logic/CaseLogic';
+import { CaseLogic } from '../../services-frontend/logic/CaseLogic';
 
 interface TaskManagerProps {
   tasks: Task[];

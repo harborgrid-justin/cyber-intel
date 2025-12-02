@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { generateDailyBriefing } from '../services-frontend/openAIService';
+import { generateDailyBriefing } from '../../services-frontend/openAIService';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 import { OverviewView } from './Views/OverviewView';

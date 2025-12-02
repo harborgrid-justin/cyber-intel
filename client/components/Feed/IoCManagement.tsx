@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { Threat, Severity, IncidentStatus } from '../../types';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { Input, Button, Card, Select, CardHeader } from '../Shared/UI';

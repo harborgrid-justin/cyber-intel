@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, Button, TextArea, Badge, Input, Select } from '../../Shared/UI';
-import { DetectionLogic } from '../../services-frontend/logic/DetectionLogic';
-import { threatData } from '../../services-frontend/dataLayer';
+import { DetectionLogic } from 'services-frontend/logic/DetectionLogic';
+import { threatData } from 'services-frontend/dataLayer';
 
 export const RuleViews = {
   LogAnalysis: () => {

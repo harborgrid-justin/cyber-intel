@@ -3,7 +3,7 @@ import React from 'react';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { Badge, Button } from '../Shared/UI';
 import { Vulnerability } from '../../types';
-import { VulnerabilityLogic } from '../services-frontend/logic/VulnerabilityLogic';
+import { VulnerabilityLogic } from '../../services-frontend/logic/VulnerabilityLogic';
 
 interface VulnTableProps {
   data: Vulnerability[];

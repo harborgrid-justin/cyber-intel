@@ -3,8 +3,8 @@ import React from 'react';
 import { Case } from '../../types';
 import { Card, Badge, Button, CardHeader, ProgressBar, Grid } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
-import { threatData } from '../services-frontend/dataLayer';
-import { IncidentLogic } from '../services-frontend/logic/IncidentLogic';
+import { threatData } from '../../services-frontend/dataLayer';
+import { IncidentLogic } from '../../services-frontend/logic/IncidentLogic';
 import NetworkGraph from '../Shared/NetworkGraph';
 
 export const IncidentTimeline = ({ cases }: { cases: Case[] }) => {

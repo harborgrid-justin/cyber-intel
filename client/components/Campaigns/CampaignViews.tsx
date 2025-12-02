@@ -3,8 +3,8 @@ import React, { useMemo } from 'react';
 import { Campaign, Threat, View } from '../../types';
 import { Card, Badge, Grid, Button, CardHeader, ProgressBar } from '../Shared/UI';
 import FeedItem from '../Feed/FeedItem';
-import { threatData } from '../services-frontend/dataLayer';
-import { RiskLogic } from '../services-frontend/logic/RiskLogic';
+import { threatData } from '../../services-frontend/dataLayer';
+import { RiskLogic } from '../../services-frontend/logic/RiskLogic';
 import CampaignImpact from './Views/CampaignImpact';
 
 export const CampaignBriefingView: React.FC<{ campaign: Campaign }> = ({ campaign }) => {

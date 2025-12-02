@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { Threat, IoCFeed } from '../../types';
 import FeedItem from './FeedItem';
 import IoCManagement from './IoCManagement';

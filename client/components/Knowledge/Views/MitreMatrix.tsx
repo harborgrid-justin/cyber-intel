@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, FilterGroup } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
+import { threatData } from '../../../services-frontend/dataLayer';
 import { MitreItem } from '../../../types';
 
 interface Props {

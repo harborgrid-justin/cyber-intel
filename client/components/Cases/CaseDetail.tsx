@@ -8,7 +8,7 @@ import CaseLinksView from './Views/CaseLinksView';
 import CaseResponseView from './Views/CaseResponseView';
 import CaseIntelligenceView from './Views/CaseIntelligenceView';
 import CaseEvidenceView from './Views/CaseEvidenceView';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { Button, Badge } from '../Shared/UI';
 import { DetailViewHeader } from '../Shared/Layouts';
 

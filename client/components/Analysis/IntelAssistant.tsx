@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { createAnalysisChat, ChatSession } from '../services-frontend/openAIService';
-import { threatData } from '../services-frontend/dataLayer';
+import { createAnalysisChat, ChatSession } from '../../services-frontend/openAIService';
+import { threatData } from '../../services-frontend/dataLayer';
 import { StandardPage } from '../Shared/Layouts';
 import { Card, Button, CardHeader, Badge } from '../Shared/UI';
 import { CONFIG } from '../../config';

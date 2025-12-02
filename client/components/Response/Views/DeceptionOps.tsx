@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Card, CardHeader, Badge, ProgressBar, Button, Input, Select, Label } from '../../Shared/UI';
 import { Icons } from '../../Shared/Icons';
 import { Honeytoken } from '../../../types';
-import { OrchestratorLogic } from '../../services-frontend/logic/OrchestratorLogic';
-import { threatData } from '../../services-frontend/dataLayer';
+import { OrchestratorLogic } from '../../../services-frontend/logic/OrchestratorLogic';
+import { threatData } from '../../../services-frontend/dataLayer';
 
 interface Props {
   honeytokens: Honeytoken[];

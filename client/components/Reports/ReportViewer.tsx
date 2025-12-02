@@ -3,7 +3,7 @@ import React from 'react';
 import { IncidentReport, View } from '../../types';
 import { Button, Badge } from '../Shared/UI';
 import { DetailViewHeader } from '../Shared/Layouts';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 
 interface Props {
   report: IncidentReport;

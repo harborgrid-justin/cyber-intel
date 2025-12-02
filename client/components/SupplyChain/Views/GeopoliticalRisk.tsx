@@ -2,7 +2,7 @@
 import React from 'react';
 import { Vendor } from '../../../types';
 import { Card, CardHeader } from '../../Shared/UI';
-import { SupplyChainLogic } from '../../services-frontend/logic/SupplyChainLogic';
+import { SupplyChainLogic } from '../../../services-frontend/logic/SupplyChainLogic';
 
 interface Props {
   vendors: Vendor[];

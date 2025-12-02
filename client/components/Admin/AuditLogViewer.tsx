@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 import { StandardPage } from '../Shared/Layouts';
 import { Button, Card, CardHeader, Input, Badge, Select, FilterGroup } from '../Shared/UI';
 import { CONFIG } from '../../config';
 import { AuditLog } from '../../types';
 import { Icons } from '../Shared/Icons';
-import { AuditLogic } from '../services-frontend/logic/AuditLogic';
+import { AuditLogic } from 'services-frontend/logic/AuditLogic';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 
 // specialized views

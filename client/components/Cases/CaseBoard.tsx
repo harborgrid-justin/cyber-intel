@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import CaseList from './CaseList';
 import CaseDetail from './CaseDetail';
 import CreateCaseForm from './CreateCaseForm';

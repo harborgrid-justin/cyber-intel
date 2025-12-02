@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, FilterGroup, Select, CardHeader, Label } from '../Shared/UI';
 import { DetailViewHeader } from '../Shared/Layouts';
 import ResponsiveTable from '../Shared/ResponsiveTable';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { REPORT_BOILERPLATE, MOCK_TEMPLATES } from '../../constants';
 import { Threat, Case, ThreatActor, IncidentReport, ReportSection } from '../../types';
 import ReportSectionList from './ReportSectionList';

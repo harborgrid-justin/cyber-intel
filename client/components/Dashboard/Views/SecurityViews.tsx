@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Card, CardHeader, Grid, ProgressBar, Badge } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
+import { threatData } from '../../../services-frontend/dataLayer';
 import { MOCK_NIST_CONTROLS } from '../../../constants';
-import { ComplianceLogic, InsiderLogic, DarkWebLogic } from '../../services-frontend/logic/dashboard/SecurityLogic';
+import { ComplianceLogic, InsiderLogic, DarkWebLogic } from '../../../services-frontend/logic/dashboard/SecurityLogic';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
 
 export const SecurityViews = {

@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
+          'services-frontend': path.resolve(__dirname, 'services-frontend'),
         }
       }
     };

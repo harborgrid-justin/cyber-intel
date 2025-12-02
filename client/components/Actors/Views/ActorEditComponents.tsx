@@ -2,7 +2,7 @@
 import React from 'react';
 import { ThreatActor, Infrastructure, View } from '../../../types';
 import { Badge, Card, Button, Input, CardHeader } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
+import { threatData } from '../../../services-frontend/dataLayer';
 
 interface CommonListProps { onAdd: () => void; onDelete?: (id: string) => void; }
 

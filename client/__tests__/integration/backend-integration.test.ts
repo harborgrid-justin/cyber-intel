@@ -1,8 +1,8 @@
 // 🔴 AGENT-5: Integration Test Suite
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { apiClient } from '../../services-frontend/apiClient';
-import { threatData } from '../../services-frontend/dataLayer';
+import { apiClient } from 'services-frontend/apiClient';
+import { threatData } from 'services-frontend/dataLayer';
 
 describe('Backend Integration Tests', () => {
   let backendAvailable = false;

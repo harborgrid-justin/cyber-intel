@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
-import { ResponseLogic } from '../services-frontend/logic/ResponseLogic';
-import { OrchestratorLogic } from '../services-frontend/logic/OrchestratorLogic';
+import { threatData } from '../../services-frontend/dataLayer';
+import { ResponseLogic } from '../../services-frontend/logic/ResponseLogic';
+import { OrchestratorLogic } from '../../services-frontend/logic/OrchestratorLogic';
 import { StandardPage } from '../Shared/Layouts';
 import { ResponsePlan, Honeytoken } from '../../types';
 import { ResponseTopology } from './Views/ResponseTopology';

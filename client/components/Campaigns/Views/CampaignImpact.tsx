@@ -1,8 +1,8 @@
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { Campaign, Threat, Case } from '../../../types';
-import { RiskLogic } from '../../services-frontend/logic/RiskLogic';
-import { threatData } from '../../services-frontend/dataLayer';
+import { RiskLogic } from 'services-frontend/logic/RiskLogic';
+import { threatData } from 'services-frontend/dataLayer';
 import { Card, Grid, ProgressBar, CardHeader } from '../../Shared/UI';
 
 interface Props { campaign: Campaign; compact?: boolean; }

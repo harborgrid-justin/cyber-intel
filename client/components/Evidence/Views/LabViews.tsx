@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, Badge, Button, Grid, ProgressBar } from '../../Shared/UI';
 import { Malware, ForensicJob } from '../../../types';
-import { ForensicsLogic } from '../../services-frontend/logic/ForensicsLogic';
-import { threatData } from '../../services-frontend/dataLayer';
+import { ForensicsLogic } from '../../../services-frontend/logic/ForensicsLogic';
+import { threatData } from '../../../services-frontend/dataLayer';
 
 // --- Malware Vault ---
 export const MalwareVaultView: React.FC<{ data: Malware[] }> = ({ data }) => {

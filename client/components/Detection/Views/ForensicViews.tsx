@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Card, CardHeader, Badge, Button, Grid, ProgressBar } from '../../Shared/UI';
-import { threatData } from '../../services-frontend/dataLayer';
-import { DetectionLogic } from '../../services-frontend/logic/DetectionLogic';
+import { threatData } from 'services-frontend/dataLayer';
+import { DetectionLogic } from 'services-frontend/logic/DetectionLogic';
 
 export const ForensicViews = {
   Network: () => {

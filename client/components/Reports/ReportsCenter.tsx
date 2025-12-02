@@ -4,7 +4,7 @@ import { Card, Button, Badge, Grid, CardHeader, Input, FilterGroup, ProgressBar 
 import { MasterDetailLayout, StandardPage, DetailViewHeader } from '../Shared/Layouts';
 import MasterList from '../Shared/MasterList';
 import { CONFIG } from '../../config';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 import { IncidentReport, View } from '../../types';
 import ReportBuilder from './ReportBuilder';
 import ReportViewer from './ReportViewer';

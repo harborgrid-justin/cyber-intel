@@ -4,10 +4,10 @@ import { Card, Button, Badge, Grid, EmptyState } from '../Shared/UI';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 import DatabaseConnector from './DatabaseConnector';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { SystemUser } from '../../types';
 import { MOCK_NIST_CONTROLS } from '../../constants';
-import { SystemLogic } from '../services-frontend/logic/SystemLogic';
+import { SystemLogic } from '../../services-frontend/logic/SystemLogic';
 import { ComplianceOps } from './Views/ComplianceOps';
 import { UserManagement } from './Views/UserManagement';
 

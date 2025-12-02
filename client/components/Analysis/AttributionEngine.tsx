@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { Card, TextArea, Button, Badge, CardHeader } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
-import { ThreatLogic } from '../services-frontend/logic/ThreatLogic';
+import { threatData } from '../../services-frontend/dataLayer';
+import { ThreatLogic } from '../../services-frontend/logic/ThreatLogic';
 
 const AttributionEngine: React.FC = () => {
   const [input, setInput] = useState('');

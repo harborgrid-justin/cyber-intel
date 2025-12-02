@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Card, Button, Badge, FilterGroup, CardHeader } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { Artifact } from '../../types';
-import { ForensicsLogic } from '../services-frontend/logic/ForensicsLogic';
-import { threatData } from '../services-frontend/dataLayer';
+import { ForensicsLogic } from '../../services-frontend/logic/ForensicsLogic';
+import { threatData } from '../../services-frontend/dataLayer';
 
 interface EvidenceItem extends Artifact { caseId: string; caseTitle: string; }
 interface Props { artifacts: EvidenceItem[]; handleNavigateCase: (id: string) => void; }

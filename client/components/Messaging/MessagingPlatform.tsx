@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Channel, TeamMessage, View } from '../../types';
-import { threatData } from '../services-frontend/dataLayer';
-import { MessagingLogic } from '../services-frontend/logic/MessagingLogic';
+import { threatData } from 'services-frontend/dataLayer';
+import { MessagingLogic } from 'services-frontend/logic/MessagingLogic';
 import { StandardPage } from '../Shared/Layouts';
 import { CONFIG } from '../../config';
 import ChannelList from './ChannelList';

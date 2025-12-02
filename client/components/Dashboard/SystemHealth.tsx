@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import { Card, CardHeader } from '../Shared/UI';
-import { HealthLogic } from '../services-frontend/logic/dashboard/InfraLogic';
+import { HealthLogic } from '../../services-frontend/logic/dashboard/InfraLogic';
 
 const SystemHealth: React.FC = () => {
   const nodes = threatData.getSystemNodes();

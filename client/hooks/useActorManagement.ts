@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { ThreatActor, IncidentReport } from '../types';
-import { threatData } from '../services/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 
 export const useActorManagement = (actor: ThreatActor, onUpdate: () => void) => {
   const [newCampaign, setNewCampaign] = useState('');

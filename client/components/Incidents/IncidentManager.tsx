@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 import IncidentTriage from './IncidentTriage';
 import IncidentKanban from './IncidentKanban';
 import WarRoom from './WarRoom';

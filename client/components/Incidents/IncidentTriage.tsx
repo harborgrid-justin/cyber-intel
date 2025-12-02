@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Threat, IncidentStatus, Severity } from '../../types';
-import { threatData } from '../services-frontend/dataLayer';
-import { IncidentLogic } from '../services-frontend/logic/IncidentLogic';
+import { threatData } from '../../services-frontend/dataLayer';
+import { IncidentLogic } from '../../services-frontend/logic/IncidentLogic';
 import { Button, Badge, Card, CardHeader } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 

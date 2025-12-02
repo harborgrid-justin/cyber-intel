@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button, Input } from '../Shared/UI';
-import { threatData } from '../services-frontend/dataLayer';
+import { threatData } from '../../services-frontend/dataLayer';
 
 interface Props {
   onCancel: () => void;

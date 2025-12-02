@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Threat, IncidentStatus } from '../../../types';
-import { RiskLogic } from '../../services-frontend/logic/RiskLogic';
+import { RiskLogic } from 'services-frontend/logic/RiskLogic';
 import { Card, Badge, CardHeader } from '../../Shared/UI';
 
 interface KillChainViewProps {

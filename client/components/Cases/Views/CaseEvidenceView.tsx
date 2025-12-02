@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Case, Artifact } from '../../../types';
 import { Card, CardHeader, Badge } from '../../Shared/UI';
 import EvidenceManager from '../EvidenceManager';
-import { threatData } from '../../services-frontend/dataLayer';
+import { threatData } from 'services-frontend/dataLayer';
 
 interface Props {
   activeCase: Case;
