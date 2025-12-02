@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateChannelDto } from './create-channel.dto';
+import { ChannelsCreateChannelDto } from './create-channel.dto';
 
-export class UpdateChannelDto extends PartialType(CreateChannelDto) {}
+export class ChannelsUpdateChannelDto extends PartialType(ChannelsCreateChannelDto) {}

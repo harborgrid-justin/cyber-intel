@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Channel } from '../models';
-import { CreateChannelDto, UpdateChannelDto } from './dto';
+import { ChannelsCreateChannelDto, ChannelsUpdateChannelDto } from './dto';
 
 @Injectable()
 export class ChannelsService {
@@ -23,7 +23,7 @@ export class ChannelsService {
     });
   }
 
-  async create(createChannelDto: CreateChannelDto): Promise<Channel> {
+  async create(createChannelDto: ChannelsCreateChannelDto): Promise<Channel> {
     const channelData = { ...createChannelDto };
     if (!channelData.id) {
       channelData.id = `channel-${Date.now()}`;
@@ -31,7 +31,7 @@ export class ChannelsService {
     return this.channelModel.create(channelData as Channel);
   }
 
-  async update(id: string, updateChannelDto: UpdateChannelDto): Promise<Channel | null> {
+  async update(id: string, updateChannelDto: ChannelsUpdateChannelDto): Promise<Channel | null> {
     const [affectedCount] = await this.channelModel.update(updateChannelDto, {
       where: { id },
     });

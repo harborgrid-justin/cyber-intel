@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsNumber, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateForensicJobDto {
+export class DetectionCreateForensicJobDto {
   @ApiProperty({ description: 'Name of the forensic job', example: 'Memory Analysis Job' })
   @IsString()
   name: string;

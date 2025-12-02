@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateNormalizationRuleDto {
+export class IngestionCreateNormalizationRuleDto {
   @ApiProperty({ description: 'Field name to normalize', example: 'ip_address' })
   @IsString()
   field: string;

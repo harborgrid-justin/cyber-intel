@@ -22,8 +22,8 @@ import {
 import { MessagingService } from './messaging.service';
 import { Channel, TeamMessage } from '@/types';
 import {
-  CreateChannelDto,
-  UpdateChannelDto,
+  MessagingCreateChannelDto,
+  MessagingUpdateChannelDto,
   CreateMessageDto,
   UpdateMessageDto,
   JoinChannelDto,
@@ -74,11 +74,11 @@ export class MessagingController {
   @Post('channels')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new channel' })
-  @ApiBody({ type: CreateChannelDto })
+  @ApiBody({ type: MessagingCreateChannelDto })
   @ApiResponse({ status: 201, description: 'Channel created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid request data' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
-  async createChannel(@Body() createChannelDto: CreateChannelDto): Promise<Channel> {
+  async createChannel(@Body() createChannelDto: MessagingCreateChannelDto): Promise<Channel> {
     try {
       return await this.messagingService.createChannel(createChannelDto);
     } catch (error) {
@@ -89,13 +89,13 @@ export class MessagingController {
   @Put('channels/:id')
   @ApiOperation({ summary: 'Update an existing channel' })
   @ApiParam({ name: 'id', description: 'Channel ID', example: 'channel-001' })
-  @ApiBody({ type: UpdateChannelDto })
+  @ApiBody({ type: MessagingUpdateChannelDto })
   @ApiResponse({ status: 200, description: 'Channel updated successfully' })
   @ApiResponse({ status: 404, description: 'Channel not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async updateChannel(
     @Param('id') id: string,
-    @Body() updateChannelDto: UpdateChannelDto,
+    @Body() updateChannelDto: MessagingUpdateChannelDto,
   ): Promise<Channel> {
     try {
       const channel = await this.messagingService.updateChannel(id, updateChannelDto);

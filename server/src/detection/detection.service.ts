@@ -5,10 +5,10 @@ import { ParserRule } from '../models/parser-rule.model';
 import { EnrichmentModule } from '../models/enrichment-module.model';
 import { NormalizationRule } from '../models/normalization-rule.model';
 import {
-  CreateForensicJobDto,
-  UpdateForensicJobDto,
-  CreateParserRuleDto,
-  CreateNormalizationRuleDto,
+  DetectionCreateForensicJobDto,
+  DetectionUpdateForensicJobDto,
+  DetectionCreateParserRuleDto,
+  DetectionCreateNormalizationRuleDto,
 } from './dto';
 
 @Injectable()
@@ -39,14 +39,14 @@ export class DetectionService {
     return job;
   }
 
-  async createForensicJob(createForensicJobDto: CreateForensicJobDto): Promise<ForensicJob> {
+  async createForensicJob(createForensicJobDto: DetectionCreateForensicJobDto): Promise<ForensicJob> {
     return this.forensicJobModel.create({
       ...createForensicJobDto,
       status: 'PENDING',
     } as any);
   }
 
-  async updateForensicJob(id: string, updateForensicJobDto: UpdateForensicJobDto): Promise<ForensicJob> {
+  async updateForensicJob(id: string, updateForensicJobDto: DetectionUpdateForensicJobDto): Promise<ForensicJob> {
     const job = await this.forensicJobModel.findByPk(id);
     if (!job) {
       throw new NotFoundException(`Forensic job with ID ${id} not found`);
@@ -62,7 +62,7 @@ export class DetectionService {
     });
   }
 
-  async createParserRule(createParserRuleDto: CreateParserRuleDto): Promise<ParserRule> {
+  async createParserRule(createParserRuleDto: DetectionCreateParserRuleDto): Promise<ParserRule> {
     return this.parserRuleModel.create(createParserRuleDto as any);
   }
 
@@ -89,7 +89,7 @@ export class DetectionService {
     });
   }
 
-  async createNormalizationRule(createNormalizationRuleDto: CreateNormalizationRuleDto): Promise<NormalizationRule> {
+  async createNormalizationRule(createNormalizationRuleDto: DetectionCreateNormalizationRuleDto): Promise<NormalizationRule> {
     return this.normalizationRuleModel.create(createNormalizationRuleDto as any);
   }
 }

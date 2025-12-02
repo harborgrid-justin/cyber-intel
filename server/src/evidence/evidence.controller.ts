@@ -25,8 +25,8 @@ import {
   CreateMalwareDto,
   MalwareResponseDto,
   MalwareQueryDto,
-  CreateForensicJobDto,
-  UpdateForensicJobDto,
+  EvidenceCreateForensicJobDto,
+  EvidenceUpdateForensicJobDto,
   ForensicJobResponseDto,
   ForensicJobQueryDto,
   CreateDeviceDto,
@@ -302,7 +302,7 @@ export class EvidenceController {
     summary: 'Create forensic job',
     description: 'Create a new forensic analysis job.',
   })
-  @ApiBody({ type: CreateForensicJobDto })
+  @ApiBody({ type: EvidenceCreateForensicJobDto })
   @ApiResponse({
     status: 201,
     description: 'Forensic job created successfully',
@@ -316,7 +316,7 @@ export class EvidenceController {
     status: 500,
     description: 'Failed to create forensic job',
   })
-  async createForensicJob(@Body() jobData: CreateForensicJobDto): Promise<ForensicJobResponseDto> {
+  async createForensicJob(@Body() jobData: EvidenceCreateForensicJobDto): Promise<ForensicJobResponseDto> {
     try {
       return this.evidenceService.createForensicJob(jobData);
     } catch (error) {
@@ -334,7 +334,7 @@ export class EvidenceController {
     description: 'Unique identifier of the forensic job',
     example: 'fj-1234567890',
   })
-  @ApiBody({ type: UpdateForensicJobDto })
+  @ApiBody({ type: EvidenceUpdateForensicJobDto })
   @ApiResponse({
     status: 200,
     description: 'Forensic job updated successfully',
@@ -350,7 +350,7 @@ export class EvidenceController {
   })
   async updateForensicJob(
     @Param('id') id: string,
-    @Body() updates: UpdateForensicJobDto,
+    @Body() updates: EvidenceUpdateForensicJobDto,
   ): Promise<ForensicJobResponseDto> {
     try {
       const job = this.evidenceService.updateForensicJob(id, updates);

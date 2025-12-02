@@ -20,7 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { ChannelsService } from './channels.service';
 import { Channel } from '../models';
-import { CreateChannelDto, UpdateChannelDto } from './dto';
+import { ChannelsCreateChannelDto, ChannelsUpdateChannelDto } from './dto';
 
 @ApiTags('channels')
 @Controller('api/channels')
@@ -82,7 +82,7 @@ export class ChannelsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new communication channel' })
-  @ApiBody({ type: CreateChannelDto })
+  @ApiBody({ type: ChannelsCreateChannelDto })
   @ApiResponse({
     status: 201,
     description: 'Channel created successfully',
@@ -96,7 +96,7 @@ export class ChannelsController {
     status: 500,
     description: 'Internal server error',
   })
-  async create(@Body() createChannelDto: CreateChannelDto): Promise<Channel> {
+  async create(@Body() createChannelDto: ChannelsCreateChannelDto): Promise<Channel> {
     try {
       return await this.channelsService.create(createChannelDto);
     } catch (error) {
@@ -111,7 +111,7 @@ export class ChannelsController {
     description: 'Channel unique identifier',
     example: 'channel-intel-ops',
   })
-  @ApiBody({ type: UpdateChannelDto })
+  @ApiBody({ type: ChannelsUpdateChannelDto })
   @ApiResponse({
     status: 200,
     description: 'Channel updated successfully',
@@ -127,7 +127,7 @@ export class ChannelsController {
   })
   async update(
     @Param('id') id: string,
-    @Body() updateChannelDto: UpdateChannelDto,
+    @Body() updateChannelDto: ChannelsUpdateChannelDto,
   ): Promise<Channel> {
     try {
       const channel = await this.channelsService.update(id, updateChannelDto);

@@ -1,7 +1,7 @@
 import { IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpdateEnrichmentModuleDto {
+export class DetectionUpdateEnrichmentModuleDto {
   @ApiProperty({
     description: 'New status for the enrichment module',
     enum: ['ACTIVE', 'DISABLED', 'ERROR'],

@@ -2,7 +2,7 @@ import { IsString, IsOptional, IsEnum, IsNumber, IsObject, IsDate } from 'class-
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
-export class UpdateForensicJobDto {
+export class DetectionUpdateForensicJobDto {
   @ApiPropertyOptional({ description: 'Name of the forensic job', example: 'Updated Memory Analysis Job' })
   @IsOptional()
   @IsString()

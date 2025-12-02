@@ -1,7 +1,7 @@
 import { IsString, IsEnum, IsNumber, IsOptional, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateForensicJobDto {
+export class EvidenceCreateForensicJobDto {
   @ApiProperty({
     description: 'Type of forensic analysis',
     example: 'Memory Analysis'
@@ -43,7 +43,7 @@ export class CreateForensicJobDto {
   technician: string;
 }
 
-export class UpdateForensicJobDto {
+export class EvidenceUpdateForensicJobDto {
   @ApiPropertyOptional({
     description: 'Type of forensic analysis',
     example: 'Disk Analysis'

@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsArray, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateParserRuleDto {
+export class IngestionCreateParserRuleDto {
   @ApiProperty({ description: 'Parser rule name', example: 'Syslog Parser' })
   @IsString()
   name: string;

@@ -5,12 +5,12 @@ import {
   CreateIngestionJobDto,
   UpdateIngestionJobDto,
   CompleteIngestionJobDto,
-  CreateParserRuleDto,
+  IngestionCreateParserRuleDto,
   UpdateParserRuleDto,
   ValidateParserRuleDto,
   CreateEnrichmentModuleDto,
-  UpdateEnrichmentModuleDto,
-  CreateNormalizationRuleDto,
+  IngestionUpdateEnrichmentModuleDto,
+  IngestionCreateNormalizationRuleDto,
   UpdateNormalizationRuleDto,
   ProcessDataDto,
 } from './dto';
@@ -210,10 +210,10 @@ export class IngestionController {
 
   @Post('parser-rules')
   @ApiOperation({ summary: 'Create a new parser rule' })
-  @ApiBody({ type: CreateParserRuleDto })
+  @ApiBody({ type: IngestionCreateParserRuleDto })
   @ApiResponse({ status: 201, description: 'Parser rule created' })
   @ApiResponse({ status: 500, description: 'Failed to create parser rule' })
-  async createParserRule(@Body() ruleData: CreateParserRuleDto): Promise<ParserRule> {
+  async createParserRule(@Body() ruleData: IngestionCreateParserRuleDto): Promise<ParserRule> {
     try {
       return this.ingestionService.createParserRule(ruleData as Omit<ParserRule, 'id'>);
     } catch (error) {
@@ -310,11 +310,11 @@ export class IngestionController {
   @Put('enrichment-modules/:id')
   @ApiOperation({ summary: 'Update an enrichment module' })
   @ApiParam({ name: 'id', description: 'Enrichment module ID', example: 'module-123' })
-  @ApiBody({ type: UpdateEnrichmentModuleDto })
+  @ApiBody({ type: IngestionUpdateEnrichmentModuleDto })
   @ApiResponse({ status: 200, description: 'Enrichment module updated' })
   @ApiResponse({ status: 404, description: 'Enrichment module not found' })
   @ApiResponse({ status: 500, description: 'Failed to update enrichment module' })
-  async updateEnrichmentModule(@Param('id') id: string, @Body() updates: UpdateEnrichmentModuleDto): Promise<EnrichmentModule> {
+  async updateEnrichmentModule(@Param('id') id: string, @Body() updates: IngestionUpdateEnrichmentModuleDto): Promise<EnrichmentModule> {
     try {
       const module = this.ingestionService.updateEnrichmentModule(id, updates as any);
       if (!module) {
@@ -413,10 +413,10 @@ export class IngestionController {
 
   @Post('normalization-rules')
   @ApiOperation({ summary: 'Create a new normalization rule' })
-  @ApiBody({ type: CreateNormalizationRuleDto })
+  @ApiBody({ type: IngestionCreateNormalizationRuleDto })
   @ApiResponse({ status: 201, description: 'Normalization rule created' })
   @ApiResponse({ status: 500, description: 'Failed to create normalization rule' })
-  async createNormalizationRule(@Body() ruleData: CreateNormalizationRuleDto): Promise<NormalizationRule> {
+  async createNormalizationRule(@Body() ruleData: IngestionCreateNormalizationRuleDto): Promise<NormalizationRule> {
     try {
       return this.ingestionService.createNormalizationRule(ruleData as Omit<NormalizationRule, 'id'>);
     } catch (error) {

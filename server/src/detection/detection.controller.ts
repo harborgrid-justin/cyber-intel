@@ -6,11 +6,11 @@ import { ParserRule } from '../models/parser-rule.model';
 import { EnrichmentModule } from '../models/enrichment-module.model';
 import { NormalizationRule } from '../models/normalization-rule.model';
 import {
-  CreateForensicJobDto,
-  UpdateForensicJobDto,
-  CreateParserRuleDto,
-  CreateNormalizationRuleDto,
-  UpdateEnrichmentModuleDto,
+  DetectionCreateForensicJobDto,
+  DetectionUpdateForensicJobDto,
+  DetectionCreateParserRuleDto,
+  DetectionCreateNormalizationRuleDto,
+  DetectionUpdateEnrichmentModuleDto,
 } from './dto';
 
 @ApiTags('detection')
@@ -39,23 +39,23 @@ export class DetectionController {
   @Post('forensic-jobs')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new forensic job' })
-  @ApiBody({ type: CreateForensicJobDto, description: 'Forensic job data' })
+  @ApiBody({ type: DetectionCreateForensicJobDto, description: 'Forensic job data' })
   @ApiResponse({ status: 201, description: 'Forensic job created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - Invalid input data' })
-  async createForensicJob(@Body() createForensicJobDto: CreateForensicJobDto): Promise<ForensicJob> {
+  async createForensicJob(@Body() createForensicJobDto: DetectionCreateForensicJobDto): Promise<ForensicJob> {
     return this.detectionService.createForensicJob(createForensicJobDto);
   }
 
   @Put('forensic-jobs/:id')
   @ApiOperation({ summary: 'Update a forensic job' })
   @ApiParam({ name: 'id', description: 'Forensic job ID', type: String })
-  @ApiBody({ type: UpdateForensicJobDto, description: 'Forensic job update data' })
+  @ApiBody({ type: DetectionUpdateForensicJobDto, description: 'Forensic job update data' })
   @ApiResponse({ status: 200, description: 'Forensic job updated successfully' })
   @ApiResponse({ status: 404, description: 'Forensic job not found' })
   @ApiResponse({ status: 400, description: 'Bad request - Invalid input data' })
   async updateForensicJob(
     @Param('id') id: string,
-    @Body() updateForensicJobDto: UpdateForensicJobDto,
+    @Body() updateForensicJobDto: DetectionUpdateForensicJobDto,
   ): Promise<ForensicJob> {
     return this.detectionService.updateForensicJob(id, updateForensicJobDto);
   }
@@ -72,10 +72,10 @@ export class DetectionController {
   @Post('parser-rules')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new parser rule' })
-  @ApiBody({ type: CreateParserRuleDto, description: 'Parser rule data' })
+  @ApiBody({ type: DetectionCreateParserRuleDto, description: 'Parser rule data' })
   @ApiResponse({ status: 201, description: 'Parser rule created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - Invalid input data' })
-  async createParserRule(@Body() createParserRuleDto: CreateParserRuleDto): Promise<ParserRule> {
+  async createParserRule(@Body() createParserRuleDto: DetectionCreateParserRuleDto): Promise<ParserRule> {
     return this.detectionService.createParserRule(createParserRuleDto);
   }
 
@@ -91,13 +91,13 @@ export class DetectionController {
   @Put('enrichment-modules/:id')
   @ApiOperation({ summary: 'Update enrichment module status' })
   @ApiParam({ name: 'id', description: 'Enrichment module ID', type: String })
-  @ApiBody({ type: UpdateEnrichmentModuleDto, description: 'Enrichment module status update' })
+  @ApiBody({ type: DetectionUpdateEnrichmentModuleDto, description: 'Enrichment module status update' })
   @ApiResponse({ status: 200, description: 'Enrichment module updated successfully' })
   @ApiResponse({ status: 404, description: 'Enrichment module not found' })
   @ApiResponse({ status: 400, description: 'Bad request - Invalid status value' })
   async updateEnrichmentModule(
     @Param('id') id: string,
-    @Body() updateEnrichmentModuleDto: UpdateEnrichmentModuleDto,
+    @Body() updateEnrichmentModuleDto: DetectionUpdateEnrichmentModuleDto,
   ): Promise<EnrichmentModule> {
     return this.detectionService.updateEnrichmentModule(id, updateEnrichmentModuleDto.status);
   }
@@ -114,11 +114,11 @@ export class DetectionController {
   @Post('normalization-rules')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new normalization rule' })
-  @ApiBody({ type: CreateNormalizationRuleDto, description: 'Normalization rule data' })
+  @ApiBody({ type: DetectionCreateNormalizationRuleDto, description: 'Normalization rule data' })
   @ApiResponse({ status: 201, description: 'Normalization rule created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - Invalid input data' })
   async createNormalizationRule(
-    @Body() createNormalizationRuleDto: CreateNormalizationRuleDto,
+    @Body() createNormalizationRuleDto: DetectionCreateNormalizationRuleDto,
   ): Promise<NormalizationRule> {
     return this.detectionService.createNormalizationRule(createNormalizationRuleDto);
   }

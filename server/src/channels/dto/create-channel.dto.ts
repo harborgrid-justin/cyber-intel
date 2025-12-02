@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsEnum, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateChannelDto {
+export class ChannelsCreateChannelDto {
   @ApiPropertyOptional({
     description: 'Unique identifier for the channel',
     example: 'channel-intel-ops'

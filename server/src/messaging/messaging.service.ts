@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Channel, TeamMessage } from '@/types';
 import {
-  CreateChannelDto,
-  UpdateChannelDto,
+  MessagingCreateChannelDto,
+  MessagingUpdateChannelDto,
   CreateMessageDto,
   MessagingStatsDto,
   ChannelActivityDto,
@@ -90,7 +90,7 @@ export class MessagingService {
     return this.channels.find((channel) => channel.id === id) || null;
   }
 
-  async createChannel(createChannelDto: CreateChannelDto): Promise<Channel> {
+  async createChannel(createChannelDto: MessagingCreateChannelDto): Promise<Channel> {
     const newChannel: Channel = {
       id: `channel-${Date.now()}`,
       name: createChannelDto.name,
@@ -105,7 +105,7 @@ export class MessagingService {
 
   async updateChannel(
     id: string,
-    updateChannelDto: UpdateChannelDto,
+    updateChannelDto: MessagingUpdateChannelDto,
   ): Promise<Channel | null> {
     const index = this.channels.findIndex((channel) => channel.id === id);
     if (index === -1) {

@@ -34,7 +34,7 @@ export class CreateEnrichmentModuleDto {
   config?: Record<string, any>;
 }
 
-export class UpdateEnrichmentModuleDto {
+export class IngestionUpdateEnrichmentModuleDto {
   @ApiPropertyOptional({ description: 'Enrichment module name' })
   @IsOptional()
   @IsString()

@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsEnum, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateChannelDto {
+export class MessagingCreateChannelDto {
   @ApiProperty({ description: 'Channel name', example: 'threat-intel' })
   @IsString()
   name: string;

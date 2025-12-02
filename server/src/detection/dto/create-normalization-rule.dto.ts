@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsBoolean, IsNumber, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateNormalizationRuleDto {
+export class DetectionCreateNormalizationRuleDto {
   @ApiProperty({ description: 'Name of the normalization rule', example: 'Windows Event Normalizer' })
   @IsString()
   name: string;
