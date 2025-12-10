@@ -6,9 +6,10 @@ import { IdentityViews } from './Views/IdentityViews';
 import { InfrastructureViews } from './Views/InfrastructureViews';
 import { threatData } from '../../services/dataLayer';
 import { View } from '../../types';
+import { useDataStore } from '../../hooks';
 
 const OsintDashboard: React.FC = () => {
-  const modules = useMemo(() => threatData.getModulesForView(View.OSINT), []);
+  const modules = useDataStore(() => threatData.getModulesForView(View.OSINT));
   const [activeModule, setActiveModule] = useState(modules[0]);
 
   const renderContent = () => {

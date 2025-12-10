@@ -4,21 +4,16 @@ import { createAnalysisChat } from '../../services/geminiService';
 import { Chat, GenerateContentResponse } from "@google/genai";
 import { threatData } from '../../services/dataLayer';
 import { StandardPage } from '../Shared/Layouts';
-// Fix: Import UI components from the barrel file
 import { Card, Button, CardHeader, Badge } from '../Shared/UI';
 import ChatInterface, { Message } from '../Shared/ChatInterface';
 import AttributionEngine from './AttributionEngine';
 import { IntelTools } from './Views/IntelTools';
 import { TriageView } from './Views/TriageView';
-// Fix: Import types from the central types file
 import { CaseId, View } from '../../types';
-// Fix: Add missing import for useDataStore
 import { useDataStore } from '../../hooks';
 
 const IntelAssistant: React.FC = () => {
-  // Fix: Property 'getModulesForView' does not exist on type 'DataLayer'. This is now available.
-  const modules = useMemo(() => threatData.getModulesForView(View.ANALYSIS), []);
-  // Fix: Cannot find name 'useDataStore' and Property 'getAIConfig' does not exist on type 'DataLayer'. This is now available.
+  const modules = useDataStore(() => threatData.getModulesForView(View.ANALYSIS));
   const aiConfig = useDataStore(() => threatData.getAIConfig());
   const [activeModule, setActiveModule] = useState(modules[0]);
   const [messages, setMessages] = useState<Message[]>([{ id: '0', role: 'model', text: 'Sentinel AI online. How can I assist with your threat hunting today?', timestamp: Date.now(), senderName: 'Sentinel AI' }]);
@@ -53,7 +48,6 @@ const IntelAssistant: React.FC = () => {
         let responseText = "No Data";
         if (chatSession.current) {
             const result: GenerateContentResponse = await chatSession.current.sendMessage({ message: userMsg.text });
-            // FIX: Access response text via the .text property, not as a function call.
             responseText = result.text || "No Data";
         } else {
             await new Promise(r => setTimeout(r, 1500)); 

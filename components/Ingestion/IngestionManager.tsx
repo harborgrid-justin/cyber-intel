@@ -1,15 +1,11 @@
 
-
-
 import React, { useState, useMemo } from 'react';
 import { getRecentJobs, ingestDataStream } from '../../services/ingestionService';
 import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../../hooks/useDataStore';
-// Fix: Import types from the central types file
 import { IoCFeed, View } from '../../types';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { StandardPage } from '../Shared/Layouts';
-// Fix: Import UI components from the barrel file
 import { Button, Card, Badge, Grid, CardHeader } from '../Shared/UI';
 import ParsersView from './ParsersView';
 import EnrichmentView from './EnrichmentView';
@@ -17,7 +13,7 @@ import NormalizationView from './NormalizationView';
 import CreateFeedForm from './CreateFeedForm';
 
 const IngestionManager: React.FC = () => {
-  const modules = useMemo(() => threatData.getModulesForView(View.INGESTION), []);
+  const modules = useDataStore(() => threatData.getModulesForView(View.INGESTION));
   const [activeModule, setActiveModule] = useState(modules[0]);
   const [isCreating, setIsCreating] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);

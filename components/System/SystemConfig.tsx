@@ -13,15 +13,13 @@ import { PermissionGate } from '../Shared/PermissionGate';
 import { View } from '../../types';
 
 const SystemConfig: React.FC = () => {
-  // Memoize module list to prevent re-creation on render
-  const modules = useMemo(() => {
-      // Fetch modules from config, ensuring Theme Designer is present
+  const modules = useDataStore(() => {
       const baseModules = threatData.getModulesForView(View.SYSTEM);
       if (!baseModules.includes('Theme Designer')) {
           return [...baseModules, 'Theme Designer', 'Compliance Ops'];
       }
       return [...baseModules, 'Compliance Ops'];
-  }, []);
+  });
 
   const [activeModule, setActiveModule] = useState(modules[0]);
   
