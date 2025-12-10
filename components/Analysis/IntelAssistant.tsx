@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createAnalysisChat } from '../../services/geminiService';
 import { Chat, GenerateContentResponse } from "@google/genai";
@@ -16,7 +15,7 @@ const IntelAssistant: React.FC = () => {
   const modules = useDataStore(() => threatData.getModulesForView(View.ANALYSIS));
   const aiConfig = useDataStore(() => threatData.getAIConfig());
   const [activeModule, setActiveModule] = useState(modules[0]);
-  const [messages, setMessages] = useState<Message[]>([{ id: '0', role: 'model', text: 'Sentinel AI online. How can I assist with your threat hunting today?', timestamp: Date.now(), senderName: 'Sentinel AI' }]);
+  const [messages, setMessages] = useState<Message[]>([{ id: '0', role: 'model', text: 'Synapse AI online. How can I assist with your threat hunting today?', timestamp: Date.now(), senderName: 'Synapse AI' }]);
   const [loading, setLoading] = useState(false);
   const chatSession = useRef<Chat | null>(null);
 
@@ -53,10 +52,10 @@ const IntelAssistant: React.FC = () => {
             await new Promise(r => setTimeout(r, 1500)); 
             responseText = getSimulatedResponse(userMsg.text);
         }
-        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'model', text: responseText, timestamp: Date.now(), senderName: 'Sentinel AI' }]);
+        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'model', text: responseText, timestamp: Date.now(), senderName: 'Synapse AI' }]);
     } catch (err) { 
       const offlineResponse = getSimulatedResponse(userMsg.text);
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'model', text: `[OFFLINE MODE] ${offlineResponse}`, timestamp: Date.now(), senderName: 'Sentinel AI' }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'model', text: `[OFFLINE MODE] ${offlineResponse}`, timestamp: Date.now(), senderName: 'Synapse AI' }]);
     } finally { 
         setLoading(false); 
     }

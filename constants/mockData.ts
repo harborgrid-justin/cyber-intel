@@ -1,5 +1,4 @@
 
-
 import { 
     Threat, Severity, IncidentStatus, SystemNode, AuditLog, Case, IoCFeed, ThreatActor, 
     Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, MitreItem, 
@@ -12,7 +11,7 @@ import {
 
 // FIX: Add missing export for MOCK_USERS. This data is adapted from backend seeds.
 export const MOCK_USERS: SystemUser[] = [
-  { id: 'USR-ADMIN' as UserId, name: 'Adm. S. Connor', username: 'admin.connor', roleId: 'ROLE-ADMIN', role: 'Administrator', clearance: 'TS/SCI', status: 'Online', email: 'admin@sentinel.local', isVIP: true, effectivePermissions: ['*:*'] },
+  { id: 'USR-ADMIN' as UserId, name: 'Oscar Saadein', username: 'admin.connor', roleId: 'ROLE-ADMIN', role: 'Administrator', clearance: 'TS/SCI', status: 'Online', email: 'admin@sentinel.local', isVIP: true, effectivePermissions: ['*:*'] },
   { id: 'USR-ANALYST' as UserId, name: 'J. Doe', username: 'analyst.doe', roleId: 'ROLE-ANALYST', role: 'Analyst', clearance: 'SECRET', status: 'Online', email: 'doe@sentinel.local', isVIP: false, effectivePermissions: ['threat:read', 'case:read'] },
   { id: 'USR-VIEWER' as UserId, name: 'Auditor Smith', username: 'auditor.smith', roleId: 'ROLE-VIEWER', role: 'Viewer', clearance: 'UNCLASSIFIED', status: 'Offline', email: 'audit@sentinel.local', isVIP: false, effectivePermissions: ['audit:read'] }
 ];

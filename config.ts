@@ -7,8 +7,8 @@ export const CONFIG = {
     THREAT_LEVEL: "ELEVATED (DEFCON 3)",
   },
   USER: {
-    NAME: "Adm. S. Connor",
-    INITIALS: "SC",
+    NAME: "Oscar Saadein",
+    INITIALS: "OS",
     CLEARANCE: "TS/SCI",
   },
   DATABASE: {

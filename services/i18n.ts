@@ -1,28 +1,27 @@
-
 // A lightweight localization engine without heavy library overhead
 type Locale = 'en' | 'es' | 'fr' | 'jp';
 
 const DICTIONARY: Record<Locale, Record<string, string>> = {
   en: {
-    'app.title': 'SENTINEL CORE',
+    'app.title': 'SYNAPSE',
     'status.online': 'ONLINE',
     'status.offline': 'OFFLINE',
     'threat.critical': 'CRITICAL THREAT DETECTED'
   },
   es: {
-    'app.title': 'NÚCLEO CENTINELA',
+    'app.title': 'SYNAPSE',
     'status.online': 'EN LÍNEA',
     'status.offline': 'DESCONECTADO',
     'threat.critical': 'AMENAZA CRÍTICA DETECTADA'
   },
   fr: {
-    'app.title': 'NOYAU SENTINELLE',
+    'app.title': 'SYNAPSE',
     'status.online': 'EN LIGNE',
     'status.offline': 'HORS LIGNE',
     'threat.critical': 'MENACE CRITIQUE DÉTECTÉE'
   },
   jp: {
-    'app.title': 'センチネル・コア',
+    'app.title': 'SYNAPSE',
     'status.online': 'オンライン',
     'status.offline': 'オフライン',
     'threat.critical': '重大な脅威を検出'

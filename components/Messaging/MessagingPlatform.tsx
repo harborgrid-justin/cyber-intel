@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Channel, TeamMessage } from '../../types';
 import { threatData } from '../../services/dataLayer';
@@ -45,7 +44,7 @@ const MessagingPlatform: React.FC = () => {
 
   return (
     <StandardPage 
-        title="Sentinel Chat" 
+        title="Synapse Chat" 
         subtitle="Secure Internal Communications" 
         modules={[]} 
         activeModule="" 

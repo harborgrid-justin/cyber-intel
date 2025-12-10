@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useIncidentManager } from '../../hooks';
 import { WidgetErrorBoundary } from '../Shared/WidgetErrorBoundary';
@@ -10,14 +9,14 @@ import { LoadingSpinner } from '../Shared/LoadingSpinner';
 const IncidentTriage = React.lazy(() => import('./IncidentTriage'));
 const IncidentKanban = React.lazy(() => import('./IncidentKanban'));
 const WarRoom = React.lazy(() => import('./WarRoom'));
-// FIX: Corrected import path casing to use 'views' consistently, resolving a case-sensitive path error on some systems.
-const IncidentTimeline = React.lazy(() => import('./views/IncidentTimeline'));
-const IncidentAssets = React.lazy(() => import('./views/IncidentAssets'));
-const IncidentReports = React.lazy(() => import('./views/IncidentReports'));
-const IncidentUsers = React.lazy(() => import('./views/IncidentUsers'));
-const IncidentPlaybooks = React.lazy(() => import('./views/IncidentPlaybooks'));
-const IncidentEvidence = React.lazy(() => import('./views/IncidentEvidence'));
-const IncidentNetwork = React.lazy(() => import('./views/IncidentNetwork'));
+// FIX: Corrected import path casing to use 'Views' consistently, resolving a case-sensitive path error on some systems.
+const IncidentTimeline = React.lazy(() => import('./Views/IncidentTimeline'));
+const IncidentAssets = React.lazy(() => import('./Views/IncidentAssets'));
+const IncidentReports = React.lazy(() => import('./Views/IncidentReports'));
+const IncidentUsers = React.lazy(() => import('./Views/IncidentUsers'));
+const IncidentPlaybooks = React.lazy(() => import('./Views/IncidentPlaybooks'));
+const IncidentEvidence = React.lazy(() => import('./Views/IncidentEvidence'));
+const IncidentNetwork = React.lazy(() => import('./Views/IncidentNetwork'));
 
 const IncidentManager: React.FC = () => {
   const { 

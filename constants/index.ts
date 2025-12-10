@@ -7,7 +7,7 @@ import { TOKENS } from '../styles/theme';
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   id: 'GLOBAL_CONFIG',
-  appName: 'SENTINEL',
+  appName: 'SYNAPSE',
   subtitle: 'CYBER INTELLIGENCE',
   version: '2.5.0',
   threatLevel: 'ELEVATED (DEFCON 3)',

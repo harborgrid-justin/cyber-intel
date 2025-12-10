@@ -1,6 +1,5 @@
-
 {
-  "name": "sentinel-core-backend",
+  "name": "synapse-core-backend",
   "version": "1.0.0",
   "description": "Enterprise Cyber Threat Intelligence API",
   "main": "dist/server.js",
