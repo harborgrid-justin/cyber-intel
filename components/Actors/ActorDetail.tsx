@@ -5,7 +5,7 @@ import SubModuleNav from '../Shared/SubModuleNav';
 import { threatData } from '../../services/dataLayer';
 import { DetailViewHeader } from '../Shared/Layouts';
 import { Button, Card, Badge } from '../Shared/UI';
-import { useActorManagement } from '../../hooks/useActorManagement';
+import { useActorManagement } from '../../hooks';
 import { ActorDossierView } from './Views/ActorDossier';
 import { ActorOperationsView } from './Views/ActorOperations';
 import { TechnicalOpsView } from './Views/ActorEditComponents';

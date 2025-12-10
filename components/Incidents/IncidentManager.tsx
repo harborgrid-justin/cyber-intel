@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { useIncidentManager } from '../../hooks/modules/useIncidentManager';
+import { useIncidentManager } from '../../hooks';
 import { WidgetErrorBoundary } from '../Shared/WidgetErrorBoundary';
 import { StandardPage } from '../Shared/Layouts';
 import { Card } from '../Shared/UI';

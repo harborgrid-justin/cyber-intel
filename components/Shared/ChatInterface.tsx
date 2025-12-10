@@ -1,8 +1,9 @@
 
 
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from './UI';
-import { useThrottledCallback } from '../../hooks/useThrottle';
+import { useThrottledCallback } from '../../hooks';
 // FIX: Module '"../../styles/theme"' has no exported member 'EXECUTIVE_THEME'. This is now exported.
 // FIX: '"../../styles/theme"' has no exported member named 'tokens'. Did you mean 'TOKENS'?
 import { EXECUTIVE_THEME, TOKENS } from '../../styles/theme';

@@ -1,11 +1,10 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { threatData } from '../../services/dataLayer';
-import { useDataStore } from '../../hooks/useDataStore';
+import { useDataStore, useNetworkStatus, useThemeEngine } from '../../hooks';
 import { NotificationBell } from '../Shared/NotificationSystem';
 import { Icons } from '../Shared/Icons';
-import { useNetworkStatus } from '../../hooks/useNetworkStatus';
-import { useThemeEngine } from '../../hooks/useThemeEngine';
 import { STYLES } from '../../styles/theme';
 
 interface HeaderProps { toggleSidebar: () => void; }

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createAnalysisChat } from '../../services/geminiService';
 import { Chat, GenerateContentResponse } from "@google/genai";
@@ -12,7 +13,7 @@ import { TriageView } from './Views/TriageView';
 // Fix: Import types from the central types file
 import { CaseId, View } from '../../types';
 // Fix: Add missing import for useDataStore
-import { useDataStore } from '../../hooks/useDataStore';
+import { useDataStore } from '../../hooks';
 
 const IntelAssistant: React.FC = () => {
   // Fix: Property 'getModulesForView' does not exist on type 'DataLayer'. This is now available.

@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { View } from '../../types';
 import { threatData } from '../../services/dataLayer';
-import { useDataStore } from '../../hooks/useDataStore';
+import { useDataStore } from '../../hooks';
 import { Icons } from '../Shared/Icons';
 import { STYLES } from '../../styles/theme';
 

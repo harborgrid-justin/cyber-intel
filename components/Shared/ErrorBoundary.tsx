@@ -12,8 +12,10 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
-// FIX: Extended React.Component directly to ensure this is a proper React class component.
-// This gives it access to `this.props`, `this.state`, and `this.setState`.
+// FIX: This class must extend React.Component to be a valid React class component.
+// This provides access to lifecycle methods, `this.props`, and `this.setState`.
+// FIX: ErrorBoundary was not extending React.Component, causing 'setState' and 'props' to be undefined.
+// FIX: Extended React.Component to make this a valid class component.
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = {
     hasError: false,

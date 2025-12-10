@@ -28,7 +28,7 @@ export * from './useTQL';
 export * from './useWakeLock';
 // Module specific hooks
 export * from './useThreatFeedLogic';
-export * from './modules/useActorManagement';
+export * from './useActorManagement';
 export * from './modules/useBreachSimulation';
 export * from './modules/useEvidenceOperations';
 export * from './modules/useIncidentManager';

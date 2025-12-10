@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import FeedItem from './FeedItem';
 import IoCManagement from './IoCManagement';
@@ -6,7 +7,7 @@ import NetworkGraph from '../Shared/NetworkGraph';
 import { StandardPage } from '../Shared/Layouts';
 import { EmptyState } from '../Shared/ui/EmptyState';
 import { AdvancedSearch } from './AdvancedSearch';
-import { useThreatFeedLogic } from '../../hooks/useThreatFeedLogic';
+import { useThreatFeedLogic } from '../../hooks';
 
 const ThreatFeed: React.FC = () => {
   const {

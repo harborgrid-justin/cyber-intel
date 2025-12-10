@@ -1,3 +1,4 @@
+
 import { CONFIG } from '../../config';
 
 export class BeaconService {
@@ -8,7 +9,7 @@ export class BeaconService {
     
     // The Beacon API is designed to send data even after the page unloads
     // FIX: CONFIG.DATABASE does not exist. The telemetry endpoint is a fixed path.
-    const telemetryUrl = '/telemetry';
+    const telemetryUrl = '/api/v1/telemetry';
     const success = navigator.sendBeacon(telemetryUrl, payload);
     
     if (!success) {

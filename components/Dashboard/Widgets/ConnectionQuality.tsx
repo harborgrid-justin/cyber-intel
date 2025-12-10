@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNetworkStatus } from '../../../hooks/useNetworkStatus';
+import { useNetworkStatus } from '../../../hooks';
 import { Card } from '../../Shared/UI';
 import { Icons } from '../../Shared/Icons';
 // FIX: Changed 'tokens' to 'TOKENS' to match export.
