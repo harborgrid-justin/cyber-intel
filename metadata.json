@@ -1,0 +1,5 @@
+{
+  "name": "Sentinel CyberIntel 2",
+  "description": "Enterprise-grade cyber threat intelligence platform featuring real-time threat monitoring, IOC feeds, and AI-powered threat analysis using Gemini.",
+  "requestFramePermissions": []
+}

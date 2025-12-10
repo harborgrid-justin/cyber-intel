@@ -1,0 +1,46 @@
+
+{
+  "name": "sentinel-core-backend",
+  "version": "1.0.0",
+  "description": "Enterprise Cyber Threat Intelligence API",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "db:init": "ts-node src/scripts/seed.ts",
+    "vector:ingest": "ts-node src/scripts/vector_cli.ts ingest",
+    "vector:search": "ts-node src/scripts/vector_cli.ts search",
+    "vector:stats": "ts-node src/scripts/vector_cli.ts stats"
+  },
+  "dependencies": {
+    "@google/genai": "^0.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-graphql": "^0.12.0",
+    "express-rate-limit": "^7.2.0",
+    "graphql": "^16.8.1",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "reflect-metadata": "^0.2.2",
+    "sequelize": "^6.37.3",
+    "sequelize-typescript": "^2.1.6",
+    "winston": "^3.13.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.12.7",
+    "@types/pg": "^8.11.5",
+    "@types/sequelize": "^4.28.20",
+    "@types/validator": "^13.11.9",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
+  }
+}
