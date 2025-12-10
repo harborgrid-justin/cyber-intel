@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 // Re-export all the modular UI components from a single point for cleaner imports.
@@ -28,4 +27,3 @@ export const Timestamp: React.FC<{ date: string | Date; format?: 'full' | 'time'
     const str = format === 'time' ? d.toLocaleTimeString() : format === 'date' ? d.toLocaleDateString() : d.toLocaleString();
     return <span className={`font-mono text-[10px] text-slate-500 whitespace-nowrap ${className}`}>{str}</span>;
 };
-    

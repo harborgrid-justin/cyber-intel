@@ -1,4 +1,3 @@
-
 import { InitialDataFactory } from '../initialData';
 import { DatabaseAdapter } from '../dbAdapter';
 import { ThreatStore } from './threatStore';

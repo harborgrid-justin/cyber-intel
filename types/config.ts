@@ -1,4 +1,3 @@
-
 import { View, Severity } from './common';
 
 export interface AppConfig {

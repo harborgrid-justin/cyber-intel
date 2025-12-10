@@ -1,6 +1,3 @@
-
-
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from './UI';
 import { useThrottledCallback } from '../../hooks';
@@ -78,7 +75,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                <div className={`
                  max-w-[90%] md:max-w-[80%] rounded-lg px-5 py-3 text-sm leading-relaxed shadow-md backdrop-blur-sm border
                  ${isUser 
-                    ? `bg-blue-600 text-white border-blue-500 rounded-tr-none shadow-blue-900/20` 
+                    ? `bg-[var(--colors-brand)] text-white border-blue-500 rounded-tr-none shadow-blue-900/20` 
                     : `bg-slate-900/90 text-slate-200 border-slate-700 rounded-tl-none shadow-black/30 font-mono`
                  }
                `}>

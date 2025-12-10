@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Layout from './components/Layout/Layout';
 import { ErrorBoundary } from './components/Shared/ErrorBoundary';

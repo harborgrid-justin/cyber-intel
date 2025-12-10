@@ -1,4 +1,5 @@
 
+
 import { 
     Threat, Severity, IncidentStatus, SystemNode, AuditLog, Case, IoCFeed, ThreatActor, 
     Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, MitreItem, 
@@ -73,23 +74,25 @@ export const MOCK_ACTORS: ThreatActor[] = [
 ];
 
 export const MOCK_CAMPAIGNS: Campaign[] = [
+  // FIX: Added missing targetRegions property to align with Campaign type.
   { id: 'CAM-001', name: 'SolarWinds Supply Chain', description: 'Widespread supply chain attack targeting government and tech sectors.', status: 'ARCHIVED', objective: 'ESPIONAGE', actors: ['APT-29'], firstSeen: '2020-03-01', lastSeen: '2021-02-28', targetSectors: ['Gov', 'Tech'], targetRegions: ['Global'], threatIds: ['1', '9'], ttps: ['T1195'] },
+  // FIX: Added missing targetRegions property to align with Campaign type.
   { id: 'CAM-002', name: 'Operation Serpent Scale', description: 'Ongoing ransomware campaign targeting financial institutions using LockBit.', status: 'ACTIVE', objective: 'FINANCIAL_GAIN', actors: ['LockBit'], firstSeen: '2023-08-15', lastSeen: '2023-10-27', targetSectors: ['Finance'], targetRegions: ['Global'], threatIds: ['2'], ttps: ['T1486'] },
   { id: 'CAM-003', name: 'Operation GhostNet', description: 'Large-scale cyber espionage operation targeting government ministries and embassies.', status: 'ACTIVE', objective: 'ESPIONAGE', actors: ['Lazarus'], firstSeen: '2022-01-01', lastSeen: '2023-09-30', targetSectors: ['Gov'], targetRegions: ['APAC'], threatIds: [], ttps: ['T1204'] }
 ];
 
 export const MOCK_CASES: Case[] = [
-  { id: 'CASE-23-001' as CaseId, title: 'Operation Blue Horizon', description: 'Investigation into coordinated phishing campaign targeting executives.', status: 'IN_PROGRESS', priority: 'HIGH', assignee: 'Analyst.Doe', reporter: 'System', created: '2023-10-25', relatedThreatIds: ['1', '3', '6'], findings: 'Confirmed C2 activity from multiple endpoints.', 
+  { id: 'CASE-23-001' as CaseId, title: 'Operation Blue Horizon', description: 'Investigation into coordinated phishing campaign targeting executives.', status: 'IN_PROGRESS', priority: 'HIGH', assignee: 'Analyst.Doe', createdBy: 'System', created: '2023-10-25', relatedThreatIds: ['1', '3', '6'], findings: 'Confirmed C2 activity from multiple endpoints.', 
     tasks: [{id: 't1', title: 'Isolate affected workstations', status: 'DONE'}, {id: 't2', title: 'Force password reset for HR group', status: 'PENDING'}], 
     notes: [{id:'n1', author: 'J. Doe', date: '10/26/23', content: 'Initial compromise vector appears to be spearphishing email.'}], 
     artifacts: [{id: 'art-1', name: 'phish.eml', type: 'EMAIL', size:'12KB', uploadedBy:'System', uploadDate: '10/25/23'}],
     timeline: [{id:'ev1', date:'10/25/23', title:'Initial Alert', type:'ALERT'}],
     agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Phishing'], tlp: 'AMBER' },
-  { id: 'CASE-23-002' as CaseId, title: 'Internal Data Exfil - Finance', description: 'Anomalous outbound traffic from FIN-DB-CLUSTER to unknown external IP.', status: 'OPEN', priority: 'CRITICAL', assignee: 'admin.connor', reporter: 'system', created: '2023-10-26', relatedThreatIds: ['5'], findings: '', 
+  { id: 'CASE-23-002' as CaseId, title: 'Internal Data Exfil - Finance', description: 'Anomalous outbound traffic from FIN-DB-CLUSTER to unknown external IP.', status: 'OPEN', priority: 'CRITICAL', assignee: 'admin.connor', createdBy: 'system', created: '2023-10-26', relatedThreatIds: ['5'], findings: '', 
     tasks: [{id:'t3', title:'Block exfil IP on perimeter firewall', status: 'PENDING'}],
     notes: [], artifacts: [], timeline: [],
     agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: ['FBI_CYBER'], labels: ['Insider'], tlp: 'AMBER', slaBreach: true },
-  { id: 'CASE-23-003' as CaseId, title: 'LockBit Ransomware on DC', description: 'Ransomware payload detected and quarantined on HQ-DC-01. No encryption reported yet.', status: 'OPEN', priority: 'CRITICAL', assignee: 'Analyst.Doe', reporter: 'EDR', created: '2023-10-27', relatedThreatIds: ['2'], findings: '', tasks: [], notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Ransomware'], tlp: 'RED' }
+  { id: 'CASE-23-003' as CaseId, title: 'LockBit Ransomware on DC', description: 'Ransomware payload detected and quarantined on HQ-DC-01. No encryption reported yet.', status: 'OPEN', priority: 'CRITICAL', assignee: 'Analyst.Doe', createdBy: 'EDR', created: '2023-10-27', relatedThreatIds: ['2'], findings: '', tasks: [], notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Ransomware'], tlp: 'RED' }
 ];
 
 export const MOCK_INCIDENT_REPORTS: IncidentReport[] = [

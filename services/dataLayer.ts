@@ -1,4 +1,3 @@
-
 import { MockAdapter, DatabaseAdapter, RemoteAdapter } from './dbAdapter';
 import { SyncManager } from './syncManager';
 import { createStores } from './stores/storeFactory';

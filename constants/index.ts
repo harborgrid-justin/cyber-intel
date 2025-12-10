@@ -1,4 +1,3 @@
-
 export * from './mockData';
 import { 
     AppConfig, AIConfig, ScoringConfig, ThemeConfig, NavigationConfig, View, Permission, Role 

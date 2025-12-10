@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Case, CaseId } from '../../types';
 import { Input, Select, TextArea, Button, Label, CardHeader } from '../Shared/UI';
@@ -13,7 +14,8 @@ const CreateCaseForm: React.FC<Props> = ({ onCancel, onSubmit }) => {
     if(!title) return;
     const newCase: Case = {
       id: `CASE-${Date.now()}` as CaseId, title, description: desc, status: 'OPEN',
-      priority: priority as any, assignee: 'Me', reporter: 'Analyst', tasks: [], findings: '', 
+      // FIX: Changed 'reporter' to 'createdBy' to match the Case type definition.
+      priority: priority as any, assignee: 'Me', createdBy: 'Analyst', tasks: [], findings: '', 
       relatedThreatIds: [], created: new Date().toLocaleDateString(), notes: [], artifacts: [], timeline: [],
       agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: [], tlp: 'AMBER'
     };

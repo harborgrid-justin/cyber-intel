@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EXECUTIVE_THEME, STYLES, TOKENS } from '../../../styles/theme';
 

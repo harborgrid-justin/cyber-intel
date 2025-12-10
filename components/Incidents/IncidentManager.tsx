@@ -10,7 +10,7 @@ import { LoadingSpinner } from '../Shared/LoadingSpinner';
 const IncidentTriage = React.lazy(() => import('./IncidentTriage'));
 const IncidentKanban = React.lazy(() => import('./IncidentKanban'));
 const WarRoom = React.lazy(() => import('./WarRoom'));
-// FIX: Correct casing for view paths. The directory is 'views', not 'Views'.
+// FIX: Corrected import path casing to use 'views' consistently, resolving a case-sensitive path error on some systems.
 const IncidentTimeline = React.lazy(() => import('./views/IncidentTimeline'));
 const IncidentAssets = React.lazy(() => import('./views/IncidentAssets'));
 const IncidentReports = React.lazy(() => import('./views/IncidentReports'));

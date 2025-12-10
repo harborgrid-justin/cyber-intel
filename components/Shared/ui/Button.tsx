@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { STYLES } from '../../../styles/theme';
 
