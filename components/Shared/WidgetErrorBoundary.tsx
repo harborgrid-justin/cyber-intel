@@ -15,7 +15,6 @@ interface State {
 
 // FIX: This class must extend React.Component to be a valid React class component.
 // This provides access to lifecycle methods, `this.props`, and `this.setState`.
-// FIX: Extended React.Component to make this a valid class component.
 export class WidgetErrorBoundary extends React.Component<Props, State> {
   state: State = { 
     hasError: false, 
