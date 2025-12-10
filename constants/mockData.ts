@@ -1,4 +1,5 @@
 
+
 import { 
     Threat, Severity, IncidentStatus, SystemNode, AuditLog, Case, IoCFeed, ThreatActor, 
     Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, MitreItem, 
@@ -71,8 +72,9 @@ export const MOCK_ACTORS: ThreatActor[] = [
   { id: 'a4' as ActorId, name: 'Insider-01', aliases: [], origin: 'Internal', description: 'Internal threat actor with privileged access.', sophistication: 'Low', targets: ['Finance'], campaigns: [], ttps: [], infrastructure: [], exploits: [], references: [], history: [], evasionTechniques: [] }
 ];
 
+// FIX: Add missing 'targetRegions' property to conform to the Campaign type.
 export const MOCK_CAMPAIGNS: Campaign[] = [
-  { id: 'CAM-001', name: 'SolarWinds Supply Chain', description: 'Widespread supply chain attack targeting government and tech sectors.', status: 'ARCHIVED', objective: 'ESPIONAGE', actors: ['APT-29'], firstSeen: '2020-03-01', lastSeen: '2021-02-28', targetSectors: ['Gov', 'Tech'], threatIds: ['1', '9'], ttps: ['T1195'] },
+  { id: 'CAM-001', name: 'SolarWinds Supply Chain', description: 'Widespread supply chain attack targeting government and tech sectors.', status: 'ARCHIVED', objective: 'ESPIONAGE', actors: ['APT-29'], firstSeen: '2020-03-01', lastSeen: '2021-02-28', targetSectors: ['Gov', 'Tech'], targetRegions: ['Global'], threatIds: ['1', '9'], ttps: ['T1195'] },
   { id: 'CAM-002', name: 'Operation Serpent Scale', description: 'Ongoing ransomware campaign targeting financial institutions using LockBit.', status: 'ACTIVE', objective: 'FINANCIAL_GAIN', actors: ['LockBit'], firstSeen: '2023-08-15', lastSeen: '2023-10-27', targetSectors: ['Finance'], targetRegions: ['Global'], threatIds: ['2'], ttps: ['T1486'] }
 ];
 
