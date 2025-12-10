@@ -2,9 +2,10 @@ import React from 'react';
 import { Card, Badge, ProgressBar } from '../../Shared/UI';
 import { threatData } from '../../../services/dataLayer';
 import { IncidentLogic } from '../../../services/logic/IncidentLogic';
+import { useDataStore } from '../../../hooks/useDataStore';
 
 export const IncidentPlaybooks: React.FC = () => {
-   const pbs = threatData.getPlaybooks();
+   const pbs = useDataStore(() => threatData.getPlaybooks());
    return (
      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
        {pbs.map(pb => {

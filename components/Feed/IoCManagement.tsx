@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 // Fix: Consolidate type imports to use the central `types.ts` file.
 import { Threat, Severity, IncidentStatus, ThreatId } from '../../types';
 import { threatData } from '../../services/dataLayer';
@@ -8,21 +7,20 @@ import { Input, Button, Select } from '../Shared/UI';
 // Fix: Import Card and CardHeader from the correct central UI export
 import { Card, CardHeader } from '../Shared/UI';
 import { BloomFilter } from '../../services/algorithms/BloomFilter';
+import { useDataStore } from '../../hooks/useDataStore';
 
 const IOC_TYPES = ['IP Address', 'Domain', 'File Hash', 'URL', 'Email Address'];
-const filter = new BloomFilter(1000, 0.01);
 
 const IoCManagement: React.FC = () => {
-  const [data, setData] = useState(threatData.getThreats());
+  const data = useDataStore(() => threatData.getThreats());
   const [newIoC, setNewIoC] = useState('');
   const [newType, setNewType] = useState(IOC_TYPES[0]);
 
-  useEffect(() => {
-    const refresh = () => { const threats = threatData.getThreats(); threats.forEach(t => filter.add(t.indicator)); setData(threats); };
-    refresh();
-    window.addEventListener('data-update', refresh);
-    return () => window.removeEventListener('data-update', refresh);
-  }, []);
+  const filter = useMemo(() => {
+    const bloom = new BloomFilter(1000, 0.01);
+    data.forEach(t => bloom.add(t.indicator));
+    return bloom;
+  }, [data]);
 
   const handleDelete = (id: string) => { threatData.deleteThreat(id); };
 
@@ -35,7 +33,6 @@ const IoCManagement: React.FC = () => {
       threatActor: 'Unknown', reputation: 0, score: 50
     };
     threatData.addThreat(t);
-    filter.add(newIoC);
     setNewIoC('');
   };
 
@@ -57,4 +54,3 @@ const IoCManagement: React.FC = () => {
   );
 };
 export default IoCManagement;
-    

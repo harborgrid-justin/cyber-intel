@@ -1,11 +1,11 @@
-
-import React, { useState } from 'react';
-import { Campaign, View } from '../../types';
+import React, { useState, useMemo } from 'react';
+import { Campaign, View, Threat } from '../../types';
 import SubModuleNav from '../Shared/SubModuleNav';
 import { DetailViewHeader } from '../Shared/Layouts';
 import { Button, Card, Badge } from '../Shared/UI';
 import { CampaignBriefingView, CampaignTechnicalView, CampaignTimeline, CampaignAttribution } from './CampaignViews';
 import { threatData } from '../../services/dataLayer';
+import { useDataStore } from '../../hooks/useDataStore';
 
 interface CampaignDetailProps {
   campaign: Campaign; 
@@ -20,7 +20,8 @@ const CONSOLIDATED_TABS = ['Mission Brief', 'Technical Ops', 'Timeline', 'Attrib
 
 const CampaignDetail: React.FC<CampaignDetailProps> = ({ campaign, onBack, onUpdate }) => {
   const [activeTab, setActiveTab] = useState(CONSOLIDATED_TABS[0]);
-  const linkedThreats = threatData.getThreats().filter(t => campaign.threatIds.includes(t.id));
+  const allThreats = useDataStore(() => threatData.getThreats());
+  const linkedThreats = useMemo(() => allThreats.filter(t => campaign.threatIds.includes(t.id)), [allThreats, campaign.threatIds]);
 
   const handleDelete = () => {
     threatData.deleteCampaign(campaign.id);

@@ -29,10 +29,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
+    // FIX: Property 'setState' does not exist on type 'ErrorBoundary'. Add `extends React.Component` to fix.
     this.setState({ errorInfo });
   }
 
   public handleReset = () => {
+    // FIX: Property 'setState' does not exist on type 'ErrorBoundary'. Add `extends React.Component` to fix.
     this.setState({ hasError: false, error: null, errorInfo: null });
   }
 
@@ -77,6 +79,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       );
     }
 
+    // FIX: Property 'props' does not exist on type 'ErrorBoundary'. Add `extends React.Component` to fix.
     return this.props.children;
   }
 }

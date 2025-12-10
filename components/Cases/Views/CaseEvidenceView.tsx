@@ -5,6 +5,7 @@ import { Case, Artifact } from '../../../types';
 import { Card, CardHeader, Badge } from '../../Shared/UI';
 import EvidenceManager from '../EvidenceManager';
 import { threatData } from '../../../services/dataLayer';
+import { useDataStore } from '../../../hooks/useDataStore';
 
 interface Props {
   activeCase: Case;
@@ -13,9 +14,10 @@ interface Props {
 }
 
 const CaseEvidenceView: React.FC<Props> = ({ activeCase, onAddArtifact, onDeleteArtifact }) => {
+  const allLogs = useDataStore(() => threatData.getAuditLogs());
   const caseLogs = useMemo(() => {
-    return threatData.getAuditLogs().filter(l => l.details.includes(activeCase.id) || l.details.includes(activeCase.title) || activeCase.artifacts.some(a => l.details.includes(a.name))).slice(0, 50);
-  }, [activeCase]);
+    return allLogs.filter(l => l.details.includes(activeCase.id) || l.details.includes(activeCase.title) || activeCase.artifacts.some(a => l.details.includes(a.name))).slice(0, 50);
+  }, [activeCase, allLogs]);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 h-full flex flex-col">

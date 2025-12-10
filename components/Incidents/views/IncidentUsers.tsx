@@ -3,10 +3,11 @@ import { Case } from '../../../types';
 import { Card } from '../../Shared/UI';
 import { threatData } from '../../../services/dataLayer';
 import { IncidentLogic } from '../../../services/logic/IncidentLogic';
+import { useDataStore } from '../../../hooks/useDataStore';
 
 export const IncidentUsers: React.FC<{ cases: Case[] }> = ({ cases }) => {
-  const users = threatData.getSystemUsers();
-  const logs = threatData.getAuditLogs();
+  const users = useDataStore(() => threatData.getSystemUsers());
+  const logs = useDataStore(() => threatData.getAuditLogs());
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

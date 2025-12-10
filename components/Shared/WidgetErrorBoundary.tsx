@@ -26,10 +26,12 @@ export class WidgetErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // FIX: Property 'props' does not exist on type 'WidgetErrorBoundary'. Add `extends React.Component` to fix.
     console.warn(`Widget Error (${this.props.title}):`, error, errorInfo);
   }
 
   public handleRetry = () => {
+    // FIX: Property 'setState' does not exist on type 'WidgetErrorBoundary'. Add `extends React.Component` to fix.
     this.setState({ hasError: false, error: null });
   }
 
@@ -38,6 +40,7 @@ export class WidgetErrorBoundary extends React.Component<Props, State> {
       return (
         <div className="h-full w-full flex flex-col items-center justify-center bg-slate-900 border border-slate-800 rounded p-4 text-center">
           <Icons.AlertTriangle className="w-8 h-8 text-red-500 mb-2" />
+          {/* FIX: Property 'props' does not exist on type 'WidgetErrorBoundary'. Add `extends React.Component` to fix. */}
           <h4 className="text-sm font-bold text-slate-300 uppercase">{this.props.title || 'Widget Failed'}</h4>
           <p className="text-[10px] text-slate-500 mb-3 max-w-[200px] truncate">{this.state.error?.message}</p>
           <Button onClick={this.handleRetry} variant="secondary" className="text-[10px] py-1 h-6">RETRY</Button>
@@ -45,6 +48,7 @@ export class WidgetErrorBoundary extends React.Component<Props, State> {
       );
     }
 
+    // FIX: Property 'props' does not exist on type 'WidgetErrorBoundary'. Add `extends React.Component` to fix.
     return this.props.children;
   }
 }
