@@ -15,13 +15,16 @@ import { View } from '../../types';
 const SystemConfig: React.FC = () => {
   const modules = useDataStore(() => {
       const baseModules = threatData.getModulesForView(View.SYSTEM);
-      if (!baseModules.includes('Theme Designer')) {
-          return [...baseModules, 'Theme Designer', 'Compliance Ops'];
-      }
-      return [...baseModules, 'Compliance Ops'];
+      // Add new modules if they don't exist
+      const newModules = [...baseModules];
+      if (!newModules.includes('Theme Designer')) newModules.push('Theme Designer');
+      if (!newModules.includes('Compliance Ops')) newModules.push('Compliance Ops');
+      if (!newModules.includes('System Actions')) newModules.push('System Actions');
+      return newModules;
   });
 
   const [activeModule, setActiveModule] = useState(modules[0]);
+  const [confirmingAction, setConfirmingAction] = useState<'NONE' | 'FLUSH' | 'MAINTENANCE'>('NONE');
   
   // Efficient subscription
   const users = useDataStore(() => threatData.getSystemUsers());
@@ -37,6 +40,11 @@ const SystemConfig: React.FC = () => {
     };
     fetchCompliance();
   }, [nistControls]);
+
+  const handleActionConfirm = () => {
+      alert(`Action '${confirmingAction}' executed.`);
+      setConfirmingAction('NONE');
+  };
 
   return (
     <StandardPage title="System Configuration" subtitle="Platform Administration" modules={modules} activeModule={activeModule} onModuleChange={setActiveModule}>
@@ -60,6 +68,30 @@ const SystemConfig: React.FC = () => {
       
       {activeModule === 'Theme Designer' && (
         <ThemeEditor />
+      )}
+
+      {activeModule === 'System Actions' && (
+        <Card className="p-6">
+            <h3 className="font-bold text-white text-lg">System Actions</h3>
+            <div className="mt-4 flex flex-col md:flex-row gap-4">
+                {confirmingAction === 'NONE' ? (
+                    <>
+                        <Button onClick={() => setConfirmingAction('FLUSH')} variant="danger">FLUSH LOGS</Button>
+                        <Button onClick={() => setConfirmingAction('MAINTENANCE')} variant="secondary">MAINTENANCE MODE</Button>
+                    </>
+                ) : (
+                    <div className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-lg flex flex-col md:flex-row gap-4 items-center animate-in fade-in duration-300">
+                        <div className="flex-1 text-sm text-yellow-300">
+                            <strong>Confirm:</strong> {confirmingAction === 'FLUSH' ? 'This will permanently delete old audit logs. Are you sure?' : 'This will lock out non-admin users. Are you sure?'}
+                        </div>
+                        <div className="flex gap-2">
+                            <Button onClick={handleActionConfirm} variant="danger">CONFIRM</Button>
+                            <Button onClick={() => setConfirmingAction('NONE')} variant="secondary">CANCEL</Button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </Card>
       )}
 
       {(activeModule === 'Security Policy' || activeModule === 'System Logs') && (

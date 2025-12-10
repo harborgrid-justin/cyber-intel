@@ -1,5 +1,4 @@
 
-
 import { 
     Threat, Severity, IncidentStatus, SystemNode, AuditLog, Case, IoCFeed, ThreatActor, 
     Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, Vulnerability, MitreItem, 
@@ -67,15 +66,16 @@ export const MOCK_THREATS: Threat[] = [
 
 export const MOCK_ACTORS: ThreatActor[] = [
   { id: 'a1' as ActorId, name: 'APT-29', aliases: ['Cozy Bear'], origin: 'Russia', description: 'SVR affiliated group known for stealthy and sophisticated operations against government and diplomatic targets.', sophistication: 'Advanced', targets: ['Gov', 'Energy'], campaigns: ['SolarWinds'], ttps: [{id:'ttp-1', code:'T1195', name:'Phishing'}], infrastructure: [], exploits: ['CVE-2023-23397'], references: [], history: [], evasionTechniques: ['Rootkit', 'Fileless Malware'] },
-  { id: 'a2' as ActorId, name: 'Lazarus', aliases: ['Hidden Cobra'], origin: 'DPRK', description: 'State-sponsored cybercrime and espionage group, primarily targeting financial institutions.', sophistication: 'Advanced', targets: ['Finance'], campaigns: ['WannaCry'], ttps: [], infrastructure: [], exploits: ['CVE-2023-34362'], references: [], history: [], evasionTechniques: ['Anti-VM'] },
+  { id: 'a2' as ActorId, name: 'Lazarus', aliases: ['Hidden Cobra'], origin: 'DPRK', description: 'State-sponsored cybercrime and espionage group, primarily targeting financial institutions.', sophistication: 'Advanced', targets: ['Finance'], campaigns: ['WannaCry', 'Operation GhostNet'], ttps: [], infrastructure: [], exploits: ['CVE-2023-34362'], references: [], history: [], evasionTechniques: ['Anti-VM'] },
   { id: 'a3' as ActorId, name: 'FIN7', aliases: [], origin: 'Eastern Europe', description: 'Financially motivated group known for targeting point-of-sale systems and deploying ransomware.', sophistication: 'Moderate', targets: ['Retail', 'Hospitality'], campaigns: [], ttps: [], infrastructure: [], exploits: [], references: [], history: [], evasionTechniques: [] },
-  { id: 'a4' as ActorId, name: 'Insider-01', aliases: [], origin: 'Internal', description: 'Internal threat actor with privileged access.', sophistication: 'Low', targets: ['Finance'], campaigns: [], ttps: [], infrastructure: [], exploits: [], references: [], history: [], evasionTechniques: [] }
+  { id: 'a4' as ActorId, name: 'Insider-01', aliases: [], origin: 'Internal', description: 'Internal threat actor with privileged access.', sophistication: 'Low', targets: ['Finance'], campaigns: [], ttps: [], infrastructure: [], exploits: [], references: [], history: [], evasionTechniques: [] },
+  { id: 'a5' as ActorId, name: 'LockBit', aliases: ['Bitwise Spider'], origin: 'Russia', description: 'Ransomware-as-a-Service (RaaS) group known for double extortion tactics.', sophistication: 'Advanced', targets: ['Finance', 'Healthcare'], campaigns: ['Operation Serpent Scale'], ttps: [], infrastructure: [], exploits: [], references: [], history: [], evasionTechniques: [] }
 ];
 
-// FIX: Add missing 'targetRegions' property to conform to the Campaign type.
 export const MOCK_CAMPAIGNS: Campaign[] = [
   { id: 'CAM-001', name: 'SolarWinds Supply Chain', description: 'Widespread supply chain attack targeting government and tech sectors.', status: 'ARCHIVED', objective: 'ESPIONAGE', actors: ['APT-29'], firstSeen: '2020-03-01', lastSeen: '2021-02-28', targetSectors: ['Gov', 'Tech'], targetRegions: ['Global'], threatIds: ['1', '9'], ttps: ['T1195'] },
-  { id: 'CAM-002', name: 'Operation Serpent Scale', description: 'Ongoing ransomware campaign targeting financial institutions using LockBit.', status: 'ACTIVE', objective: 'FINANCIAL_GAIN', actors: ['LockBit'], firstSeen: '2023-08-15', lastSeen: '2023-10-27', targetSectors: ['Finance'], targetRegions: ['Global'], threatIds: ['2'], ttps: ['T1486'] }
+  { id: 'CAM-002', name: 'Operation Serpent Scale', description: 'Ongoing ransomware campaign targeting financial institutions using LockBit.', status: 'ACTIVE', objective: 'FINANCIAL_GAIN', actors: ['LockBit'], firstSeen: '2023-08-15', lastSeen: '2023-10-27', targetSectors: ['Finance'], targetRegions: ['Global'], threatIds: ['2'], ttps: ['T1486'] },
+  { id: 'CAM-003', name: 'Operation GhostNet', description: 'Large-scale cyber espionage operation targeting government ministries and embassies.', status: 'ACTIVE', objective: 'ESPIONAGE', actors: ['Lazarus'], firstSeen: '2022-01-01', lastSeen: '2023-09-30', targetSectors: ['Gov'], targetRegions: ['APAC'], threatIds: [], ttps: ['T1204'] }
 ];
 
 export const MOCK_CASES: Case[] = [
@@ -135,12 +135,26 @@ export const MOCK_CHAIN: ChainEvent[] = [
 
 export const MOCK_MALWARE: Malware[] = [
   { id: 'm1', name: 'invoice.exe', family: 'LockBit', hash: 'e3b0c442...', verdict: 'MALICIOUS', score: 100, associatedActor: 'LockBit' },
-  { id: 'm2', name: 'update.dll', family: 'CobaltStrike', hash: 'a1b2c3d4...', verdict: 'MALICIOUS', score: 95, associatedActor: 'APT-29' }
+  { id: 'm2', name: 'update.dll', family: 'CobaltStrike', hash: 'a1b2c3d4...', verdict: 'MALICIOUS', score: 95, associatedActor: 'APT-29' },
+  { id: 'm3', name: 'payload.js', family: 'WannaCry', hash: 'f5e6a7b8...', verdict: 'MALICIOUS', score: 98, associatedActor: 'Lazarus' }
 ];
 
-export const MOCK_LAB_JOBS: ForensicJob[] = [ { id: 'j1', type: 'Disk Imaging', target: 'Server-01', status: 'PROCESSING', progress: 45, technician: 'Stark' } ];
-export const MOCK_DEVICES: Device[] = [ { id: 'd1', name: 'CEO iPhone', type: 'Mobile', serial: 'SN-9988', custodian: 'Vault', status: 'SECURE' } ];
-export const MOCK_PCAPS: Pcap[] = [ { id: 'p1', name: 'beacon.pcap', size: '15MB', date: '2023-10-27', source: 'FW', protocol: 'TCP', analysisStatus: 'ANALYZED' } ];
+export const MOCK_LAB_JOBS: ForensicJob[] = [ 
+  { id: 'j1', type: 'Disk Imaging', target: 'Server-01', status: 'PROCESSING', progress: 45, technician: 'Stark' },
+  { id: 'j2', type: 'Memory Dump', target: 'Workstation-HR-05', status: 'COMPLETED', progress: 100, technician: 'Banner' },
+  { id: 'j3', type: 'Log Correlation', target: 'CASE-23-001', status: 'QUEUED', progress: 0, technician: 'System' }
+];
+
+export const MOCK_DEVICES: Device[] = [ 
+  { id: 'd1', name: 'CEO iPhone', type: 'Mobile', serial: 'SN-9988', custodian: 'Vault', status: 'SECURE' },
+  { id: 'd2', name: 'Compromised Laptop', type: 'Laptop', serial: 'SN-1234', custodian: 'Lab', status: 'QUARANTINED' }
+];
+
+export const MOCK_PCAPS: Pcap[] = [ 
+  { id: 'p1', name: 'beacon.pcap', size: '15MB', date: '2023-10-27', source: 'FW', protocol: 'TCP', analysisStatus: 'ANALYZED', associatedActor: 'APT-29' },
+  { id: 'p2', name: 'exfil.pcap', size: '152MB', date: '2023-10-26', source: 'IDS', protocol: 'DNS', analysisStatus: 'PENDING' }
+];
+
 export const MOCK_VENDOR_FEEDS: VendorFeedItem[] = [ { id: 'v1', vendor: 'Microsoft MSRC', date: '2023-10-25', title: 'Security Update Guide - October', severity: 'High' } ];
 export const MOCK_SCANNERS: ScannerStatus[] = [ { id: 's1', name: 'Nessus Pro', status: 'ONLINE', lastScan: '2 hours ago', coverage: '98%', findings: 12 } ];
 export const MOCK_TACTICS: MitreItem[] = [ { id: 'TA0001', name: 'Initial Access', description: 'Trying to get into your network.' } ];

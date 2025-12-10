@@ -10,14 +10,14 @@ import { LoadingSpinner } from '../Shared/LoadingSpinner';
 const IncidentTriage = React.lazy(() => import('./IncidentTriage'));
 const IncidentKanban = React.lazy(() => import('./IncidentKanban'));
 const WarRoom = React.lazy(() => import('./WarRoom'));
-// FIX: Correct casing for view paths. The directory is 'Views', not 'views'.
-const IncidentTimeline = React.lazy(() => import('./Views/IncidentTimeline'));
-const IncidentAssets = React.lazy(() => import('./Views/IncidentAssets'));
-const IncidentReports = React.lazy(() => import('./Views/IncidentReports'));
-const IncidentUsers = React.lazy(() => import('./Views/IncidentUsers'));
-const IncidentPlaybooks = React.lazy(() => import('./Views/IncidentPlaybooks'));
-const IncidentEvidence = React.lazy(() => import('./Views/IncidentEvidence'));
-const IncidentNetwork = React.lazy(() => import('./Views/IncidentNetwork'));
+// FIX: Correct casing for view paths. The directory is 'views', not 'Views'.
+const IncidentTimeline = React.lazy(() => import('./views/IncidentTimeline'));
+const IncidentAssets = React.lazy(() => import('./views/IncidentAssets'));
+const IncidentReports = React.lazy(() => import('./views/IncidentReports'));
+const IncidentUsers = React.lazy(() => import('./views/IncidentUsers'));
+const IncidentPlaybooks = React.lazy(() => import('./views/IncidentPlaybooks'));
+const IncidentEvidence = React.lazy(() => import('./views/IncidentEvidence'));
+const IncidentNetwork = React.lazy(() => import('./views/IncidentNetwork'));
 
 const IncidentManager: React.FC = () => {
   const { 

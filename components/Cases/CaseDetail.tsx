@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Case, Threat, Artifact, IncidentReport, View, Playbook } from '../../types';
 import SubModuleNav from '../Shared/SubModuleNav';
-import WorkflowModal from './WorkflowModal';
+import WorkflowSelectorPage from './WorkflowSelectorPage';
 import CaseWorkbenchView from './Views/CaseTicketView';
 import CaseLinksView from './Views/CaseLinksView';
 import CaseResponseView from './Views/CaseResponseView';
@@ -21,7 +21,7 @@ interface CaseDetailProps {
 const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBack, onUpdate }) => {
   const modules = useMemo(() => threatData.getModulesForView(View.CASES), []);
   const [activeTab, setActiveTab] = useState(modules[0]);
-  const [showWorkflowModal, setShowWorkflowModal] = useState(false);
+  const [isSelectingWorkflow, setIsSelectingWorkflow] = useState(false);
   const [suggestedPlaybook, setSuggestedPlaybook] = useState<Playbook | null>(null);
   
   // Handle internal navigation for case links
@@ -50,16 +50,22 @@ const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBa
   const toggleTask = (tid: string) => { threatData.toggleTask(activeCase.id, tid); onUpdate(); };
   const handleAddArtifact = (a: Artifact) => { threatData.addArtifact(activeCase.id, a); onUpdate(); };
   const handleDeleteArtifact = (aid: string) => { threatData.deleteArtifact(activeCase.id, aid); onUpdate(); };
-  const handleApplyPlaybook = (pbId: string) => { threatData.applyPlaybook(activeCase.id, pbId); setShowWorkflowModal(false); onUpdate(); };
+  const handleApplyPlaybook = (pbId: string) => { 
+      threatData.applyPlaybook(activeCase.id, pbId); 
+      setIsSelectingWorkflow(false); 
+      onUpdate(); 
+  };
   const handleComment = (c: string) => { if(c) { threatData.addNote(activeCase.id, c); onUpdate(); }};
   
   const handleLinkCase = (targetId: string) => { threatData.linkCases(activeCase.id, targetId); onUpdate(); };
   const handleUnlinkCase = (targetId: string) => { threatData.unlinkCases(activeCase.id, targetId); onUpdate(); };
 
+  if (isSelectingWorkflow) {
+    return <WorkflowSelectorPage onClose={() => setIsSelectingWorkflow(false)} onApply={handleApplyPlaybook} />;
+  }
+
   return (
     <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-full relative shadow-2xl">
-      <WorkflowModal isOpen={showWorkflowModal} onClose={() => setShowWorkflowModal(false)} onApply={handleApplyPlaybook} />
-      
       <DetailViewHeader 
         title={activeCase.title} subtitle={activeCase.id} onBack={onBack}
         tags={<><Badge color={activeCase.agency === 'SENTINEL_CORE' ? 'blue' : 'purple'}>{activeCase.agency}</Badge><Badge color={activeCase.status === 'OPEN' ? 'green' : 'slate'}>{activeCase.status}</Badge></>}
@@ -67,7 +73,7 @@ const CaseDetail: React.FC<CaseDetailProps> = ({ activeCase, linkedThreats, onBa
             <>
                 {suggestedPlaybook && <Button onClick={() => handleApplyPlaybook(suggestedPlaybook.id)} variant="secondary" className="px-3 py-1 text-[10px] text-yellow-400 border-yellow-900/50">SUGGESTED: {suggestedPlaybook.name}</Button>}
                 <Button variant="secondary" className="px-3 py-1 text-[10px]">EDIT</Button>
-                <Button onClick={() => setShowWorkflowModal(true)} variant="primary" className="px-3 py-1 text-[10px]">WORKFLOW</Button>
+                <Button onClick={() => setIsSelectingWorkflow(true)} variant="primary" className="px-3 py-1 text-[10px]">WORKFLOW</Button>
             </>
         }
       />

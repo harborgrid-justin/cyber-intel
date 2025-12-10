@@ -1,3 +1,4 @@
+
 // FIX: Module '"../constants/index"' has no exported member 'MOCK_FEEDS'.
 // This error occurs because several mock data arrays (MOCK_FEEDS, MOCK_USERS, MOCK_VENDORS)
 // were not defined in the frontend's `constants/mockData.ts` file.
@@ -31,7 +32,7 @@ export class InitialDataFactory {
   static getScanners() { return MOCK_SCANNERS; }
   
   static getMitreData() { return { tactics: MOCK_TACTICS, techniques: MOCK_TECHNIQUES, subTechniques: MOCK_SUB_TECHNIQUES, groups: MOCK_GROUPS, software: MOCK_SOFTWARE, mitigations: MOCK_MITIGATIONS }; }
-  static getOsintData() { return { domains: MOCK_DOMAIN, breaches: MOCK_BREACH, geo: MOCK_GEO, social: MOCK_SOCIAL }; }
+  static getOsintData() { return { domains: MOCK_DOMAIN, breaches: MOCK_BREACH, geo: MOCK_GEO, social: MOCK_SOCIAL, darkweb: MOCK_DARKWEB, meta: MOCK_META }; }
   static getConfigData() {
     return {
       integrations: MOCK_INTEGRATIONS, patchStatus: MOCK_PATCH_STATUS, apiKeys: MOCK_API_KEYS, enrichment: MOCK_ENRICHMENT,
