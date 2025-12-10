@@ -5,6 +5,7 @@ import { Icons } from '../../Shared/Icons';
 import { Honeytoken } from '../../../types';
 import { OrchestratorLogic } from '../../../services/logic/OrchestratorLogic';
 import { threatData } from '../../../services/dataLayer';
+import { useDataStore } from '../../../hooks';
 
 interface Props {
   honeytokens: Honeytoken[];
@@ -15,6 +16,7 @@ export const DeceptionOps: React.FC<Props> = ({ honeytokens }) => {
   const [newDecoy, setNewDecoy] = useState({ name: '', type: 'FILE', location: '' });
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [effectiveness, setEffectiveness] = useState(0);
+  const allNodes = useDataStore(() => threatData.getSystemNodes());
   
   useEffect(() => {
     OrchestratorLogic.recommendDecoyPlacement().then(setRecommendations);
@@ -29,7 +31,7 @@ export const DeceptionOps: React.FC<Props> = ({ honeytokens }) => {
   };
 
   const handleAutoDeploy = (rec: {nodeId: string, reason: string}) => {
-      const node = threatData.getSystemNodes().find(n => n.id === rec.nodeId);
+      const node = allNodes.find(n => n.id === rec.nodeId);
       if(node) {
           setNewDecoy({ name: `honeypot_${node.name.toLowerCase()}.dat`, type: 'FILE', location: node.name });
           setIsDeploying(true);
@@ -112,7 +114,7 @@ export const DeceptionOps: React.FC<Props> = ({ honeytokens }) => {
                         <div className="text-[10px] font-bold text-slate-500 uppercase mb-3">AI Recommendations</div>
                         <div className="space-y-2">
                             {recommendations.slice(0, 3).map(rec => {
-                                const nodeName = threatData.getSystemNodes().find(n => n.id === rec.nodeId)?.name;
+                                const nodeName = allNodes.find(n => n.id === rec.nodeId)?.name;
                                 return (
                                     <div key={rec.nodeId} className="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
                                         <div className="text-xs">

@@ -4,9 +4,10 @@ import { threatData } from '../../services/dataLayer';
 // Fix: Import UI components from the barrel file
 import { Card, CardHeader } from '../Shared/UI';
 import { HealthLogic } from '../../services/logic/dashboard/InfraLogic';
+import { useDataStore } from '../../hooks';
 
 const SystemHealth: React.FC = () => {
-  const nodes = threatData.getSystemNodes();
+  const nodes = useDataStore(() => threatData.getSystemNodes());
 
   return (
     <Card className="shadow-sm p-0 overflow-hidden flex flex-col">

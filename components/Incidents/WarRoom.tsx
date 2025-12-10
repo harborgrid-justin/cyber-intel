@@ -7,6 +7,7 @@ import { useWarRoom } from '../../hooks/modules/useWarRoom';
 import ChatInterface from '../Shared/ChatInterface';
 import GeoMap from '../Dashboard/GeoMap';
 import Modal from '../Shared/Modal';
+import { useDataStore } from '../../hooks/useDataStore';
 
 interface WarRoomProps { 
   threats: Threat[]; 
@@ -15,7 +16,7 @@ interface WarRoomProps {
 }
 
 const StatusTicker = React.memo(() => {
-  const logs = threatData.getAuditLogs().slice(0, 5);
+  const logs = useDataStore(() => threatData.getAuditLogs().slice(0, 5));
   return (
     <div className="bg-slate-950 border-b border-slate-800 py-1 overflow-hidden whitespace-nowrap flex items-center gap-4 shrink-0">
       <div className="text-[10px] font-bold text-red-500 px-4 animate-pulse">LIVE FEED</div>
@@ -43,7 +44,8 @@ const WarRoom: React.FC<WarRoomProps> = ({ threats, cases, onUpdate }) => {
     metrics
   } = useWarRoom(threats, cases);
 
-  const activeResponders = useMemo(() => threatData.getSystemUsers().filter(u => u.status === 'Online').length, []);
+  const allUsers = useDataStore(() => threatData.getSystemUsers());
+  const activeResponders = useMemo(() => allUsers.filter(u => u.status === 'Online').length, [allUsers]);
 
   const handleLockdown = () => {
     setIsLocked(true);

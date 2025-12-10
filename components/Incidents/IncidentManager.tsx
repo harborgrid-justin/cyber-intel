@@ -10,13 +10,20 @@ import { LoadingSpinner } from '../Shared/LoadingSpinner';
 const IncidentTriage = React.lazy(() => import('./IncidentTriage'));
 const IncidentKanban = React.lazy(() => import('./IncidentKanban'));
 const WarRoom = React.lazy(() => import('./WarRoom'));
-const IncidentTimeline = React.lazy(() => import('./views/IncidentTimeline'));
-const IncidentAssets = React.lazy(() => import('./views/IncidentAssets'));
-const IncidentReports = React.lazy(() => import('./views/IncidentReports'));
-const IncidentUsers = React.lazy(() => import('./views/IncidentUsers'));
-const IncidentPlaybooks = React.lazy(() => import('./views/IncidentPlaybooks'));
-const IncidentEvidence = React.lazy(() => import('./views/IncidentEvidence'));
-const IncidentNetwork = React.lazy(() => import('./views/IncidentNetwork'));
+// FIX: Corrected casing for import path.
+const IncidentTimeline = React.lazy(() => import('./Views/IncidentTimeline'));
+// FIX: Corrected casing for import path.
+const IncidentAssets = React.lazy(() => import('./Views/IncidentAssets'));
+// FIX: Corrected casing for import path.
+const IncidentReports = React.lazy(() => import('./Views/IncidentReports'));
+// FIX: Corrected casing for import path.
+const IncidentUsers = React.lazy(() => import('./Views/IncidentUsers'));
+// FIX: Corrected casing for import path.
+const IncidentPlaybooks = React.lazy(() => import('./Views/IncidentPlaybooks'));
+// FIX: Corrected casing for import path.
+const IncidentEvidence = React.lazy(() => import('./Views/IncidentEvidence'));
+// FIX: Corrected casing for import path.
+const IncidentNetwork = React.lazy(() => import('./Views/IncidentNetwork'));
 
 const IncidentManager: React.FC = () => {
   const { 

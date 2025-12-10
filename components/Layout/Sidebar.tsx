@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View } from '../../types';
 import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../../hooks';
@@ -13,15 +13,10 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen }) => {
-  const [permissions, setPermissions] = useState<string[]>(threatData.currentUser?.effectivePermissions || []);
+  const currentUser = useDataStore(() => threatData.currentUser);
+  const permissions = useMemo(() => currentUser?.effectivePermissions || [], [currentUser]);
   const config = useDataStore(() => threatData.getAppConfig());
   const navigationConfig = useDataStore(() => threatData.getNavigationConfig());
-
-  useEffect(() => {
-    const updatePermissions = () => setPermissions(threatData.currentUser?.effectivePermissions || []);
-    window.addEventListener('user-update', updatePermissions);
-    return () => window.removeEventListener('user-update', updatePermissions);
-  }, []);
 
   const hasPerm = (p: string) => permissions.includes(p) || permissions.includes('*:*');
 
@@ -89,12 +84,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen }) =>
         <button onClick={() => onNavigate(View.SETTINGS)} className={`w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--colors-surfaceHighlight)] transition-colors group`}>
             <div className={`w-8 h-8 rounded-full bg-[var(--colors-surfaceRaised)] border border-[var(--colors-borderSubtle)] flex items-center justify-center relative`}>
                 <span className={`text-xs font-semibold text-[var(--colors-textPrimary)]`}>
-                    {threatData.currentUser?.name?.charAt(0) || 'A'}
+                    {currentUser?.name?.charAt(0) || 'A'}
                 </span>
                 <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 bg-[var(--colors-success)] border-2 border-[var(--colors-borderDefault)] rounded-full shadow-sm`}></span>
             </div>
             <div className="flex-1 text-left min-w-0">
-                <div className={`text-xs font-semibold text-[var(--colors-textPrimary)] truncate`}>{threatData.currentUser?.name || 'Administrator'}</div>
+                <div className={`text-xs font-semibold text-[var(--colors-textPrimary)] truncate`}>{currentUser?.name || 'Administrator'}</div>
                 <div className={`text-[10px] text-[var(--colors-textSecondary)] truncate`}>{config.orgName}</div>
             </div>
             <Icons.Settings className={`w-4 h-4 text-[var(--colors-textTertiary)] group-hover:text-[var(--colors-textSecondary)] transition-colors`} />

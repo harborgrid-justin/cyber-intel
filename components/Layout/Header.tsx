@@ -10,16 +10,9 @@ import { STYLES } from '../../styles/theme';
 interface HeaderProps { toggleSidebar: () => void; }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
-  const [user, setUser] = useState(threatData.currentUser);
   const config = useDataStore(() => threatData.getAppConfig());
   const { online } = useNetworkStatus();
   const { theme } = useThemeEngine(); 
-
-  useEffect(() => {
-    const handleUserChange = () => setUser(threatData.currentUser);
-    window.addEventListener('user-update', handleUserChange);
-    return () => window.removeEventListener('user-update', handleUserChange);
-  }, []);
 
   const toggleTheme = () => {
     window.dispatchEvent(new Event('toggle-theme'));

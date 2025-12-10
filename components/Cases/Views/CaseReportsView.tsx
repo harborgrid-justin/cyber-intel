@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { IncidentReport, View } from '../../../types';
 import { Button, Card, Badge } from '../../Shared/UI';
 import { threatData } from '../../../services/dataLayer';
+import { useDataStore } from '../../../hooks';
 
 interface CaseReportsViewProps {
   caseId: string;
@@ -10,7 +11,8 @@ interface CaseReportsViewProps {
 }
 
 const CaseReportsView: React.FC<CaseReportsViewProps> = ({ caseId, onGenerate }) => {
-  const reports = threatData.getReportsByCase(caseId);
+  const allReports = useDataStore(() => threatData.getReports());
+  const reports = useMemo(() => allReports.filter(r => r.relatedCaseId === caseId), [allReports, caseId]);
 
   const handleView = (id: string) => {
     window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.REPORTS, id } }));
