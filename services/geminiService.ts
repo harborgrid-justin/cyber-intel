@@ -67,7 +67,6 @@ export const generateDailyBriefing = async (): Promise<string> => {
 
 export const generateCaseReport = async (kase: Case, type: string): Promise<string> => {
   const ai = getAiClient();
-  const config = threatData.getAIConfig();
   if (!ai) {
       console.error("[GeminiService] Client not initialized (Missing API Key)");
       return "Error: API Key missing. Cannot generate report.";

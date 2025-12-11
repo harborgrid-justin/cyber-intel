@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { threatData } from '../../services/dataLayer';

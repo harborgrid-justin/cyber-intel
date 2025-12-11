@@ -33,4 +33,3 @@ export const scanTextForIoCs = (text: string): Threat[] => {
   
   return findings;
 };
-    

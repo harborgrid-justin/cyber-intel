@@ -1,305 +1,376 @@
 
-import { MockAdapter, DatabaseAdapter, RemoteAdapter } from './dbAdapter';
-import { SyncManager } from './syncManager';
+import { Threat, Case, SystemNode, ThreatActor, AppConfig, Severity, IncidentStatus, AIConfig, ScoringConfig, ThemeConfig, View, IoCFeed, AuditLog, Vulnerability, IncidentReport, SystemUser, Vendor, Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, VendorFeedItem, ScannerStatus, NistControl, ApiKey, PatchStatus, Integration, Channel, TeamMessage, EnrichmentModule, ParserRule, NormalizationRule, SegmentationPolicy, Honeytoken, TrafficFlow, RiskForecastItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, OsintDarkWebItem, OsintFileMeta, MitreItem, ThreatId, CaseId, ActorId, UserId, AssetId, VendorId } from '../types';
 import { createStores } from './stores/storeFactory';
-import { 
-  SystemUser, Threat, Case, AppConfig, AIConfig, ScoringConfig, ThemeConfig, Task,
-  ThreatActor, Campaign, AuditLog, IncidentReport, Playbook, ChainEvent, SystemNode,
-  Vulnerability, Vendor, IoCFeed, ApiKey, Integration, Malware, ForensicJob, Device, Pcap,
-  PatchStatus, ScannerStatus, EnrichmentModule, ParserRule, NormalizationRule, 
-  SegmentationPolicy, Honeytoken, NistControl, OsintBreach, OsintDomain, OsintSocial, 
-  OsintGeo, OsintDarkWebItem, OsintFileMeta, VendorFeedItem, TrafficFlow, MitreItem,
-  RiskForecastItem
-} from '../types';
-import { apiClient } from './apiClient';
-import { CONFIG } from '../config';
-import { InterconnectLogic } from './logic/InterconnectLogic';
-import { AdvancedInterconnect } from './logic/AdvancedInterconnect';
-import { DeepAnalytics } from './logic/DeepAnalytics';
-import { VectorStore } from './data/VectorStore';
-import { InvertedIndex } from './data/InvertedIndex';
-import { QuadTree } from './data/QuadTree';
-import { TimeSeriesStore } from './data/TimeSeriesStore';
-import { ReadThroughCache } from './data/ReadThroughCache';
-import { AclManager } from './data/AclManager';
-import { SystemGuard } from './core/SystemGuard';
-import { DEFAULT_APP_CONFIG, MOCK_AI_CONFIG, MOCK_SCORING_CONFIG, DEFAULT_THEME_CONFIG } from '../constants/index';
-import { fastDeepEqual } from './utils/fastDeepEqual';
-import { Logger } from './logger';
-import { Result } from '../types/result';
+import { DatabaseAdapter, MockAdapter } from './dbAdapter';
+import { ThreatMapper, CaseMapper, ActorMapper, AssetMapper } from './mappers';
+import { PrefixTrie } from './algorithms/Trie';
+import { MOCK_NAVIGATION_CONFIG, MOCK_MODULES_CONFIG } from '../constants';
 
-export class DataLayer {
+class DataLayer {
   public adapter: DatabaseAdapter;
-  public syncManager: SyncManager;
-  public currentUser: SystemUser | null = null;
-  public vectorSearch = new VectorStore();
-  public fullTextSearch = new InvertedIndex();
-  public geoIndex = new QuadTree({ x: 0, y: 0, w: 100, h: 50 });
-  public trafficMetrics = new TimeSeriesStore();
-  public threatCache: ReadThroughCache<Threat | null>;
+  public stores: ReturnType<typeof createStores>;
   
-  [key: string]: any;
+  public isOffline: boolean = true;
+  public fullTextSearch: PrefixTrie;
 
   constructor() {
-    this.adapter = new RemoteAdapter();
-    const stores = createStores(this.adapter);
-    Object.assign(this, stores);
-
-    this.threatCache = new ReadThroughCache(async (id) => {
-        const res = this.threatStore.getById(id);
-        return res.success ? res.data : null;
-    });
-    
-    SystemGuard.registerDependency('DataLayer', 'Stores');
-    this.initializeData();
-    this.syncManager = new SyncManager(this);
-    this.syncManager.start();
-  }
-
-  get isOffline(): boolean {
-    return this.adapter.type === 'MEMORY';
-  }
-
-  async initializeData() {
-    const connected = await this.adapter.connect({});
-    if (connected && this.adapter.type === 'REMOTE') {
-      try {
-        const userData = await apiClient.get<SystemUser>('/users/me');
-        this.setUser(userData);
-      } catch (e) {
-        Logger.warn('Failed to fetch user profile, using mock.');
-        this.setMockUser();
-      }
-      await Promise.allSettled(['threatStore','caseStore','actorStore','nodeStore','feedStore','userStore'].map(s => this[s].fetch()));
-    } else {
-      this.setProvider(new MockAdapter());
-      this.setMockUser();
-    }
-    this.indexData();
-  }
-
-  private setUser(user: SystemUser) {
-      this.currentUser = { ...user, effectivePermissions: user.effectivePermissions || [] };
-      Logger.setContext('user', this.currentUser.id);
-      window.dispatchEvent(new Event('user-update'));
-  }
-
-  private indexData() {
-    const res = this.threatStore.getAll();
-    const threats = res.success ? res.data : [];
-    threats.forEach((t: Threat) => {
-      this.fullTextSearch.add(t.id, t.description + ' ' + t.indicator);
-      this.vectorSearch.add(t.id, Array.from({length: 5}, () => Math.random()));
-    });
-  }
-
-  private setMockUser() {
-    this.setUser({
-        id: 'USR-MOCK', name: CONFIG.USER.NAME, username: 'admin.local', roleId: 'ROLE-ADMIN', role: 'Administrator',
-        clearance: CONFIG.USER.CLEARANCE, status: 'Online', isVIP: true, effectivePermissions: ['*:*']
-    } as SystemUser);
+    this.adapter = new MockAdapter();
+    this.stores = createStores(this.adapter);
+    this.fullTextSearch = new PrefixTrie();
+    this.initSearchIndex();
   }
 
   setProvider(adapter: DatabaseAdapter) {
-    this.adapter = adapter;
-    const stores = createStores(adapter);
-    // CRITICAL FIX: Assign new stores to instance so getters/syncManager use the new adapter
-    Object.assign(this, stores);
-    window.dispatchEvent(new Event('db-adapter-changed'));
+      this.adapter = adapter;
+      // Re-initialize stores with new adapter
+      this.stores = createStores(this.adapter);
+      this.isOffline = adapter.type === 'MEMORY';
   }
 
-  getAdapterInfo() { return { name: this.adapter.name, type: this.adapter.type }; }
+  private initSearchIndex() {
+      // Index initial data
+      this.getThreats().forEach(t => this.fullTextSearch.insert(t.indicator, t.id));
+      this.getCases().forEach(c => this.fullTextSearch.insert(c.title, c.id));
+      this.getActors().forEach(a => this.fullTextSearch.insert(a.name, a.id));
+  }
+
+  // --- Core Getters ---
   
-  // Strongly typed getters
-  private unwrap<T>(result: Result<T[]>): T[] { 
-    return (result.success && Array.isArray(result.data)) ? result.data : []; 
-  }
-
-  getThreats(sort = true): Threat[] { 
-    const clearance = this.currentUser?.clearance || 'UNCLASSIFIED';
-    // Delegate directly to the specialized store method which handles logic and its own memoization.
-    return this.threatStore.getThreats(sort, clearance);
-  }
-
-  getCases(): Case[] { 
-      const res = this.caseStore.getAll();
-      return res.success ? res.data : [];
-  }
-
-  getActors(): ThreatActor[] { return this.unwrap(this.actorStore.getAll()); }
-  getCampaigns(): Campaign[] { return this.unwrap(this.campaignStore.getAll()); }
-  getAuditLogs(): AuditLog[] { return this.unwrap(this.logStore.getAll()); }
-  getReports(): IncidentReport[] { return this.unwrap(this.reportStore.getAll()); }
-  getPlaybooks(): Playbook[] { return this.unwrap(this.playbookStore.getAll()); }
-  getChainOfCustody(): ChainEvent[] { return this.unwrap(this.chainStore.getAll()); }
-  getSystemNodes(): SystemNode[] { return this.unwrap(this.nodeStore.getAll()); }
-  getVulnerabilities(): Vulnerability[] { return this.unwrap(this.vulnStore.getAll()); }
-  getVendors(): Vendor[] { return this.unwrap(this.vendorStore.getAll()); }
-  getFeeds(): IoCFeed[] { return this.unwrap(this.feedStore.getAll()); }
-  getSystemUsers(): SystemUser[] { return this.unwrap(this.userStore.getAll()); }
-  getApiKeys(): ApiKey[] { return this.unwrap(this.apiKeyStore.getAll()); }
-  getIntegrations(): Integration[] { return this.unwrap(this.integrationStore.getAll()); }
-  getMalwareSamples(): Malware[] { return this.unwrap(this.malwareStore.getAll()); }
-  getForensicJobs(): ForensicJob[] { return this.unwrap(this.jobStore.getAll()); }
-  getDevices(): Device[] { return this.unwrap(this.deviceStore.getAll()); }
-  getNetworkCaptures(): Pcap[] { return this.unwrap(this.pcapStore.getAll()); }
-  getPatchStatus(): PatchStatus[] { return this.unwrap(this.patchStatusStore.getAll()); }
-  getScannerStatus(): ScannerStatus[] { return this.unwrap(this.scannerStore.getAll()); }
-  getEnrichmentModules(): EnrichmentModule[] { return this.unwrap(this.enrichmentStore.getAll()); }
-  getParserRules(): ParserRule[] { return this.unwrap(this.parserStore.getAll()); }
-  getNormalizationRules(): NormalizationRule[] { return this.unwrap(this.normalizationStore.getAll()); }
-  getSegmentationPolicies(): SegmentationPolicy[] { return this.unwrap(this.policyStore.getAll()); }
-  getHoneytokens(): Honeytoken[] { return this.unwrap(this.honeytokenStore.getAll()); }
-  getNistControls(): NistControl[] { return this.unwrap(this.nistControlStore.getAll()); }
-  getOsintBreaches(): OsintBreach[] { return this.unwrap(this.osintBreachStore.getAll()); }
-  getOsintDomains(): OsintDomain[] { return this.unwrap(this.osintDomainStore.getAll()); }
-  getOsintSocial(): OsintSocial[] { return this.unwrap(this.osintSocialStore.getAll()); }
-  getOsintGeo(): OsintGeo[] { return this.unwrap(this.osintGeoStore.getAll()); }
-  getOsintDarkWeb(): OsintDarkWebItem[] { return this.unwrap(this.osintDarkWebStore.getAll()); }
-  getOsintMeta(): OsintFileMeta[] { return this.unwrap(this.osintMetaStore.getAll()); }
-  getVendorFeedItems(): VendorFeedItem[] { return this.unwrap(this.vendorFeedStore.getAll()); }
-  getRiskForecast(): RiskForecastItem[] { return this.unwrap(this.riskForecastStore.getAll()); }
-  getTrafficFlows(): TrafficFlow[] { return this.unwrap(this.trafficFlowStore.getAll()); }
-  getMitreTactics(): MitreItem[] { return this.unwrap(this.mitreTacticStore.getAll()); }
-  getMitreTechniques(): MitreItem[] { return this.unwrap(this.mitreTechniqueStore.getAll()); }
-  getMitreSubTechniques(): MitreItem[] { return this.unwrap(this.mitreSubStore.getAll()); }
-  getMitreGroups(): MitreItem[] { return this.unwrap(this.mitreGroupStore.getAll()); }
-  getMitreSoftware(): MitreItem[] { return this.unwrap(this.mitreSoftwareStore.getAll()); }
-  getMitreMitigations(): MitreItem[] { return this.unwrap(this.mitreMitigationStore.getAll()); }
+  get threatStore() { return this.stores.threatStore; }
+  get caseStore() { return this.stores.caseStore; }
+  get actorStore() { return this.stores.actorStore; }
+  get nodeStore() { return this.stores.nodeStore; }
+  get campaignStore() { return this.stores.campaignStore; }
+  get feedStore() { return this.stores.feedStore; }
+  get logStore() { return this.stores.logStore; }
+  get vulnStore() { return this.stores.vulnStore; }
+  get reportStore() { return this.stores.reportStore; }
+  get userStore() { return this.stores.userStore; }
+  get vendorStore() { return this.stores.vendorStore; }
+  get messagingStore() { return this.stores.messagingStore; }
   
-  getAppConfig(): AppConfig { return (this.unwrap(this.configStore.getAll())[0] as AppConfig) || DEFAULT_APP_CONFIG; }
-  getAIConfig(): AIConfig { return (this.unwrap(this.aiConfigStore.getAll())[0] as AIConfig) || MOCK_AI_CONFIG; }
-  getScoringConfig(): ScoringConfig { return (this.unwrap(this.scoringConfigStore.getAll())[0] as ScoringConfig) || MOCK_SCORING_CONFIG; }
-  getThemeConfig(): ThemeConfig { return (this.unwrap(this.themeConfigStore?.getAll())[0] as ThemeConfig) || DEFAULT_THEME_CONFIG; }
-  getNavigationConfig() { return this.navigationConfig; }
-  getModulesForView(view: any) { return this.modulesConfig[view] || []; }
+  // --- Accessors for UI Components (Facade Pattern) ---
 
-  getCompromisedAssets() {
-    const assets = this.getSystemNodes();
-    const threats = this.getThreats();
-    return assets.map((a: SystemNode) => InterconnectLogic.correlateIoCToAsset(
-      threats.find((t: Threat) => t.indicator === a.name || t.indicator === a.ip_address) || { indicator: '', type: '' } as any, 
-      [a]
-    )).filter(Boolean);
+  get config(): AppConfig {
+      return this.getAppConfig();
   }
 
-  getEscalatableVulns() { return this.getVulnerabilities().filter((v: Vulnerability) => InterconnectLogic.shouldEscalateVuln(v)); }
-  getActiveBotnets() { return InterconnectLogic.detectBotnetSurge(this.getThreats(), 1000); }
-  
-  getAdvancedMetrics() {
-     return {
-         spearphishingRisk: AdvancedInterconnect.calcSpearphishingRisk(this.currentUser!, this.getThreats()),
-         killChainVelocity: this.getCampaigns().map((c: Campaign) => DeepAnalytics.calculateKillChainVelocity(c)),
-         rogueDevices: this.getDevices().filter((d: Device) => DeepAnalytics.isRogueDevice(d.macAddress || '', this.getDevices())).length
-     };
+  get currentUser(): SystemUser | undefined {
+      // Mock current user from store (first admin)
+      return this.stores.userStore.getAll().data?.find(u => u.role === 'Administrator') || this.stores.userStore.getAll().data?.[0];
   }
 
-  // Pass-through Actions (Refactored to reduce size/duplication)
-  addThreat(t: Threat) { this.threatStore.addThreat(t, this.getActors(), this.getCases(), (c: any) => this.addCase(c)); }
-  deleteThreat(id: string) { this.threatStore.delete(id); }
-  updateStatus(id: string, s: any) { this.threatStore.updateStatus(id, s, this.getCases(), (c: any) => this.addCase(c)); }
-  addCase(c: any) { this.caseStore.addCase(c, this.getPlaybooks(), (id: string, n: string) => this.caseStore.addNote(id, n)); }
-  updateCase(c: any) { this.caseStore.update(c); }
-  updateAppConfig(c: AppConfig) { this.configStore.update(c); window.dispatchEvent(new Event('config-update')); }
-  updateThemeConfig(c: ThemeConfig) { if (this.themeConfigStore) { this.themeConfigStore.update(c); window.dispatchEvent(new Event('theme-update')); } }
+  getAppConfig(): AppConfig {
+      return this.stores.configStore.getAll().data?.[0] as AppConfig;
+  }
+  
+  updateAppConfig(config: AppConfig) {
+      this.stores.configStore.update(config);
+  }
 
-  // ... (Other standard CRUD methods preserved but omitted for brevity to fit LOC constraint)
-  
-  getMessages(channelId: string) { return this.messagingStore.getMessages(channelId); }
-  getChannels() { return this.unwrap(this.messagingStore.getAll()); }
-  sendMessage(msg: any) { this.messagingStore.sendMessage(msg); }
-  createChannel(c: any) { this.messagingStore.createChannel(c); }
-  sync(action: 'CREATE' | 'UPDATE' | 'DELETE', collection: string, data: unknown) { this.adapter.execute(action, collection, data as Record<string, any>); }
-  getDarkWebStream() { return ["CONNECTING TO TOR...", "HANDSHAKE..."]; }
-  getResearchCorpus() { return ['APT-29', 'Cobalt Strike']; }
-  getThreatsByActor(actor: string) { return this.threatStore.getByActor(actor); }
-  getReportsByActor(actorId: string) { return this.reportStore.getByActor(actorId); }
-  getReportsByCase(caseId: string) { return this.reportStore.getByCase(caseId); }
-  
-  getThreatCategories() {
+  getAIConfig(): AIConfig {
+      return this.stores.aiConfigStore.getAll().data?.[0] as AIConfig;
+  }
+
+  getScoringConfig(): ScoringConfig {
+      return this.stores.scoringConfigStore.getAll().data?.[0] as ScoringConfig;
+  }
+
+  getThemeConfig(): ThemeConfig {
+      return this.stores.themeConfigStore.getAll().data?.[0] as ThemeConfig;
+  }
+
+  updateThemeConfig(config: ThemeConfig) {
+      this.stores.themeConfigStore.update(config);
+      window.dispatchEvent(new Event('theme-update'));
+  }
+
+  getModulesForView(view: View): string[] {
+      // In a real app, this would check permissions
+      return MOCK_MODULES_CONFIG[view] || [];
+  }
+
+  // Intelligence
+  getThreats(sortByScore = true): Threat[] {
+      // Access store directly via public method if available or generic getAll
+      // Note: Store methods return Result<T>, we unwrap for UI simplicity here (or handle error)
+      const res = this.stores.threatStore.getAll();
+      let threats = res.success ? res.data : [];
+      if (sortByScore) threats.sort((a, b) => b.score - a.score);
+      return threats;
+  }
+
+  getThreatCategories(): { name: string, value: number }[] {
       const threats = this.getThreats();
-      const categories: Record<string, number> = {};
-      threats.forEach(t => categories[t.type] = (categories[t.type] || 0) + 1);
-      return Object.keys(categories).map(k => ({ name: k, value: categories[k] }));
+      const counts: Record<string, number> = {};
+      threats.forEach(t => counts[t.type] = (counts[t.type] || 0) + 1);
+      return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }
-  getThreatTrends() { return Array.from({length: 24}, (_, i) => ({ name: `${i}:00`, value: Math.floor(Math.random() * 100) })); }
 
-  // Action stubs (condensed)
-  addSegmentationPolicy(p: any) { this.policyStore.add(p); }
-  reassessVendorRisk() {}
-  toggleFeed(id: string) { 
-      const res = this.feedStore.getById(id);
-      if (res.success && res.data) {
-        const updatedFeed = { ...res.data, status: res.data.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE' as 'ACTIVE'|'DISABLED' };
-        this.feedStore.update(updatedFeed);
-      } 
+  getThreatTrends(): { name: string, value: number }[] {
+      // Mock trend data based on recent timestamps
+      const threats = this.getThreats();
+      // Group by hour (mock logic)
+      return Array.from({ length: 24 }, (_, i) => ({
+          name: `${i}:00`,
+          value: Math.floor(Math.random() * 20) + 5 // Mock values
+      }));
   }
-  deleteFeed(id: string) { this.feedStore.delete(id); }
-  deleteCampaign(id: string) { this.campaignStore.delete(id); }
-  deleteActor(id: string) { this.actorStore.delete(id); }
-  addCampaign(c: any) { this.campaignStore.add(c); }
-  addActor(a: any) { this.actorStore.add(a); }
-  addApiKey(k: any) { this.apiKeyStore.add(k); }
-  addReport(r: any) { this.reportStore.add(r); }
-  addArtifact(caseId: string, a: any) { 
-    const res = this.caseStore.getById(caseId);
-    if(res.success && res.data) this.caseStore.update({ ...res.data, artifacts: [...res.data.artifacts, a] });
+
+  addThreat(t: Threat) {
+      this.stores.threatStore.add(t);
   }
-  deleteArtifact(caseId: string, aId: string) {
-      const res = this.caseStore.getById(caseId);
-      if(res.success && res.data) this.caseStore.update({ ...res.data, artifacts: res.data.artifacts.filter((x: any) => x.id !== aId) });
+
+  deleteThreat(id: string) {
+      this.stores.threatStore.delete(id);
   }
-  addChainEvent(e: any) { this.chainStore.add(e); }
-  addForensicJob(j: any) { this.jobStore.add(j); }
-  updateVulnerabilityStatus(id: string, s: string) { this.vulnStore.updateStatus(id, s as any); }
-  toggleEnrichmentModule(id: string) { 
-      const res = this.enrichmentStore.getById(id);
-      if(res.success && res.data) this.enrichmentStore.update({ ...res.data, enabled: !res.data.enabled });
+
+  updateStatus(id: string, status: IncidentStatus) {
+      // Simple wrapper, real implementation in store might handle side effects
+      const t = this.stores.threatStore.getById(id).data;
+      if (t) {
+          this.stores.threatStore.update({ ...t, status });
+      }
   }
-  updateParserRule(p: any) { this.parserStore.update(p); }
-  addVendorFeedItem(i: any) { this.vendorFeedStore.add(i); }
-  updateScannerStatus(s: any) {}
-  reprioritizeCases() {}
-  transferCase(id: string, agency: string) { 
-    const res = this.caseStore.getById(id);
-    if (res.success && res.data) this.caseStore.update({ ...res.data, agency });
+
+  // Cases
+  getCases(): Case[] {
+      return this.stores.caseStore.getAll().data || [];
   }
-  shareCase(id: string, agency: string) { 
-    const res = this.caseStore.getById(id);
-    if (res.success && res.data && !res.data.sharedWith.includes(agency)) this.caseStore.update({ ...res.data, sharedWith: [...res.data.sharedWith, agency] });
+
+  addCase(c: Case) {
+      this.stores.caseStore.add(c);
   }
+
+  updateCase(c: Case) {
+      this.stores.caseStore.update(c);
+  }
+
+  createCaseFromThreat(threatId: string) {
+      const threat = this.stores.threatStore.getById(threatId).data;
+      if (threat) {
+          const newCase: Case = {
+              id: `CASE-${Date.now()}` as CaseId,
+              title: `Investigation: ${threat.indicator}`,
+              description: `Auto-generated case from threat ${threat.id}`,
+              status: 'OPEN',
+              priority: threat.severity,
+              assignee: 'Unassigned',
+              reporter: 'System',
+              created: new Date().toISOString(),
+              relatedThreatIds: [threat.id],
+              findings: '',
+              tasks: [],
+              notes: [],
+              artifacts: [],
+              timeline: [],
+              agency: 'SENTINEL_CORE',
+              sharingScope: 'INTERNAL',
+              sharedWith: [],
+              labels: ['Auto'],
+              tlp: 'AMBER'
+          };
+          this.stores.caseStore.add(newCase);
+      }
+  }
+
+  reprioritizeCases() {
+      // Mock logic
+      const cases = this.getCases();
+      cases.forEach(c => {
+          if (c.relatedThreatIds.length > 2 && c.priority !== 'CRITICAL') {
+              this.stores.caseStore.update({ ...c, priority: 'CRITICAL' });
+          }
+      });
+  }
+  
+  transferCase(id: string, agency: string) {
+      const c = this.stores.caseStore.getById(id).data;
+      if(c) this.stores.caseStore.update({...c, agency});
+  }
+
+  shareCase(id: string, agency: string) {
+      const c = this.stores.caseStore.getById(id).data;
+      if(c && !c.sharedWith.includes(agency)) this.stores.caseStore.update({...c, sharedWith: [...c.sharedWith, agency]});
+  }
+  
+  addTask(caseId: string, task: any) {
+      const c = this.stores.caseStore.getById(caseId).data;
+      if(c) this.stores.caseStore.update({...c, tasks: [...c.tasks, task]});
+  }
+
   toggleTask(caseId: string, taskId: string) {
-    const res = this.caseStore.getById(caseId);
-    if (res.success && res.data) {
-        const tasks = res.data.tasks.map((t: Task) => t.id === taskId ? { ...t, status: t.status === 'DONE' ? 'PENDING' : 'DONE' as 'DONE'|'PENDING' } : t);
-        this.caseStore.update({ ...res.data, tasks });
-    }
+      const c = this.stores.caseStore.getById(caseId).data;
+      if(c) {
+          const tasks = c.tasks.map(t => t.id === taskId ? { ...t, status: t.status === 'DONE' ? 'PENDING' : 'DONE' } : t);
+          this.stores.caseStore.update({ ...c, tasks: tasks as any[] });
+      }
   }
-  addTask(caseId: string, task: any) { this.caseStore.addTask(caseId, task); }
-  linkCases(s: string, t: string) { this.caseStore.linkCases(s, t); }
-  unlinkCases(s: string, t: string) { this.caseStore.unlinkCases(s, t); }
-  applyPlaybook(cid: string, pid: string) {
-    const pbRes = this.playbookStore.getById(pid);
-    if (pbRes.success && pbRes.data) {
-        this.playbookStore.update({ ...pbRes.data, usageCount: (pbRes.data.usageCount || 0) + 1 });
-        this.caseStore.applyPlaybook(cid, pbRes.data, (id: string, n: string) => this.caseStore.addNote(id, n));
-    }
+
+  addArtifact(caseId: string, artifact: any) {
+      const c = this.stores.caseStore.getById(caseId).data;
+      if(c) this.stores.caseStore.update({...c, artifacts: [...c.artifacts, artifact]});
   }
-  addNote(cid: string, content: string) { this.caseStore.addNote(cid, content); }
-  addCampaignToActor(aid: string, c: string) { this.actorStore.linkCampaign(aid, c); }
-  addInfra(aid: string, i: any) { this.actorStore.addInfrastructure(aid, i); }
-  updateActor(a: any) { this.actorStore.update(a); }
-  addExploit(aid: string, e: string) { this.actorStore.addExploit(aid, e); }
-  addTarget(aid: string, t: string) { this.actorStore.addTarget(aid, t); }
-  addTTP(aid: string, t: any) { this.actorStore.addTTP(aid, t); }
-  addReference(aid: string, r: string) { this.actorStore.addReference(aid, r); }
-  deleteReference(aid: string, r: string) { this.actorStore.removeReference(aid, r); }
-  addHistoryEvent(aid: string, e: any) { this.actorStore.addHistoryEvent(aid, e); }
-  linkThreatToActor(tid: string, aname: string) { 
-    const res = this.threatStore.getById(tid);
-    if(res.success && res.data) this.threatStore.update({ ...res.data, threatActor: aname });
+
+  deleteArtifact(caseId: string, artifactId: string) {
+      const c = this.stores.caseStore.getById(caseId).data;
+      if(c) this.stores.caseStore.update({...c, artifacts: c.artifacts.filter(a => a.id !== artifactId)});
   }
-  addFeed(feed: any) { this.feedStore.add(feed); }
+
+  applyPlaybook(caseId: string, playbookId: string) {
+     // Mock logic handled in store usually
+     const pb = this.getPlaybooks().find(p => p.id === playbookId);
+     const c = this.stores.caseStore.getById(caseId).data;
+     if(c && pb) {
+         const newTasks = pb.tasks.map((t, i) => ({ id: `task-${Date.now()}-${i}`, title: t, status: 'PENDING' }));
+         this.stores.caseStore.update({ ...c, tasks: [...c.tasks, ...newTasks] as any[] });
+     }
+  }
+
+  addNote(caseId: string, content: string) {
+      const c = this.stores.caseStore.getById(caseId).data;
+      if(c) {
+          const note = { id: `note-${Date.now()}`, author: this.currentUser?.name || 'System', date: new Date().toISOString(), content };
+          this.stores.caseStore.update({ ...c, notes: [note, ...c.notes] });
+      }
+  }
+
+  linkCases(id1: string, id2: string) {
+      this.stores.caseStore.linkCases(id1, id2);
+  }
+
+  unlinkCases(id1: string, id2: string) {
+      this.stores.caseStore.unlinkCases(id1, id2);
+  }
+
+  // Actors
+  getActors(): ThreatActor[] { return this.stores.actorStore.getAll().data || []; }
+  addActor(a: ThreatActor) { this.stores.actorStore.add(a); }
+  deleteActor(id: string) { this.stores.actorStore.delete(id); }
+  updateActor(a: ThreatActor) { this.stores.actorStore.update(a); }
+  
+  addCampaignToActor(actorId: string, campaign: string) { this.stores.actorStore.linkCampaign(actorId, campaign); }
+  addInfra(actorId: string, infra: any) { this.stores.actorStore.addInfrastructure(actorId, infra); }
+  addExploit(actorId: string, exploit: string) { this.stores.actorStore.addExploit(actorId, exploit); }
+  addTarget(actorId: string, target: string) { this.stores.actorStore.addTarget(actorId, target); }
+  addTTP(actorId: string, ttp: any) { this.stores.actorStore.addTTP(actorId, ttp); }
+  addReference(actorId: string, ref: string) { this.stores.actorStore.addReference(actorId, ref); }
+  deleteReference(actorId: string, ref: string) { this.stores.actorStore.removeReference(actorId, ref); }
+  addHistoryEvent(actorId: string, event: any) { this.stores.actorStore.addHistoryEvent(actorId, event); }
+  linkThreatToActor(threatId: string, actorName: string) {
+      // Mock logic: update threat with actor name
+      const t = this.stores.threatStore.getById(threatId).data;
+      if(t) this.stores.threatStore.update({...t, threatActor: actorName});
+  }
+
+  // Campaigns
+  getCampaigns() { return this.stores.campaignStore.getAll().data || []; }
+  addCampaign(c: any) { this.stores.campaignStore.add(c); }
+  deleteCampaign(id: string) { this.stores.campaignStore.delete(id); }
+
+  // Infrastructure
+  getSystemNodes(): SystemNode[] { return this.stores.nodeStore.getAll().data || []; }
+  getFeeds(): IoCFeed[] { return this.stores.feedStore.getAll().data || []; }
+  toggleFeed(id: string) { this.stores.feedStore.toggleStatus(id); }
+  deleteFeed(id: string) { this.stores.feedStore.delete(id); }
+  addFeed(f: IoCFeed) { this.stores.feedStore.add(f); }
+
+  getVulnerabilities(): Vulnerability[] { return this.stores.vulnStore.getAll().data || []; }
+  updateVulnerabilityStatus(id: string, status: any) { this.stores.vulnStore.updateStatus(id, status); }
+  
+  getPatchStatus(): PatchStatus[] { return this.stores.patchStatusStore.getAll().data || []; }
+  getScannerStatus(): ScannerStatus[] { return this.stores.scannerStore.getAll().data || []; }
+  updateScannerStatus(status: Partial<ScannerStatus>) { 
+     // Logic to find and update scanner status
+     const scanners = this.getScannerStatus();
+     if(scanners.length > 0) {
+         this.stores.scannerStore.update({ ...scanners[0], ...status });
+     }
+  }
+  getVendorFeedItems(): VendorFeedItem[] { return this.stores.vendorFeedStore.getAll().data || []; }
+  
+  getVendors(): Vendor[] { return this.stores.vendorStore.getAll().data || []; }
+  reassessVendorRisk() { 
+      // Trigger recalculation logic in vendorStore if implemented, or just notify
+      window.dispatchEvent(new Event('data-update'));
+  }
+
+  getNistControls(): NistControl[] { return this.stores.nistControlStore.getAll().data || []; }
+  getApiKeys(): ApiKey[] { return this.stores.apiKeyStore.getAll().data || []; }
+  addApiKey(key: ApiKey) { this.stores.apiKeyStore.add(key); }
+  getIntegrations(): Integration[] { return this.stores.integrationStore.getAll().data || []; }
+
+  // Operations
+  getAuditLogs(): AuditLog[] { return this.stores.logStore.getAll().data || []; }
+  getReports(): IncidentReport[] { return this.stores.reportStore.getAll().data || []; }
+  addReport(r: IncidentReport) { this.stores.reportStore.add(r); }
+  getReportsByCase(id: string) { return this.stores.reportStore.getByCase(id); }
+  getReportsByActor(id: string) { return this.stores.reportStore.getByActor(id); }
+  
+  getPlaybooks(): Playbook[] { return this.stores.playbookStore.getAll().data || []; }
+  
+  getChainOfCustody(): ChainEvent[] { return this.stores.chainStore.getAll().data || []; }
+  addChainEvent(e: ChainEvent) { this.stores.chainStore.add(e); }
+  
+  getMalwareSamples(): Malware[] { return this.stores.malwareStore.getAll().data || []; }
+  getForensicJobs(): ForensicJob[] { return this.stores.jobStore.getAll().data || []; }
+  addForensicJob(j: ForensicJob) { this.stores.jobStore.add(j); }
+  
+  getDevices(): Device[] { return this.stores.deviceStore.getAll().data || []; }
+  getNetworkCaptures(): Pcap[] { return this.stores.pcapStore.getAll().data || []; }
+
+  getHoneytokens(): Honeytoken[] { return this.stores.honeytokenStore.getAll().data || []; }
+  getSegmentationPolicies(): SegmentationPolicy[] { return this.stores.policyStore.getAll().data || []; }
+  addSegmentationPolicy(p: SegmentationPolicy) { this.stores.policyStore.add(p); }
+  getTrafficFlows(): TrafficFlow[] { return this.stores.trafficFlowStore.getAll().data || []; }
+  
+  // OSINT
+  getOsintDomains(): OsintDomain[] { return this.stores.osintDomainStore.getAll().data || []; }
+  getOsintBreaches(): OsintBreach[] { return this.stores.osintBreachStore.getAll().data || []; }
+  getOsintGeo(): OsintGeo[] { return this.stores.osintGeoStore.getAll().data || []; }
+  getOsintSocial(): OsintSocial[] { return this.stores.osintSocialStore.getAll().data || []; }
+  getOsintDarkWeb(): OsintDarkWebItem[] { return this.stores.osintDarkWebStore.getAll().data || []; }
+  getOsintMeta(): OsintFileMeta[] { return this.stores.osintMetaStore.getAll().data || []; }
+  getDarkWebStream(): string[] { return ["Connecting to TOR...", "Bridge established.", "Scanning marketplaces...", "Hit found on Hydra."]; }
+
+  // Knowledge
+  getMitreTactics(): MitreItem[] { return this.stores.mitreTacticStore.getAll().data || []; }
+  getMitreTechniques(): MitreItem[] { return this.stores.mitreTechniqueStore.getAll().data || []; }
+  getMitreSubTechniques(): MitreItem[] { return this.stores.mitreSubStore.getAll().data || []; }
+  getMitreGroups(): MitreItem[] { return this.stores.mitreGroupStore.getAll().data || []; }
+  getMitreSoftware(): MitreItem[] { return this.stores.mitreSoftwareStore.getAll().data || []; }
+  getMitreMitigations(): MitreItem[] { return this.stores.mitreMitigationStore.getAll().data || []; }
+
+  // System
+  getSystemUsers(): SystemUser[] { return this.stores.userStore.getAll().data || []; }
+  getParserRules(): ParserRule[] { return this.stores.parserStore.getAll().data || []; }
+  updateParserRule(p: ParserRule) { this.stores.parserStore.update(p); }
+  getEnrichmentModules(): EnrichmentModule[] { return this.stores.enrichmentStore.getAll().data || []; }
+  toggleEnrichmentModule(id: string) { 
+      const m = this.stores.enrichmentStore.getById(id).data;
+      if(m) this.stores.enrichmentStore.update({ ...m, enabled: !m.enabled });
+  }
+  getNormalizationRules(): NormalizationRule[] { return this.stores.normalizationStore.getAll().data || []; }
+  
+  getRiskForecast(): RiskForecastItem[] { return this.stores.riskForecastStore.getAll().data || []; }
+  
+  // Messaging
+  getChannels(): Channel[] { return this.stores.messagingStore.getChannels().data || []; }
+  getMessages(channelId: string): TeamMessage[] { return this.stores.messagingStore.getMessages(channelId); }
+  sendMessage(msg: TeamMessage) { this.stores.messagingStore.sendMessage(msg); }
+  createChannel(c: Channel) { this.stores.messagingStore.createChannel(c); }
+
+  // Misc
+  getResearchCorpus(): string[] { return ["APT29", "Cobalt Strike", "Log4j", "Zero Logon", "DarkSide"]; }
+  
+  getCompromisedAssets() { return this.getSystemNodes().filter(n => n.status === 'COMPROMISED'); }
+  getEscalatableVulns() { return this.getVulnerabilities().filter(v => v.score > 9 && v.status !== 'PATCHED'); }
+  getThreatsByActor(name: string) { return this.stores.threatStore.getByActor(name); }
+
+  sync(action: string, type: string, data: any) {
+      // Generic sync handler for external triggers
+      window.dispatchEvent(new Event('data-update'));
+  }
 }
 
 export const threatData = new DataLayer();

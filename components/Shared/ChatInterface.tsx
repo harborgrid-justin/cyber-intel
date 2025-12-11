@@ -1,9 +1,8 @@
 
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from './UI';
 import { useThrottledCallback } from '../../hooks/useThrottle';
-import { EXECUTIVE_THEME, TOKENS } from '../../styles/theme';
+import { EXECUTIVE_THEME, TOKENS, STYLES } from '../../styles/theme';
 import { Icons } from './Icons';
 
 export interface Message {

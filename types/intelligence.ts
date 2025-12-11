@@ -22,6 +22,7 @@ export interface Threat {
   sanctioned?: boolean;
   mlRetrain?: boolean;
   origin?: string;
+  relatedAssetIds?: string[];
 }
 
 export interface Case {
@@ -71,6 +72,7 @@ export interface ThreatActor {
     evasionTechniques: string[];
     relatedActors?: string[];
     campaignDates?: string[];
+    targetSectors?: string[];
 }
 
 export interface Campaign {

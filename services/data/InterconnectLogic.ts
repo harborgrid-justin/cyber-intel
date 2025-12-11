@@ -190,4 +190,3 @@ detection:
       \`.trim();
   }
 }
-    

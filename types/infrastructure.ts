@@ -20,7 +20,7 @@ export interface SystemUser {
 export interface SystemNode {
     id: AssetId;
     name: string;
-    status: 'ONLINE' | 'OFFLINE' | 'DEGRADED' | 'ISOLATED';
+    status: 'ONLINE' | 'OFFLINE' | 'DEGRADED' | 'ISOLATED' | 'COMPROMISED';
     load: number;
     latency: number;
     type: string;
@@ -32,10 +32,13 @@ export interface SystemNode {
     criticalProcess?: string;
     dependencies?: string[];
     ip_address?: string;
+    // Map 'ip' to 'ip_address' compatibility
+    ip?: string; 
     criticality?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
     owner?: string;
     configHash?: string;
     iamRoles?: string[];
+    role?: string;
 }
 
 export interface SbomComponent {

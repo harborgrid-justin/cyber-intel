@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -45,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) =>
       </div>
 
       <div className="flex-1 flex overflow-hidden relative">
-        <Sidebar currentView={currentView} onNavigate={handleSidebarNavigate} isOpen={sidebarOpen} />
+        <Sidebar currentView={currentView} onNavigate={handleSidebarNavigate} />
         {sidebarOpen && <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[var(--zIndex-modalBackdrop)] md:hidden transition-opacity" onClick={() => setSidebarOpen(false)} />}
         <div className="flex-1 flex flex-col min-w-0 bg-transparent relative z-0">
           <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />

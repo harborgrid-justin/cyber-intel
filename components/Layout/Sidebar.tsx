@@ -1,111 +1,71 @@
 
-import React, { useState, useEffect, memo, useCallback } from 'react';
+import React from 'react';
 import { View } from '../../types';
-import { threatData } from '../../services/dataLayer';
-import { useDataStore } from '../../hooks/useDataStore';
 import { Icons } from '../Shared/Icons';
-import { useTranslation } from '../../hooks/useTranslation';
-import { Logger } from '../../services/logger';
+import { threatData } from '../../services/dataLayer';
 
-const NavIcon: React.FC<{ name: string, className?: string }> = ({ name, className = "w-4 h-4" }) => {
-    const IconComponent = Icons[name as keyof typeof Icons] || Icons.Activity;
-    return <IconComponent className={className} />;
-};
-
-const NavItem: React.FC<{
-  item: { view: View; label: string; icon: string; };
-  isCurrent: boolean;
-  onNavigate: (view: View) => void;
-  t: (k: string, f?: string) => string;
-}> = memo(({ item, isCurrent, onNavigate, t }) => {
-  const handleNav = useCallback(() => {
-      Logger.info('Navigation Click', { view: item.view });
-      onNavigate(item.view);
-  }, [onNavigate, item.view]);
-  
-  return (
-    <button
-      onClick={handleNav}
-      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 group relative focus:outline-none focus:ring-2 focus:ring-[var(--colors-primary)] ${
-        isCurrent
-          ? 'bg-[var(--colors-primaryDim)] text-[var(--colors-primary)]'
-          : `text-[var(--colors-textSecondary)] hover:bg-[var(--colors-surfaceHighlight)] hover:text-[var(--colors-textPrimary)]`
-      }`}
-    >
-      {isCurrent && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-[var(--colors-primary)] rounded-r"></div>}
-      <span className={`mr-3 transition-colors ${isCurrent ? 'text-[var(--colors-primary)]' : 'group-hover:text-[var(--colors-textPrimary)]'}`}>
-        <NavIcon name={item.icon} />
-      </span>
-      {/* Fallback to label if translation key doesn't exist (simulated mapping) */}
-      {t(`nav.${item.label.toLowerCase()}`, item.label)}
-    </button>
-  );
-});
-
-const Sidebar: React.FC<{
+interface SidebarProps {
   currentView: View;
   onNavigate: (view: View) => void;
-  isOpen: boolean;
-}> = ({ currentView, onNavigate, isOpen }) => {
-  const [permissions, setPermissions] = useState<string[]>(threatData.currentUser?.effectivePermissions || []);
-  const config = useDataStore(() => threatData.getAppConfig());
-  const navigationConfig = useDataStore(() => threatData.getNavigationConfig());
-  const { t } = useTranslation();
+}
 
-  useEffect(() => {
-    const updatePermissions = () => setPermissions(threatData.currentUser?.effectivePermissions || []);
-    window.addEventListener('user-update', updatePermissions);
-    return () => window.removeEventListener('user-update', updatePermissions);
-  }, []);
-
-  const hasPerm = (p: string) => permissions.includes(p) || permissions.includes('*:*');
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
+  const navItems = [
+    { view: 'DASHBOARD', label: 'Dashboard', icon: 'Grid' },
+    { view: 'FEED', label: 'Threat Feed', icon: 'Activity' },
+    { view: 'ANALYSIS', label: 'Intel Analysis', icon: 'Cpu' },
+    { view: 'CASES', label: 'Case Management', icon: 'Briefcase' },
+    { view: 'ACTORS', label: 'Threat Actors', icon: 'Users' },
+    { view: 'SETTINGS', label: 'System Config', icon: 'Settings' },
+  ];
 
   return (
-    <div className={`fixed inset-y-0 left-0 z-[var(--zIndex-sticky)] w-64 border-r border-[var(--colors-borderDefault)] bg-[var(--colors-surfaceDefault)] backdrop-blur-xl transition-transform duration-300 md:relative md:translate-x-0 flex flex-col shadow-2xl ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
-      <div className={`h-14 flex items-center px-4 border-b border-[var(--colors-borderDefault)] shrink-0`}>
+    <div className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col h-full shadow-2xl relative z-20">
+      <div className="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md">
         <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white bg-[var(--colors-brand)]`}>
-                <Icons.Shield className="w-5 h-5" />
+            <div className="w-8 h-8 bg-cyan-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(8,145,178,0.5)]">
+                <Icons.Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-                <h1 className={`text-sm font-bold text-[var(--colors-textPrimary)]`}>{config.appName}</h1>
-                <div className={`text-[9px] text-[var(--colors-textSecondary)] font-medium`}>ENTERPRISE CORE</div>
+                <h1 className="text-white font-bold text-sm tracking-wider uppercase">{threatData.config.appName}</h1>
+                <div className="text-[10px] text-cyan-500 font-mono tracking-widest">ENTERPRISE</div>
             </div>
         </div>
       </div>
-      
-      <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-8 custom-scrollbar">
-        {navigationConfig.map((group) => {
-          const visibleItems = group.items.filter(i => hasPerm(i.perm));
-          if (visibleItems.length === 0) return null;
+
+      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+        {navItems.map((item) => {
+          const active = currentView === item.view;
+          const Icon = (Icons as any)[item.icon] || Icons.Activity;
           return (
-            <div key={group.group}>
-              <div className="px-3 mb-2">
-                <span className="text-[11px] text-[var(--colors-textTertiary)] font-medium tracking-wide uppercase">{group.group}</span>
-              </div>
-              <div className="space-y-0.5">
-                  {visibleItems.map((item) => (
-                    <NavItem key={item.view} item={item} isCurrent={currentView === item.view} onNavigate={onNavigate} t={t} />
-                  ))}
-              </div>
-            </div>
+            <button
+              key={item.view}
+              onClick={() => onNavigate(item.view as View)}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-all duration-200 group ${
+                active 
+                  ? 'bg-cyan-900/20 text-cyan-400 border border-cyan-800/50 shadow-[inset_0_0_10px_rgba(8,145,178,0.1)]' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${active ? 'text-cyan-400' : 'text-slate-500 group-hover:text-white'}`} />
+              {item.label}
+              {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></div>}
+            </button>
           );
         })}
       </nav>
 
-      <div className={`p-4 border-t border-[var(--colors-borderDefault)] shrink-0`}>
-        <button onClick={() => onNavigate(View.SETTINGS)} className={`w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--colors-surfaceHighlight)] transition-colors group`}>
-            <div className={`w-8 h-8 rounded-full bg-[var(--colors-surfaceRaised)] border border-[var(--colors-borderSubtle)] flex items-center justify-center`}>
-                <span className={`text-xs font-semibold text-[var(--colors-textPrimary)]`}>{threatData.currentUser?.name?.charAt(0) || 'A'}</span>
+      <div className="p-4 border-t border-slate-800">
+        <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800">
+            <div className="text-xs text-slate-500 font-mono mb-1">SYSTEM STATUS</div>
+            <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="text-emerald-500 text-xs font-bold">OPERATIONAL</span>
             </div>
-            <div className="flex-1 text-left min-w-0">
-                <div className={`text-xs font-semibold text-[var(--colors-textPrimary)] truncate`}>{threatData.currentUser?.name}</div>
-                <div className={`text-[10px] text-[var(--colors-textSecondary)] truncate`}>{config.orgName}</div>
-            </div>
-            <Icons.Settings className={`w-4 h-4 text-[var(--colors-textTertiary)]`} />
-        </button>
+        </div>
       </div>
     </div>
   );
 };
+
 export default Sidebar;

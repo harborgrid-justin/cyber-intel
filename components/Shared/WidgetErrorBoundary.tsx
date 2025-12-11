@@ -12,9 +12,8 @@ interface State {
   error: Error | null;
 }
 
-// FIX: Explicitly extend React.Component to resolve type errors where `this.props` and `this.setState` were not found.
+// Fix: Extended React.Component to make `WidgetErrorBoundary` a valid React class component, resolving errors related to missing `this.props` and `this.setState`.
 export class WidgetErrorBoundary extends React.Component<Props, State> {
-  // Fix: Refactored state initialization to use a class property initializer.
   state: State = { 
     hasError: false, 
     error: null 

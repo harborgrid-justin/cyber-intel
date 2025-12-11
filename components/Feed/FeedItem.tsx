@@ -1,18 +1,20 @@
 
 import React, { useCallback } from 'react';
-import { IncidentStatus, Threat } from '../../types';
+import { IncidentStatus, Threat, View } from '../../types';
 import { getScoreColorClass } from '../../services/scoringEngine';
 import { threatData } from '../../services/dataLayer';
 import { Badge, Button } from '../Shared/UI';
 import { Icons } from '../Shared/Icons';
 import { fastDeepEqual } from '../../services/utils/fastDeepEqual';
+import { useNavigate } from '../../hooks/useNavigate';
 
 interface FeedItemProps {
   threat: Threat;
 }
 
 const FeedItemComponent: React.FC<FeedItemProps> = ({ threat }) => {
-  // Stable handlers using useCallback to prevent re-renders in parent lists
+  const navigate = useNavigate();
+  
   const handlePromote = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     threatData.updateStatus(threat.id, IncidentStatus.INVESTIGATING);
@@ -23,14 +25,16 @@ const FeedItemComponent: React.FC<FeedItemProps> = ({ threat }) => {
     threatData.updateStatus(threat.id, IncidentStatus.CLOSED);
   }, [threat.id]);
 
+  const handleActorNav = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const actor = threatData.getActors().find(a => a.name === threat.threatActor);
+      if (actor) {
+          navigate(View.ACTORS, { id: actor.id });
+      }
+  };
+
   const scoreColor = getScoreColorClass(threat.score);
-  
-  // Determine text color class based on score logic
-  const scoreTextColor = 
-    scoreColor === 'critical' ? 'text-red-500' : 
-    scoreColor === 'high' ? 'text-orange-500' : 
-    scoreColor === 'medium' ? 'text-yellow-500' : 
-    'text-green-500';
+  const scoreTextColor = `text-[var(--colors-${scoreColor})]`;
 
   return (
     <div 
@@ -50,6 +54,11 @@ const FeedItemComponent: React.FC<FeedItemProps> = ({ threat }) => {
                 <Badge color={threat.severity === 'CRITICAL' ? 'red' : threat.severity === 'HIGH' ? 'orange' : 'slate'}>
                     {threat.severity}
                 </Badge>
+                {threat.threatActor !== 'Unknown' && (
+                    <button onClick={handleActorNav} className="text-[10px] text-red-400 bg-red-900/10 px-1.5 rounded border border-red-900/30 hover:bg-red-900/30">
+                        {threat.threatActor}
+                    </button>
+                )}
             </div>
             <div className="text-xs text-slate-500 truncate flex gap-2">
                 <span>{threat.type}</span>
@@ -70,22 +79,10 @@ const FeedItemComponent: React.FC<FeedItemProps> = ({ threat }) => {
          </div>
          
          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
-            <Button 
-                onClick={handlePromote} 
-                variant="secondary" 
-                className="h-8 px-2"
-                aria-label="Promote threat to incident"
-                title="Promote to Incident"
-            >
+            <Button onClick={handlePromote} variant="secondary" className="h-8 px-2" title="Promote to Incident">
                 <Icons.Zap className="w-4 h-4" />
             </Button>
-            <Button 
-                onClick={handleArchive} 
-                variant="text" 
-                className="h-8 px-2 text-slate-500 hover:text-red-400"
-                aria-label="Archive threat"
-                title="Archive Threat"
-            >
+            <Button onClick={handleArchive} variant="text" className="h-8 px-2 text-slate-500 hover:text-red-400" title="Archive Threat">
                 <Icons.UserX className="w-4 h-4" />
             </Button>
          </div>
@@ -94,5 +91,4 @@ const FeedItemComponent: React.FC<FeedItemProps> = ({ threat }) => {
   );
 };
 
-// Optimized memoization: Only re-render if deep equality check fails on threat prop
 export default React.memo(FeedItemComponent, (prev, next) => fastDeepEqual(prev.threat, next.threat));
