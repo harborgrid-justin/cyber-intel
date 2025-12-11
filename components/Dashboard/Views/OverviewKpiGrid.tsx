@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Card, Grid, MetricValue } from '../../Shared/UI';
+import { Card, Grid } from '../../Shared/UI';
 import { MetricCard } from '../../Shared/MetricCard';
 import { View } from '../../../types';
 import { CardSkeleton } from '../../Shared/Skeleton';
 import { STYLES, EXECUTIVE_THEME } from '../../../styles/theme';
+import { useNavigate } from '../../../hooks/useNavigate';
 
 interface OverviewKpiGridProps {
   loading: boolean;
@@ -19,6 +20,7 @@ interface OverviewKpiGridProps {
 export const OverviewKpiGrid: React.FC<OverviewKpiGridProps> = ({ 
     loading, trend, cases, defcon, reports, handleNavigate, getDefconColor 
 }) => {
+    const navigate = useNavigate();
     if (loading) return <Grid cols={4}><CardSkeleton /><CardSkeleton /><CardSkeleton /><CardSkeleton /></Grid>;
 
     const defconColor = getDefconColor(defcon.level);
@@ -32,7 +34,7 @@ export const OverviewKpiGrid: React.FC<OverviewKpiGridProps> = ({
     return (
         <Grid cols={4} className="gap-6">
             <MetricCard 
-                onClick={() => handleNavigate(View.FEED)} 
+                onClick={() => navigate(View.FEED)} 
                 title="Global Threat Volume" 
                 value={trend.count.toString()} 
                 trend={`${trend.delta > 0 ? '+' : ''}${trend.delta} vs 24h`} 
@@ -42,10 +44,10 @@ export const OverviewKpiGrid: React.FC<OverviewKpiGridProps> = ({
                 className="h-full"
             />
             <MetricCard 
-                onClick={() => handleNavigate(View.CASES)} 
+                onClick={() => navigate(View.CASES)} 
                 title="Active Investigations" 
                 value={cases.filter(c => c.status !== 'CLOSED').length.toString()} 
-                subValue={`${cases.filter(c => c.priority === 'CRITICAL').length} Critical Priority`}
+                subValue={`${cases.filter(c => c.priority === 'CRITICAL').length} Critical`}
                 color="blue" 
                 icon="Layers" 
                 className="h-full"
@@ -53,7 +55,7 @@ export const OverviewKpiGrid: React.FC<OverviewKpiGridProps> = ({
             <Card className={`p-6 border-l-4 ${borderColor} flex flex-col justify-between h-full bg-[var(--colors-surfaceDefault)] shadow-sm`}>
                 <div className={EXECUTIVE_THEME.typography.mono_label}>Defcon Status</div>
                 <div className="flex items-center gap-4 mt-2">
-                    <MetricValue className={defcon.color}>{defcon.level}</MetricValue>
+                    <div className={`${EXECUTIVE_THEME.typography.value_huge} ${defcon.color}`}>{defcon.level}</div>
                     <div className="flex flex-col">
                         <span className={`text-sm font-bold ${defcon.color} tracking-tight`}>{defcon.label}</span>
                         <span className={`text-[10px] text-[var(--colors-textSecondary)] mt-0.5`}>System Wide Alert</span>
@@ -61,7 +63,7 @@ export const OverviewKpiGrid: React.FC<OverviewKpiGridProps> = ({
                 </div>
             </Card>
             <MetricCard 
-                onClick={() => handleNavigate(View.REPORTS)} 
+                onClick={() => navigate(View.REPORTS)} 
                 title="Intel Products" 
                 value={reports.length.toString()} 
                 color="purple" 

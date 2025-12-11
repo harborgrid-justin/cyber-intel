@@ -15,6 +15,7 @@ import { VendorStore } from './vendorStore';
 import { MessagingStore } from './messagingStore';
 import { BaseStore } from './baseStore';
 import { ThreatMapper, CaseMapper, ActorMapper, AssetMapper } from '../mappers';
+// FIX: MOCK_RISK_FORECAST is in osint.seed which was not exported by constants/index.ts
 import { MOCK_DARKWEB, MOCK_META, MOCK_TRAFFIC_FLOWS, MOCK_RISK_FORECAST } from '../../constants/index';
 import { AIConfig, AppConfig, ScoringConfig, ThemeConfig } from '../../types';
 

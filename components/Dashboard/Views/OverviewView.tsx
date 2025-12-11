@@ -7,6 +7,8 @@ import { CardSkeleton } from '../../Shared/Skeleton';
 import { RiskForecast } from '../RiskForecast';
 import { IntegrationMatrix } from '../IntegrationMatrix';
 import { OverviewKpiGrid } from './OverviewKpiGrid';
+import { useNavigate } from '../../../hooks/useNavigate';
+import AudioPlayer from '../../Shared/AudioPlayer';
 
 // Lazy load heavy chart components
 const ThreatChart = React.lazy(() => import('../ThreatChart'));
@@ -27,9 +29,7 @@ export const OverviewView: React.FC<OverviewProps> = ({
   briefing, threats, cases, reports, defcon, trend, loading 
 }) => {
   
-  const handleNavigate = (view: View) => {
-    window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view } }));
-  };
+  const navigate = useNavigate();
 
   const getDefconColor = (level: number) => {
       if (level === 1) return 'red';
@@ -50,7 +50,7 @@ export const OverviewView: React.FC<OverviewProps> = ({
           cases={cases}
           defcon={defcon}
           reports={reports}
-          handleNavigate={handleNavigate}
+          handleNavigate={navigate}
           getDefconColor={getDefconColor}
       />
 
@@ -60,7 +60,11 @@ export const OverviewView: React.FC<OverviewProps> = ({
           message={briefing}
           type="info"
           className="border-l-4 border-l-cyan-500 bg-slate-900/50 backdrop-blur-sm"
-      />
+      >
+        <div className="mt-4">
+          <AudioPlayer text={briefing} />
+        </div>
+      </AlertBanner>
 
       {/* Integration Matrix */}
       <IntegrationMatrix />

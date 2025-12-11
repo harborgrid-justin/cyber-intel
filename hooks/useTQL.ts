@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Tokenizer } from '../services/tql/Tokenizer';
 import { Parser } from '../services/tql/Parser';
 import { Interpreter } from '../services/tql/Interpreter';
@@ -32,7 +32,7 @@ export function useTQL<T>(data: T[], rawQuery: string) {
       return data.filter(item => interpreter.evaluate(ast, item));
     } catch (e: any) {
       setError(e.message);
-      return data; // Return all or empty on error? Usually all for better UX while typing
+      return []; // Return empty on error for clearer feedback
     }
   }, [data, query]);
 

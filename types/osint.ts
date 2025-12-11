@@ -11,9 +11,9 @@ export interface OsintDomain {
     created: string;
     expires: string;
     dns: string;
-    status: string;
+    status: 'Active' | 'Expired';
     subdomains: string[];
-    ssl: string;
+    ssl: 'Valid' | 'Invalid' | 'None';
 }
 
 export interface OsintBreach {
@@ -56,7 +56,7 @@ export interface OsintDarkWebItem {
     title: string;
     date: string;
     author: string;
-    status: string;
+    status: 'Verified' | 'Unverified';
     price: string;
     trend?: 'UP' | 'DOWN' | 'STABLE';
     severity?: 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -85,11 +85,12 @@ export interface VIPProfile {
 
 export type SearchResultType = 'THREAT' | 'CASE' | 'ACTOR' | 'VENDOR' | 'REPORT';
 
-export interface GlobalSearchResult {
-  type: SearchResultType;
-  val: Threat | Case | ThreatActor | Vendor | IncidentReport;
-  score?: number;
-}
+export type GlobalSearchResult = 
+    | { type: 'THREAT', val: Threat }
+    | { type: 'CASE', val: Case }
+    | { type: 'ACTOR', val: ThreatActor }
+    | { type: 'VENDOR', val: Vendor }
+    | { type: 'REPORT', val: IncidentReport };
 
 export interface DomainAnalysis {
     dnsSecurity: { score: number; hasSpf: boolean; hasDmarc: boolean; riskLevel: string; };

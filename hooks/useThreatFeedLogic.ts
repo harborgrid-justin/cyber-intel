@@ -5,10 +5,10 @@ import { useDataStore } from './useDataStore';
 import { useTQL } from './useTQL';
 import { Threat, View } from '../types';
 
-export const useThreatFeedLogic = () => {
+export const useThreatFeedLogic = (initialQuery?: string) => {
   const modules = useMemo(() => threatData.getModulesForView(View.FEED), []);
   const [activeModule, setActiveModule] = useState(modules[0]);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery || '');
   
   // Safe subscription via hardened BaseStore.getAll() implicitly through DataLayer getter
   const allThreats = useDataStore(() => threatData.getThreats());
@@ -18,8 +18,12 @@ export const useThreatFeedLogic = () => {
 
   const graphThreats = useMemo(() => filteredThreats.slice(0, 15), [filteredThreats]);
 
-  // Logic: Auto-fill query based on module selection
+  // Logic: Auto-fill query based on module selection, but respect initial query
   useEffect(() => {
+    if (initialQuery) {
+        setQuery(initialQuery);
+        return;
+    }
      switch(activeModule) {
          case 'APTs': setQuery('threatActor:APT OR threatActor:Bear'); break;
          case 'Malware': setQuery('type:Malware OR type:"File Hash"'); break;
@@ -29,7 +33,7 @@ export const useThreatFeedLogic = () => {
          case 'Manage IoCs': setQuery(''); break;
          default: setQuery(''); break;
      }
-  }, [activeModule]);
+  }, [activeModule, initialQuery]);
 
   return {
     modules,

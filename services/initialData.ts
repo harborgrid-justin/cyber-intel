@@ -1,7 +1,9 @@
 
+import { MOCK_THREATS, MOCK_CASES, MOCK_ACTORS, MOCK_CAMPAIGNS } from '../constants/seeds/intelligence.seed';
+import { INITIAL_ASSETS, INITIAL_FEEDS, INITIAL_VENDORS, INITIAL_VULNERABILITIES, INITIAL_USERS, MOCK_INTEGRATIONS, MOCK_PATCH_STATUS, MOCK_SCANNERS, MOCK_NIST_CONTROLS, MOCK_API_KEYS } from '../constants/seeds/infrastructure.seed';
+import { MOCK_PLAYBOOKS, MOCK_AUDIT_LOGS, MOCK_INCIDENT_REPORTS, MOCK_CHAIN, MOCK_MALWARE, MOCK_LAB_JOBS, MOCK_DEVICES, MOCK_PCAPS, MOCK_VENDOR_FEEDS, MOCK_ENRICHMENT, MOCK_PARSERS, MOCK_NORMALIZATION, MOCK_POLICIES, MOCK_HONEYTOKENS, MOCK_TRAFFIC_FLOWS, MOCK_DARKWEB, MOCK_META } from '../constants/seeds/operations.seed';
+import { MOCK_TACTICS, MOCK_TECHNIQUES, MOCK_SUB_TECHNIQUES, MOCK_GROUPS, MOCK_SOFTWARE, MOCK_MITIGATIONS, MOCK_DOMAIN, MOCK_BREACH, MOCK_GEO, MOCK_SOCIAL, MOCK_RISK_FORECAST } from '../constants/seeds/osint.seed';
 
-import { MOCK_THREATS, MOCK_CASES, MOCK_ACTORS, MOCK_CAMPAIGNS, MOCK_FEEDS, MOCK_AUDIT_LOGS, MOCK_VULNERABILITIES, SYSTEM_NODES, MOCK_INCIDENT_REPORTS, MOCK_USERS, MOCK_VENDORS, MOCK_PLAYBOOKS, MOCK_CHAIN, MOCK_MALWARE, MOCK_LAB_JOBS, MOCK_DEVICES, MOCK_PCAPS, MOCK_VENDOR_FEEDS, MOCK_SCANNERS, MOCK_TACTICS, MOCK_TECHNIQUES, MOCK_SUB_TECHNIQUES, MOCK_GROUPS, MOCK_SOFTWARE, MOCK_MITIGATIONS, MOCK_DOMAIN, MOCK_BREACH, MOCK_GEO, MOCK_SOCIAL, MOCK_INTEGRATIONS, MOCK_PATCH_STATUS, MOCK_API_KEYS, MOCK_ENRICHMENT, MOCK_PARSERS, MOCK_NORMALIZATION, MOCK_POLICIES, MOCK_HONEYTOKENS, MOCK_RISK_FORECAST, MOCK_NIST_CONTROLS, MOCK_DARKWEB, MOCK_META, MOCK_TRAFFIC_FLOWS } from '../constants/index';
-// FIX: '"../constants/index"' has no exported member named 'DEFAULT_THEME_CONFIG'. It has been added to the constants file.
 import { DEFAULT_APP_CONFIG, MOCK_AI_CONFIG, MOCK_SCORING_CONFIG, DEFAULT_THEME_CONFIG, MOCK_NAVIGATION_CONFIG, MOCK_MODULES_CONFIG, MOCK_PERMISSIONS, MOCK_ROLES } from '../constants/index';
 import { Channel, TeamMessage } from '../types';
 
@@ -10,13 +12,13 @@ export class InitialDataFactory {
   static getCases() { return MOCK_CASES; }
   static getActors() { return MOCK_ACTORS; }
   static getCampaigns() { return MOCK_CAMPAIGNS; }
-  static getFeeds() { return MOCK_FEEDS; }
+  static getFeeds() { return INITIAL_FEEDS; }
   static getLogs() { return MOCK_AUDIT_LOGS; }
-  static getVulns() { return MOCK_VULNERABILITIES; }
-  static getNodes() { return SYSTEM_NODES; }
+  static getVulns() { return INITIAL_VULNERABILITIES; }
+  static getNodes() { return INITIAL_ASSETS; }
   static getReports() { return MOCK_INCIDENT_REPORTS; }
-  static getUsers() { return MOCK_USERS; }
-  static getVendors() { return MOCK_VENDORS; }
+  static getUsers() { return INITIAL_USERS; }
+  static getVendors() { return INITIAL_VENDORS; }
   static getPlaybooks() { return MOCK_PLAYBOOKS; }
   static getChain() { return MOCK_CHAIN; }
   static getMalware() { return MOCK_MALWARE; }
@@ -27,14 +29,14 @@ export class InitialDataFactory {
   static getScanners() { return MOCK_SCANNERS; }
   
   static getMitreData() { return { tactics: MOCK_TACTICS, techniques: MOCK_TECHNIQUES, subTechniques: MOCK_SUB_TECHNIQUES, groups: MOCK_GROUPS, software: MOCK_SOFTWARE, mitigations: MOCK_MITIGATIONS }; }
-  static getOsintData() { return { domains: MOCK_DOMAIN, breaches: MOCK_BREACH, geo: MOCK_GEO, social: MOCK_SOCIAL }; }
+  static getOsintData() { return { domains: MOCK_DOMAIN, breaches: MOCK_BREACH, geo: MOCK_GEO, social: MOCK_SOCIAL, darkWeb: MOCK_DARKWEB, meta: MOCK_META }; }
   static getConfigData() {
     return {
       integrations: MOCK_INTEGRATIONS, patchStatus: MOCK_PATCH_STATUS, apiKeys: MOCK_API_KEYS, enrichment: MOCK_ENRICHMENT,
       parsers: MOCK_PARSERS, normalization: MOCK_NORMALIZATION, policies: MOCK_POLICIES, honeytokens: MOCK_HONEYTOKENS,
       riskForecast: MOCK_RISK_FORECAST, nistControls: MOCK_NIST_CONTROLS, appConfig: DEFAULT_APP_CONFIG, aiConfig: MOCK_AI_CONFIG,
       scoringConfig: MOCK_SCORING_CONFIG, navigationConfig: MOCK_NAVIGATION_CONFIG, modulesConfig: MOCK_MODULES_CONFIG,
-      themeConfig: DEFAULT_THEME_CONFIG, permissions: MOCK_PERMISSIONS, roles: MOCK_ROLES
+      themeConfig: DEFAULT_THEME_CONFIG, permissions: MOCK_PERMISSIONS, roles: MOCK_ROLES, trafficFlows: MOCK_TRAFFIC_FLOWS
     };
   }
   static getMessagingData() {

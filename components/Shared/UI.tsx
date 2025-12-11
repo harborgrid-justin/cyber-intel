@@ -16,6 +16,9 @@ export * from './ui/EmptyState';
 export * from './ui/DataField';
 export * from './ui/Switch';
 export * from './ui/TagList';
+// FIX: Added missing AlertBanner export
+export * from './ui/AlertBanner';
+
 
 // Keep any remaining small components that weren't extracted
 export const Grid: React.FC<{ children: React.ReactNode; cols?: 1 | 2 | 3 | 4 | 5 | 6; className?: string }> = ({ children, cols = 3, className = '' }) => {
@@ -28,4 +31,3 @@ export const Timestamp: React.FC<{ date: string | Date; format?: 'full' | 'time'
     const str = format === 'time' ? d.toLocaleTimeString() : format === 'date' ? d.toLocaleDateString() : d.toLocaleString();
     return <span className={`font-mono text-[10px] text-slate-500 whitespace-nowrap ${className}`}>{str}</span>;
 };
-    

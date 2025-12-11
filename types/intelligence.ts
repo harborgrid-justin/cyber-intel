@@ -60,7 +60,7 @@ export interface ThreatActor {
     aliases: string[];
     origin: string;
     description: string;
-    sophistication: string;
+    sophistication: 'Novice' | 'Intermediate' | 'Advanced' | 'Expert';
     targets: string[];
     campaigns: string[];
     ttps: TTP[];
@@ -77,7 +77,7 @@ export interface Campaign {
     id: string;
     name: string;
     description: string;
-    status: string;
+    status: 'ACTIVE' | 'DORMANT' | 'ARCHIVED';
     objective: string;
     actors: string[];
     firstSeen: string;

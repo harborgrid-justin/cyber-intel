@@ -1,3 +1,4 @@
+
 import React from 'react';
 import FeedItem from './FeedItem';
 import IoCManagement from './IoCManagement';
@@ -8,7 +9,11 @@ import { AdvancedSearch } from './AdvancedSearch';
 import { useThreatFeedLogic } from '../../hooks/useThreatFeedLogic';
 import { WidgetErrorBoundary } from '../Shared/WidgetErrorBoundary';
 
-const ThreatFeed: React.FC = () => {
+interface ThreatFeedProps {
+  initialQuery?: string;
+}
+
+const ThreatFeed: React.FC<ThreatFeedProps> = ({ initialQuery }) => {
   const {
     modules,
     activeModule,
@@ -18,7 +23,7 @@ const ThreatFeed: React.FC = () => {
     filteredThreats,
     graphThreats,
     searchError
-  } = useThreatFeedLogic();
+  } = useThreatFeedLogic(initialQuery);
 
   return (
     <StandardPage 

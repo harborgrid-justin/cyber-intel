@@ -8,6 +8,7 @@ import { Icons } from './components/Shared/Icons';
 import { useThemeEngine } from './hooks/useThemeEngine';
 import { bus, EVENTS } from './services/eventBus';
 import { StandardPage } from './components/Shared/Layouts';
+import { tabSync } from './services/sync/CrossTabSync';
 
 // Lazy Load Modules (Code Splitting)
 const Dashboard = lazy(() => import('./components/Dashboard/Dashboard'));
@@ -44,7 +45,7 @@ const LoadingFallback = () => (
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
-  const [viewParams, setViewParams] = useState<{ id?: string }>({});
+  const [viewParams, setViewParams] = useState<{ id?: string, query?: string }>({});
   const [isOffline, setIsOffline] = useState(false);
   
   useThemeEngine();
@@ -56,20 +57,25 @@ const App: React.FC = () => {
         const preloadFeed = import('./components/Feed/ThreatFeed');
     }
 
-    const handleNavigation = (e: Event) => {
-      const { view, ...params } = (e as CustomEvent).detail;
+    const handleNavigation = (detail: { view: View, [key: string]: any }) => {
+      const { view, ...params } = detail;
       setCurrentView(view);
       setViewParams(params);
       threatData.syncManager.prefetch(view);
     };
     const handleAdapterChange = () => setIsOffline(threatData.getAdapterInfo().type !== 'REMOTE');
+    const handleLogout = () => window.location.reload();
     
-    handleAdapterChange();
-    window.addEventListener('app-navigation', handleNavigation);
+    bus.on(EVENTS.NAVIGATE, handleNavigation);
+    bus.on(EVENTS.LOGOUT, handleLogout);
     window.addEventListener('db-adapter-changed', handleAdapterChange);
+    tabSync.onMessage((msg) => { if (msg.type === 'LOGOUT') handleLogout(); });
+
+    handleAdapterChange();
     
     return () => {
-      window.removeEventListener('app-navigation', handleNavigation);
+      bus.off(EVENTS.NAVIGATE, handleNavigation);
+      bus.off(EVENTS.LOGOUT, handleLogout);
       window.removeEventListener('db-adapter-changed', handleAdapterChange);
     };
   }, [currentView]);
@@ -77,7 +83,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentView) {
       case View.DASHBOARD: return <Dashboard />;
-      case View.FEED: return <ThreatFeed />;
+      case View.FEED: return <ThreatFeed initialQuery={viewParams.query} />;
       case View.ANALYSIS: return <IntelAssistant />;
       case View.INGESTION: return <IngestionManager />;
       case View.DETECTION: return <DetectionScanner />;
@@ -99,7 +105,7 @@ const App: React.FC = () => {
       case View.MESSAGING: return <MessagingPlatform />;
       case View.SETTINGS: return <SettingsMain />;
       case View.THEME: return (
-        <StandardPage title="Design System & Theme Engine" subtitle="Live CSS Variable Customization" modules={[]} activeModule="" onModuleChange={() => {}}>
+        <StandardPage title="Design System & Theme Engine" subtitle="Live CSS Variable Customization">
           <ThemeEditor />
         </StandardPage>
       );
@@ -109,7 +115,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <Layout currentView={currentView} onNavigate={setCurrentView}>
+      <Layout currentView={currentView} onNavigate={(view) => bus.emit(EVENTS.NAVIGATE, { view })}>
         {isOffline && <div className="bg-[var(--colors-warningDim)] border-b border-[var(--colors-warning)]/50 text-[var(--colors-warning)] text-[10px] py-1 px-4 text-center font-mono font-bold">⚠ OFFLINE MODE: USING LOCAL CACHE & SIMULATION LOGIC.</div>}
         <Suspense fallback={<LoadingFallback />}>{renderContent()}</Suspense>
       </Layout>

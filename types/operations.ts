@@ -24,7 +24,7 @@ export interface TimelineEvent {
     id: string;
     date: string;
     title: string;
-    type: string;
+    type: 'ALERT' | 'ACTION' | 'NOTE' | 'SYSTEM' | 'START' | 'END' | 'CASE' | 'REPORT';
     description?: string;
 }
 
@@ -55,7 +55,7 @@ export interface Playbook {
     description: string;
     tasks: string[];
     triggerLabel: string;
-    riskLevel: string;
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
     usageCount?: number;
     skipCount?: number;
     status?: string;
@@ -66,7 +66,7 @@ export interface ChainEvent {
     date: string;
     artifactId: string;
     artifactName: string;
-    action: string;
+    action: 'CHECK_IN' | 'CHECK_OUT' | 'TRANSFER' | 'ANALYZE' | 'ARCHIVE';
     user: string;
     notes: string;
 }
@@ -76,7 +76,7 @@ export interface Malware {
     name: string;
     family: string;
     hash: string;
-    verdict: string;
+    verdict: 'MALICIOUS' | 'UNKNOWN' | 'SAFE';
     score: number;
     associatedActor?: string;
     c2Protocol?: string;

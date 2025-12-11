@@ -5,9 +5,14 @@ export class Interpreter {
   evaluate(node: ASTNode, data: any): boolean {
     switch (node.type) {
       case 'BINARY_OP':
-        const left = this.evaluate(node.left, data);
-        const right = this.evaluate(node.right, data);
-        return node.operator === 'AND' ? left && right : left || right;
+        // Short-circuit evaluation for performance
+        if (node.operator === 'OR') {
+            return this.evaluate(node.left, data) || this.evaluate(node.right, data);
+        }
+        if (node.operator === 'AND') {
+            return this.evaluate(node.left, data) && this.evaluate(node.right, data);
+        }
+        return false;
 
       case 'GROUP':
         return this.evaluate(node.expression, data);
@@ -21,7 +26,6 @@ export class Interpreter {
   }
 
   private compare(data: any, field: string, op: string, val: string | number): boolean {
-    // Handle wildcard global search
     if (field === '*') {
         const str = JSON.stringify(data).toLowerCase();
         return str.includes(String(val).toLowerCase());
@@ -29,23 +33,35 @@ export class Interpreter {
 
     const dataVal = this.getFieldValue(data, field);
     
-    // Normalize types
-    const v1 = (typeof dataVal === 'string') ? dataVal.toLowerCase() : dataVal;
-    const v2 = (typeof val === 'string') ? val.toLowerCase() : val;
+    // Type Coercion for comparison
+    const numVal = Number(val);
+    const numDataVal = Number(dataVal);
+    const isNumCompare = !isNaN(numVal) && !isNaN(numDataVal);
+
+    if (isNumCompare) {
+        switch (op) {
+            case '>': return numDataVal > numVal;
+            case '<': return numDataVal < numVal;
+            case '>=': return numDataVal >= numVal;
+            case '<=': return numDataVal <= numVal;
+            case '=':
+            case ':': return numDataVal === numVal;
+            default: return false;
+        }
+    }
+
+    // String comparison (case-insensitive)
+    const strDataVal = String(dataVal).toLowerCase();
+    const strVal = String(val).toLowerCase();
 
     switch (op) {
       case ':': 
-      case '=': return String(v1) === String(v2) || String(v1).includes(String(v2));
-      case '>': return v1 > v2;
-      case '<': return v1 < v2;
-      case '>=': return v1 >= v2;
-      case '<=': return v1 <= v2;
-      default: return false;
+      case '=': return strDataVal.includes(strVal);
+      default: return false; // Non-numeric >, < on strings not supported
     }
   }
 
   private getFieldValue(data: any, field: string): any {
-    // Handle nested dot notation if needed, simplistic for now
-    return data[field] || data[field.toLowerCase()] || 0;
+    return data[field] ?? data[field.toLowerCase()] ?? data[field.toUpperCase()] ?? undefined;
   }
 }

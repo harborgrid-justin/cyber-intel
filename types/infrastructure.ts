@@ -9,7 +9,7 @@ export interface SystemUser {
     roleId: string;
     role: string;
     clearance: string;
-    status: string;
+    status: 'Online' | 'Offline' | 'Busy' | 'LOCKED' | 'FATIGUED';
     isVIP?: boolean;
     email?: string;
     lastLogin?: string;
@@ -32,7 +32,7 @@ export interface SystemNode {
     criticalProcess?: string;
     dependencies?: string[];
     ip_address?: string;
-    criticality?: string;
+    criticality?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
     owner?: string;
     configHash?: string;
     iamRoles?: string[];
@@ -59,8 +59,8 @@ export interface Vendor {
     name: string;
     product: string;
     riskScore: number;
-    tier: string;
-    category: string;
+    tier: 'Strategic' | 'Tactical' | 'Commodity';
+    category: 'Software' | 'Hardware' | 'Cloud' | 'Security';
     hqLocation: string;
     website?: string;
     activeVulns: number;
@@ -75,7 +75,7 @@ export interface Vulnerability {
     id: string;
     score: number;
     name: string;
-    status: string;
+    status: 'NEW' | 'UNPATCHED' | 'PATCHED' | 'MITIGATED';
     vendor: string;
     vectors: string;
     zeroDay: boolean;
@@ -89,7 +89,7 @@ export interface IoCFeed {
     id: string;
     name: string;
     url: string;
-    type: string;
+    type: 'STIX/TAXII' | 'JSON_FEED' | 'SIEM_CONNECTOR' | 'VENDOR_ADVISORY' | 'VULN_SCANNER';
     status: 'ACTIVE' | 'DISABLED' | 'ERROR' | 'CIRCUIT_BROKEN';
     interval: number;
     lastSync: string;
@@ -106,7 +106,7 @@ export interface IngestionJob {
   timestamp: string;
 }
 
-export interface Integration { id: string; name: string; status: string; type: string; desc?: string; }
+export interface Integration { id: string; name: string; status: 'Connected' | 'Error' | 'PENDING'; type: string; desc?: string; }
 
 export interface ApiKey {
   id: string;
@@ -132,7 +132,7 @@ export interface NistControl {
   id: string;
   family: string;
   name: string;
-  status: string;
+  status: 'IMPLEMENTED' | 'PLANNED' | 'NOT_APPLICABLE' | 'FAILED';
   lastAudit: string;
   description: string;
 }

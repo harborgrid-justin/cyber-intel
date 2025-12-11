@@ -13,10 +13,14 @@ interface State {
 }
 
 export class WidgetErrorBoundary extends Component<Props, State> {
-  public state: State = { 
-    hasError: false, 
-    error: null 
-  };
+  // FIX: Initialize state in the constructor for broader compatibility.
+  constructor(props: Props) {
+    super(props);
+    this.state = { 
+      hasError: false, 
+      error: null 
+    };
+  }
 
   public static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };

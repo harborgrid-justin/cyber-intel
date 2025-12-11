@@ -13,3 +13,5 @@ export * from './EmptyState';
 export * from './DataField';
 export * from './Switch';
 export * from './TagList';
+export * from './MetricValue';
+export * from './AlertBanner';

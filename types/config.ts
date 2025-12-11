@@ -47,28 +47,17 @@ export interface ScoringConfig {
 
 export interface ThemeConfig {
   id: 'THEME_CONFIG';
-  // Specific visual overrides mirroring the TOKENS structure
   overrides: Record<string, any>;
-  // Raw CSS injection for granular control
   customCss: string;
-  // Specific properties kept for backward compatibility or direct access by graphs
-  charts?: { primary: string; grid: string; text: string; tooltipBg: string; tooltipBorder: string; tooltipText: string; axisColor?: string; gridOpacity?: string };
-  graph?: {
-    actorNode: string;
-    threatCritical: string;
-    threatHigh: string;
-    threatMedium: string;
-    link: string;
-    text: string;
-    particleSize?: string;
-    linkOpacity?: string;
-  };
+  charts?: Record<string, any>;
+  graph?: Record<string, any>;
 }
 
 export interface Permission {
   id: string;
   description: string;
   resource: string;
+  action: string;
 }
 
 export interface Role {
