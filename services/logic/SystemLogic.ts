@@ -15,7 +15,7 @@ export class SystemLogic {
 
   static async checkNistCompliance(controls: NistControl[]): Promise<{ score: number, criticalGaps: string[] }> {
       if (threatData.isOffline) return { score: 0, criticalGaps: [] };
-      try { return await apiClient.post('/analysis/compliance/nist', { controls }); } 
+      try { return await apiClient.post('/analysis/compliance/nist', { controls }, { silent: true }); } 
       catch { return { score: 0, criticalGaps: [] }; }
   }
 
@@ -23,7 +23,7 @@ export class SystemLogic {
       if (threatData.isOffline) {
           let risk = 0; if (node.type === 'Database') risk += 50; if (node.dataSensitivity === 'RESTRICTED') risk += 40; return { riskScore: risk, factors: ['Offline Estimate'] };
       }
-      try { return await apiClient.get(`/analysis/assets/${node.id}/risk`); } 
+      try { return await apiClient.get(`/analysis/assets/${node.id}/risk`, { silent: true }); } 
       catch { let risk = 0; if (node.type === 'Database') risk += 50; if (node.dataSensitivity === 'RESTRICTED') risk += 40; return { riskScore: risk, factors: ['Offline Estimate'] }; }
   }
 
@@ -31,19 +31,19 @@ export class SystemLogic {
       if (threatData.isOffline) {
           if (actor.targets.includes('Executive')) { return { ...actor, sophistication: 'Advanced' as const }; } return actor;
       }
-      try { const res = await apiClient.post<any>(`/analysis/actors/${actor.id}/escalate-vip`, {}); return res.actor; } 
+      try { const res = await apiClient.post<any>(`/analysis/actors/${actor.id}/escalate-vip`, {}, { silent: true }); return res.actor; } 
       catch { if (actor.targets.includes('Executive')) { return { ...actor, sophistication: 'Advanced' as const }; } return actor; }
   }
 
   static async detectImpossibleTravel(): Promise<AuditLog[]> {
       if (threatData.isOffline) return [];
-      try { return await apiClient.get<AuditLog[]>('/analysis/compliance/travel'); } 
+      try { return await apiClient.get<AuditLog[]>('/analysis/compliance/travel', { silent: true }); } 
       catch { return []; }
   }
 
   static async checkRetentionPolicy(): Promise<void> { 
       if (threatData.isOffline) return;
-      try { await apiClient.post('/analysis/lifecycle/system/retention', {}); } 
+      try { await apiClient.post('/analysis/lifecycle/system/retention', {}, { silent: true }); } 
       catch { }
   }
 
@@ -74,5 +74,8 @@ export class SystemLogic {
   static prioritizeNegativeSentiment(social: OsintSocial): OsintSocial { return social; }
   static enforceZeroTrustPatching(device: Device): Device { return device; }
   static tripFeedCircuitBreaker(feed: IoCFeed): IoCFeed { return feed; }
-  static async monitorAnalystFatigue(): Promise<void> {}
+  static async monitorAnalystFatigue(): Promise<void> {
+    if (threatData.isOffline) return;
+    try { await apiClient.get('/analysis/lifecycle/system/fatigue', { silent: true }); } catch {}
+  }
 }

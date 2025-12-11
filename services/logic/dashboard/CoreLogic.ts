@@ -21,7 +21,7 @@ export class OverviewLogic {
         return { level: 4, label: 'GUARDED (OFFLINE)', color: 'text-green-500' };
     }
     try {
-      return await apiClient.get<DefconStatus>('/analysis/dashboard/defcon');
+      return await apiClient.get<DefconStatus>('/analysis/dashboard/defcon', { silent: true });
     } catch {
       return { level: 4, label: 'GUARDED (OFFLINE)', color: 'text-green-500' };
     }
@@ -32,7 +32,7 @@ export class OverviewLogic {
         return { count: 0, delta: 0, trend: 'DOWN' };
     }
     try {
-      return await apiClient.get<TrendMetrics>('/analysis/dashboard/trends');
+      return await apiClient.get<TrendMetrics>('/analysis/dashboard/trends', { silent: true });
     } catch {
       // Offline fallback
       return { count: 0, delta: 0, trend: 'DOWN' };
@@ -63,7 +63,7 @@ export class GeoLogic {
   static async getRegionalRisk(): Promise<[string, number][]> {
     if (threatData.isOffline) return [];
     try {
-      return await apiClient.get<[string, number][]>('/analysis/dashboard/regional-risk');
+      return await apiClient.get<[string, number][]>('/analysis/dashboard/regional-risk', { silent: true });
     } catch {
       return [];
     }

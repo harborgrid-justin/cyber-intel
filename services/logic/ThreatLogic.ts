@@ -25,7 +25,7 @@ export class ThreatLogic {
       if (!possiblyExists) threatBloom.add(key);
 
       try {
-        return await apiClient.post<DeduplicationResult>('/analysis/lifecycle/threats/deduplicate', { threat: newThreat });
+        return await apiClient.post<DeduplicationResult>('/analysis/lifecycle/threats/deduplicate', { threat: newThreat }, { silent: true });
       } catch {
         // Fallback same as offline logic
         const dup = existingThreats.find(t => t.indicator === newThreat.indicator && t.type === newThreat.type);
@@ -49,14 +49,14 @@ export class ThreatLogic {
 
   static async calculateAttribution(input: string): Promise<AttributionResult[]> {
     if (threatData.isOffline) return [];
-    try { return await apiClient.post<AttributionResult[]>('/analysis/attribution', { input }); } 
-    catch (e) { console.error("Attribution API failed", e); return []; }
+    try { return await apiClient.post<AttributionResult[]>('/analysis/attribution', { input }, { silent: true }); } 
+    catch (e) { return []; }
   }
 
   static async decayConfidence(threats: Threat[]): Promise<void> { 
       if (threatData.isOffline) return;
-      try { await apiClient.post('/analysis/lifecycle/threats/decay', {}); } 
-      catch { console.warn("Backend decay confidence unavailable."); }
+      try { await apiClient.post('/analysis/lifecycle/threats/decay', {}, { silent: true }); } 
+      catch { /* Silent fail for background tasks */ }
   }
 
   static enforceTLP(threat: Threat, userClearance: string): Threat { 
@@ -68,7 +68,7 @@ export class ThreatLogic {
 
   static async checkSubnetPattern(threats: Threat[]): Promise<string | null> { 
       if (threatData.isOffline) return null;
-      try { const res = await apiClient.get<{subnet: string | null}>('/analysis/threats/patterns'); return res.subnet; } 
+      try { const res = await apiClient.get<{subnet: string | null}>('/analysis/threats/patterns', { silent: true }); return res.subnet; } 
       catch { return null; }
   }
 
@@ -77,13 +77,13 @@ export class ThreatLogic {
       const recentHigh = threats.filter(t => t.status === IncidentStatus.NEW && t.score > 80).length;
       if (threatData.isOffline) return recentHigh > 5;
       
-      try { const res = await apiClient.get<{ransomwareVelocity: boolean}>('/analysis/threats/patterns'); return res.ransomwareVelocity; } 
+      try { const res = await apiClient.get<{ransomwareVelocity: boolean}>('/analysis/threats/patterns', { silent: true }); return res.ransomwareVelocity; } 
       catch { return recentHigh > 5; }
   }
 
   static async applyGeoBlocking(threat: Threat): Promise<void> { 
       if (threatData.isOffline) return;
-      try { await apiClient.post('/analysis/lifecycle/threats/geoblock', {}); } 
+      try { await apiClient.post('/analysis/lifecycle/threats/geoblock', {}, { silent: true }); } 
       catch { }
   }
 
