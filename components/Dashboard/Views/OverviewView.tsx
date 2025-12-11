@@ -1,10 +1,7 @@
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { AlertBanner } from '../../Shared/UI';
-import { threatData } from '../../../services/dataLayer';
-import { useDataStore } from '../../../hooks/useDataStore';
-import { OverviewLogic } from '../../../services/logic/dashboard/CoreLogic';
-import { View } from '../../../types';
+import { View, Threat, Case, IncidentReport } from '../../../types';
 import AlertTicker from '../../Shared/AlertTicker';
 import { CardSkeleton } from '../../Shared/Skeleton';
 import { RiskForecast } from '../RiskForecast';
@@ -16,25 +13,20 @@ const ThreatChart = React.lazy(() => import('../ThreatChart'));
 const GeoMap = React.lazy(() => import('../GeoMap'));
 const CategoryRadarChart = React.lazy(() => import('../CategoryRadarChart'));
 
-interface OverviewProps { briefing: string; }
+interface OverviewProps { 
+  briefing: string;
+  threats: Threat[];
+  cases: Case[];
+  reports: IncidentReport[];
+  defcon: { level: number; label: string; color: string };
+  trend: { count: number; delta: number; trend: 'UP' | 'DOWN' };
+  loading: boolean;
+}
 
-export const OverviewView: React.FC<OverviewProps> = ({ briefing }) => {
-  const threats = useDataStore(() => threatData.getThreats());
-  const cases = useDataStore(() => threatData.getCases());
-  const reports = useDataStore(() => threatData.getReports());
+export const OverviewView: React.FC<OverviewProps> = ({ 
+  briefing, threats, cases, reports, defcon, trend, loading 
+}) => {
   
-  const [defcon, setDefcon] = useState({ level: 4, label: 'CALCULATING...', color: 'text-slate-500' });
-  const [trend, setTrend] = useState({ count: 0, delta: 0, trend: 'DOWN' as 'UP' | 'DOWN' });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setTimeout(() => {
-      OverviewLogic.calculateDefconLevel().then(setDefcon);
-      OverviewLogic.getTrendMetrics().then(setTrend);
-      setLoading(false);
-    }, 800);
-  }, [threats]);
-
   const handleNavigate = (view: View) => {
     window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view } }));
   };

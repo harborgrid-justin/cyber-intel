@@ -4,25 +4,48 @@ import { generateDailyBriefing } from '../../services/geminiService';
 import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../useDataStore';
 import { View } from '../../types';
+import { OverviewLogic } from '../../services/logic/dashboard/CoreLogic';
+import { useIsMounted } from '../useIsMounted';
 
 export const useDashboardLogic = () => {
   const [activeModule, setActiveModule] = useState<string>('Overview');
   const [isPending, startTransition] = useTransition();
   const [briefing, setBriefing] = useState<string>('DECRYPTING INTELLIGENCE STREAM...');
   
-  // Selector-based subscriptions (Principle 2 & 4)
+  // New State Hoisted from OverviewView
+  const [defcon, setDefcon] = useState({ level: 4, label: 'CALCULATING...', color: 'text-slate-500' });
+  const [trend, setTrend] = useState({ count: 0, delta: 0, trend: 'DOWN' as 'UP' | 'DOWN' });
+  const [metricsLoading, setMetricsLoading] = useState(true);
+
+  // Selector-based subscriptions
   const threats = useDataStore(() => threatData.getThreats());
+  const cases = useDataStore(() => threatData.getCases());
+  const reports = useDataStore(() => threatData.getReports());
   const config = useDataStore(() => threatData.getAppConfig());
   const modules = useMemo(() => threatData.getModulesForView(View.DASHBOARD), []);
+  
+  const isMounted = useIsMounted();
 
-  // Strict Effect Management (Principle 9)
+  // Unified Data Fetching Effect for Dashboard Context
   useEffect(() => { 
-    let isMounted = true;
-    generateDailyBriefing().then(text => {
-      if (isMounted) setBriefing(text);
-    });
-    return () => { isMounted = false; };
-  }, []);
+    const loadDashboardData = async () => {
+      // Parallel execution for performance
+      const [briefingText, defconData, trendData] = await Promise.all([
+        generateDailyBriefing(),
+        OverviewLogic.calculateDefconLevel(),
+        OverviewLogic.getTrendMetrics()
+      ]);
+
+      if (isMounted()) {
+        setBriefing(briefingText);
+        setDefcon(defconData);
+        setTrend(trendData);
+        setMetricsLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [threats, isMounted]); // Re-calc when threats change
 
   const handleModuleChange = useCallback((newModule: string) => {
     startTransition(() => {
@@ -43,7 +66,12 @@ export const useDashboardLogic = () => {
     isPending,
     briefing,
     threats,
+    cases,
+    reports,
     config,
-    modules
+    modules,
+    defcon,
+    trend,
+    metricsLoading
   };
 };

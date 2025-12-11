@@ -17,13 +17,31 @@ const Dashboard: React.FC = () => {
     isPending, 
     briefing, 
     threats, 
+    cases,
+    reports,
+    defcon,
+    trend,
+    metricsLoading,
     config, 
     modules 
   } = useDashboardLogic();
 
   const renderContent = () => {
     switch (activeModule) {
-      case 'Overview': return ( <><OverviewView briefing={briefing} /> <PhaseTwoMatrix /></> );
+      case 'Overview': return ( 
+        <>
+          <OverviewView 
+            briefing={briefing} 
+            threats={threats} 
+            cases={cases} 
+            reports={reports}
+            defcon={defcon}
+            trend={trend}
+            loading={metricsLoading}
+          /> 
+          <PhaseTwoMatrix />
+        </> 
+      );
       case 'Global Map': return ( <VisibilityGuard><div className="h-full p-4 min-h-[600px]"><HolographicGlobe threats={threats} /></div></VisibilityGuard> );
       case 'System Health': return <InfraViews.SystemHealth />;
       case 'Network Ops': return <InfraViews.NetworkOps />;
@@ -31,7 +49,20 @@ const Dashboard: React.FC = () => {
       case 'Compliance': return <SecurityViews.Compliance />;
       case 'Insider Threat': return <SecurityViews.InsiderThreat />;
       case 'Dark Web': return <SecurityViews.DarkWeb />;
-      default: return ( <><OverviewView briefing={briefing} /> <PhaseTwoMatrix /></> );
+      default: return ( 
+        <>
+          <OverviewView 
+            briefing={briefing} 
+            threats={threats} 
+            cases={cases} 
+            reports={reports}
+            defcon={defcon}
+            trend={trend}
+            loading={metricsLoading}
+          /> 
+          <PhaseTwoMatrix />
+        </> 
+      );
     }
   };
 
