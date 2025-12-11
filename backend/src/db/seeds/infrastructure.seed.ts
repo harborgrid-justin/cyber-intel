@@ -13,10 +13,14 @@ export const INITIAL_FEEDS = [
 export const INITIAL_VENDORS = [
   { 
     id: 'VEND-01', name: 'SolarWinds', product: 'Orion', tier: 'Tactical', category: 'Software', risk_score: 85, hq_location: 'USA',
-    subcontractors: ['Unknown_Offshore_Dev'], compliance: [{ standard: 'ISO27001', status: 'EXPIRED' }], access: [{ systemId: 'n2', accessLevel: 'READ', accountCount: 1 }], sbom: [{ name: 'log4j', critical: true }]
+    subcontractors: ['Unknown_Offshore_Dev'], compliance: [{ standard: 'ISO27001', status: 'EXPIRED', expiry: '2023-01-01' }], access: [{ systemId: 'n2', accessLevel: 'READ', accountCount: 1, mfaEnabled: true }], sbom: [{ name: 'log4j', version: '2.14.1', critical: true, vulnerabilities: 5, license: 'Apache-2.0' }]
   },
   { 
     id: 'VEND-02', name: 'Microsoft', product: 'Azure', tier: 'Strategic', category: 'Cloud', risk_score: 15, hq_location: 'USA',
-    subcontractors: ['Akamai'], compliance: [{ standard: 'FEDRAMP', status: 'VALID' }], access: [{ systemId: 'n3', accessLevel: 'ADMIN', accountCount: 3 }], sbom: [{ name: 'openssl', critical: false }]
+    subcontractors: ['Akamai', 'Intel'], compliance: [], access: [{ systemId: 'n3', accessLevel: 'ADMIN', accountCount: 5, mfaEnabled: true }], sbom: [{ name: 'openssl', version: '3.0.0', critical: false, vulnerabilities: 0, license: 'Apache-2.0' }]
+  },
+  {
+    id: 'VEND-03', name: 'Kaspersky', product: 'Endpoint Security', tier: 'Commodity', category: 'Security', risk_score: 95, hq_location: 'Russia',
+    subcontractors: [], compliance: [{ standard: 'SOC2', status: 'VALID', expiry: '2025-01-01' }], access: [{ systemId: 'n1', accessLevel: 'WRITE', accountCount: 2, mfaEnabled: false }], sbom: [{ name: 'sqlite', version: '3.38.0', critical: false, vulnerabilities: 0, license: 'Public Domain' }]
   }
 ];

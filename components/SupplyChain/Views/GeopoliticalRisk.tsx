@@ -14,7 +14,6 @@ export const GeopoliticalRisk: React.FC<Props> = ({ vendors }) => {
   useEffect(() => {
     const load = async () => {
         const results: Record<string, any> = {};
-        // Deduplicate countries to minimize API calls
         const countries: string[] = Array.from(new Set(vendors.map(v => v.hqLocation)));
         
         await Promise.all(countries.map(async (c) => {
@@ -27,64 +26,87 @@ export const GeopoliticalRisk: React.FC<Props> = ({ vendors }) => {
 
   const highRiskVendors = vendors.filter(v => (assessments[v.hqLocation]?.score || 0) > 60);
   const safeVendors = vendors.filter(v => (assessments[v.hqLocation]?.score || 0) <= 30);
+  const moderateVendors = vendors.filter(v => {
+      const s = assessments[v.hqLocation]?.score || 0;
+      return s > 30 && s <= 60;
+  });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-        <Card className="p-0 overflow-hidden relative">
-            <CardHeader title="Jurisdictional Heatmap" className="absolute top-0 w-full z-10 bg-transparent border-none" />
-            <div className="w-full h-full bg-slate-950 flex items-center justify-center p-8">
-                {/* Abstract World Map Placeholder */}
-                <svg className="w-full h-full text-slate-800" viewBox="0 0 100 50">
-                    <path d="M20,10 Q30,5 40,12 T60,10 T80,15 T90,30 L85,40 H60 L50,30 L30,35 L20,40 Z" fill="currentColor" opacity="0.5" />
+        <Card className="p-0 overflow-hidden relative border-t-4 border-t-slate-700">
+            <CardHeader title="Jurisdictional Heatmap" className="absolute top-0 w-full z-10 bg-slate-900/80 backdrop-blur-sm border-b border-slate-800" />
+            <div className="w-full h-full bg-[#0b1120] flex items-center justify-center p-8 relative">
+                {/* Grid Overlay */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+                
+                {/* Simplified Map Representation */}
+                <div className="relative w-full aspect-[2/1] border border-slate-800 rounded bg-slate-900/50">
+                    <div className="absolute inset-0 flex items-center justify-center text-[10px] text-slate-700 font-bold uppercase tracking-[1em] pointer-events-none select-none">Global Operations Map</div>
+                    
                     {/* Render dots for vendor locations */}
                     {vendors.map((v, i) => {
                         const score = assessments[v.hqLocation]?.score || 0;
                         const isRisky = score > 60;
-                        // Mock coordinates based on simple hash of location string
-                        const x = (v.hqLocation.length * 7) % 80 + 10; 
-                        const y = (v.hqLocation.length * 3) % 40 + 5;
+                        const color = isRisky ? 'text-red-500' : score > 30 ? 'text-yellow-500' : 'text-green-500';
+                        
+                        // Deterministic Pseudo-random coordinates based on location string hash
+                        const hash = v.hqLocation.split('').reduce((a,b)=>a+b.charCodeAt(0),0);
+                        const x = (hash % 80) + 10; 
+                        const y = ((hash * 13) % 60) + 20;
+
                         return (
-                            <circle key={i} cx={x} cy={y} r="1.5" className={isRisky ? 'text-red-500 animate-pulse' : 'text-green-500'} fill="currentColor" />
+                            <div key={i} className={`absolute group cursor-pointer`} style={{ left: `${x}%`, top: `${y}%` }}>
+                                <div className={`w-3 h-3 ${color} relative flex items-center justify-center`}>
+                                    <div className={`absolute w-full h-full rounded-full bg-current opacity-20 ${isRisky ? 'animate-ping' : ''}`}></div>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
+                                </div>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-900 border border-slate-700 px-2 py-1 rounded text-[9px] whitespace-nowrap z-20 shadow-xl text-white">
+                                    {v.name} ({v.hqLocation})
+                                </div>
+                            </div>
                         );
                     })}
-                </svg>
+                </div>
             </div>
         </Card>
 
-        <div className="flex flex-col gap-6">
-            <Card className="p-0 overflow-hidden flex-1 border-red-900/30">
+        <div className="flex flex-col gap-4 overflow-y-auto custom-scrollbar h-full pb-2">
+            <Card className="p-0 overflow-hidden shrink-0 border-l-4 border-l-red-600 bg-red-900/5">
                 <CardHeader title="High Risk Jurisdictions" />
-                <div className="p-4 space-y-3 overflow-y-auto">
-                    {highRiskVendors.length > 0 ? highRiskVendors.map(v => {
-                        const assessment = assessments[v.hqLocation];
-                        return (
-                            <div key={v.id} className="flex justify-between items-center bg-red-900/10 border border-red-900/30 p-3 rounded">
-                                <div>
-                                    <div className="font-bold text-red-200">{v.name}</div>
-                                    <div className="text-xs text-red-300/70">{v.hqLocation} • {assessment?.label}</div>
-                                </div>
-                                <div className="text-2xl font-bold text-red-500">{assessment?.score}</div>
-                            </div>
-                        );
-                    }) : <div className="text-center text-slate-500 py-4">No high risk vendors detected.</div>}
+                <div className="p-4 space-y-2">
+                    {highRiskVendors.length > 0 ? highRiskVendors.map(v => (
+                        <div key={v.id} className="flex justify-between items-center bg-slate-900/80 border border-slate-800 p-2 rounded">
+                            <div><div className="font-bold text-red-300 text-sm">{v.name}</div><div className="text-[10px] text-slate-500">{v.hqLocation} • {assessments[v.hqLocation]?.label}</div></div>
+                            <div className="text-xl font-bold text-red-500">{assessments[v.hqLocation]?.score}</div>
+                        </div>
+                    )) : <div className="text-center text-slate-500 text-xs py-2">No active high-risk exposure.</div>}
                 </div>
             </Card>
-
-            <Card className="p-0 overflow-hidden flex-1 border-green-900/30">
-                <CardHeader title="Safe Harbor Vendors" />
-                <div className="p-4 space-y-3 overflow-y-auto">
-                    {safeVendors.map(v => {
-                        const assessment = assessments[v.hqLocation];
-                        return (
-                            <div key={v.id} className="flex justify-between items-center bg-green-900/10 border border-green-900/30 p-3 rounded">
-                                <div>
-                                    <div className="font-bold text-green-200">{v.name}</div>
-                                    <div className="text-xs text-green-300/70">{v.hqLocation}</div>
-                                </div>
-                                <div className="text-xl font-bold text-green-500">{assessment?.score}</div>
+            
+            {moderateVendors.length > 0 && (
+                <Card className="p-0 overflow-hidden shrink-0 border-l-4 border-l-yellow-500 bg-yellow-900/5">
+                    <CardHeader title="Moderate Risk" />
+                    <div className="p-4 space-y-2">
+                        {moderateVendors.map(v => (
+                            <div key={v.id} className="flex justify-between items-center bg-slate-900/80 border border-slate-800 p-2 rounded">
+                                <div><div className="font-bold text-yellow-300 text-sm">{v.name}</div><div className="text-[10px] text-slate-500">{v.hqLocation}</div></div>
+                                <div className="text-xl font-bold text-yellow-500">{assessments[v.hqLocation]?.score}</div>
                             </div>
-                        );
-                    })}
+                        ))}
+                    </div>
+                </Card>
+            )}
+
+            <Card className="p-0 overflow-hidden shrink-0 border-l-4 border-l-green-500 bg-green-900/5">
+                <CardHeader title="Safe Harbor" />
+                <div className="p-4 space-y-2">
+                    {safeVendors.map(v => (
+                        <div key={v.id} className="flex justify-between items-center bg-slate-900/80 border border-slate-800 p-2 rounded">
+                            <div><div className="font-bold text-green-300 text-sm">{v.name}</div><div className="text-[10px] text-slate-500">{v.hqLocation}</div></div>
+                            <div className="text-xl font-bold text-green-500">{assessments[v.hqLocation]?.score}</div>
+                        </div>
+                    ))}
                 </div>
             </Card>
         </div>
