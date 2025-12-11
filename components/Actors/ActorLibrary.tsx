@@ -1,74 +1,34 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { threatData } from '../../services/dataLayer';
-import { useDataStore } from '../../hooks/useDataStore';
-import { ThreatActor, ActorId, View } from '../../types';
+import { View } from '../../types';
 import ActorList from './ActorList';
 import ActorDetail from './ActorDetail';
 import { MasterDetailLayout } from '../Shared/Layouts';
 import NetworkGraph from '../Shared/NetworkGraph';
 import { Button, Input, Card, CardHeader } from '../Shared/UI';
 import { Icons } from '../Shared/Icons';
+import { useActorLibrary } from '../../hooks/modules/useActorLibrary';
 
 interface ActorLibraryProps {
   initialId?: string;
 }
 
 const ActorLibrary: React.FC<ActorLibraryProps> = ({ initialId }) => {
-  const modules = useMemo(() => threatData.getModulesForView(View.ACTORS), []);
-  const [libModule, setLibModule] = useState(modules[0]);
+  const {
+    modules, libModule, setLibModule,
+    filteredActors, selectedActor,
+    isCreating, onShowCreate, onBack,
+    newName, setNewName,
+    searchTerm, setSearchTerm,
+    handleCreate, onSelect,
+  } = useActorLibrary(initialId);
+  
   const [activeDetailModule, setActiveDetailModule] = useState('Profile');
-  
-  // Efficient subscription
-  const actors = useDataStore(() => threatData.getActors());
-  
-  const [selectedActor, setSelectedActor] = useState<ThreatActor | null>(initialId ? actors.find(a => a.id === initialId) || null : null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const activeActor = selectedActor || (!isCreating && !initialId && window.innerWidth >= 768 && actors.length > 0 ? actors[0] : null);
-  
-  useEffect(() => {
-    if (initialId) {
-      const found = actors.find(a => a.id === initialId);
-      if (found) setSelectedActor(found);
-    }
-  }, [initialId, actors]);
-
-  // Keep selectedActor fresh if updated in store
-  useEffect(() => {
-    if (activeActor) {
-        const fresh = actors.find(a => a.id === activeActor.id);
-        if (!fresh && activeActor.id.startsWith('ACT-')) {
-            // Actor deleted
-            setSelectedActor(null);
-        } else if (fresh && fresh !== activeActor) {
-            // Actor updated
-            setSelectedActor(fresh);
-        }
-    }
-  }, [actors, activeActor]);
-
-  const handleCreate = () => {
-    if(!newName) return;
-    const newActor: ThreatActor = { 
-      id: `ACT-${Date.now()}` as ActorId, name: newName, aliases: [], origin: 'Unknown', description: 'New Profile', 
-      sophistication: 'Novice', targets: [], ttps: [], campaigns: [], infrastructure: [], exploits: [], references: [], history: [],
-      evasionTechniques: []
-    };
-    threatData.addActor(newActor); setIsCreating(false); setNewName(''); setSelectedActor(newActor);
-  };
-
-  const filteredActors = useMemo(() => {
-    if (!searchTerm) return actors;
-    const lower = searchTerm.toLowerCase();
-    return actors.filter(a => a.name.toLowerCase().includes(lower) || a.origin.toLowerCase().includes(lower) || a.aliases.some(al => al.toLowerCase().includes(lower)));
-  }, [actors, searchTerm]);
 
   const Actions = () => (
     <div className="flex gap-2 items-center">
-       <Button onClick={() => { setIsCreating(true); setSelectedActor(null); }} variant="primary" className="text-xs">+ New Adversary</Button>
+       <Button onClick={onShowCreate} variant="primary" className="text-xs">+ New Adversary</Button>
     </div>
   );
 
@@ -80,7 +40,7 @@ const ActorLibrary: React.FC<ActorLibraryProps> = ({ initialId }) => {
       activeModule={libModule}
       onModuleChange={setLibModule}
       isDetailOpen={!!selectedActor || isCreating}
-      onBack={() => { setSelectedActor(null); setIsCreating(false); }}
+      onBack={onBack}
       actions={<Actions />}
       listContent={
         libModule === 'Directory' ? (
@@ -94,7 +54,7 @@ const ActorLibrary: React.FC<ActorLibraryProps> = ({ initialId }) => {
                  className="pl-9"
                />
             </div>
-            <ActorList actors={filteredActors} selectedId={activeActor?.id || null} onSelect={(a) => { setSelectedActor(a); setIsCreating(false); }} />
+            <ActorList actors={filteredActors} selectedId={selectedActor?.id || null} onSelect={onSelect} />
           </div>
         ) : (
           <div className="p-8 text-center border-2 border-dashed border-slate-800 rounded-xl text-slate-500 italic text-sm">
@@ -123,16 +83,16 @@ const ActorLibrary: React.FC<ActorLibraryProps> = ({ initialId }) => {
                 </div>
                 <div className="flex gap-4 pt-2">
                    <Button onClick={handleCreate} className="flex-1">CREATE PROFILE</Button>
-                   <Button onClick={() => setIsCreating(false)} variant="text" className="flex-1">CANCEL</Button>
+                   <Button onClick={onBack} variant="text" className="flex-1">CANCEL</Button>
                 </div>
              </div>
           </Card>
-        ) : activeActor ? (
+        ) : selectedActor ? (
           <ActorDetail 
-            actor={activeActor} 
+            actor={selectedActor} 
             activeModule={activeDetailModule} 
             onModuleChange={setActiveDetailModule} 
-            onBack={() => setSelectedActor(null)} 
+            onBack={onBack} 
             modules={threatData.getModulesForView(View.ACTORS)} 
             onUpdate={() => {}} 
           />

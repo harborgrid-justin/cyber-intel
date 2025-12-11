@@ -1,17 +1,22 @@
 
-
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { StandardPage } from '../Shared/Layouts';
-// Fix: Import UI components from the barrel file
 import { Card } from '../Shared/UI';
-import { RuleViews } from './Views/RuleViews';
-import { ForensicViews } from './Views/ForensicViews';
-import { AdvancedViews } from './Views/AdvancedViews';
 import { Icons } from '../Shared/Icons';
 import { threatData } from '../../services/dataLayer';
-// Fix: Import types from the central types file
 import { View } from '../../types';
+import { LoadingSpinner } from '../Shared/LoadingSpinner';
+
+const LogAnalysis = lazy(() => import('./Views/LogAnalysis').then(m => ({ default: m.LogAnalysis })));
+const YaraEditor = lazy(() => import('./Views/YaraEditor').then(m => ({ default: m.YaraEditor })));
+const SigmaBuilder = lazy(() => import('./Views/SigmaBuilder').then(m => ({ default: m.SigmaBuilder })));
+const NetworkForensics = lazy(() => import('./Views/NetworkForensics').then(m => ({ default: m.NetworkForensics })));
+const MemoryForensics = lazy(() => import('./Views/MemoryForensics').then(m => ({ default: m.MemoryForensics })));
+const DiskForensics = lazy(() => import('./Views/DiskForensics').then(m => ({ default: m.DiskForensics })));
+const UserBehavior = lazy(() => import('./Views/UserBehavior').then(m => ({ default: m.UserBehavior })));
+const AnomalyDetection = lazy(() => import('./Views/AnomalyDetection').then(m => ({ default: m.AnomalyDetection })));
+const DecryptionTool = lazy(() => import('./Views/DecryptionTool').then(m => ({ default: m.DecryptionTool })));
+
 
 const DetectionScanner: React.FC = () => {
   const modules = useMemo(() => threatData.getModulesForView(View.DETECTION), []);
@@ -20,19 +25,19 @@ const DetectionScanner: React.FC = () => {
   const renderContent = () => {
     switch (activeModule) {
       // Rule Development
-      case 'Log Analysis': return <RuleViews.LogAnalysis />;
-      case 'YARA': return <RuleViews.YaraEditor />;
-      case 'Sigma': return <RuleViews.SigmaBuilder />;
+      case 'Log Analysis': return <LogAnalysis />;
+      case 'YARA': return <YaraEditor />;
+      case 'Sigma': return <SigmaBuilder />;
       
       // Forensics
-      case 'Network': return <ForensicViews.Network />;
-      case 'Memory': return <ForensicViews.Memory />;
-      case 'Disk': return <ForensicViews.Disk />;
+      case 'Network': return <NetworkForensics />;
+      case 'Memory': return <MemoryForensics />;
+      case 'Disk': return <DiskForensics />;
       
       // Advanced / Behavior
-      case 'User Behavior': return <AdvancedViews.Ueba />;
-      case 'Anomaly': return <AdvancedViews.Anomaly />;
-      case 'Decryption': return <AdvancedViews.Decryption />;
+      case 'User Behavior': return <UserBehavior />;
+      case 'Anomaly': return <AnomalyDetection />;
+      case 'Decryption': return <DecryptionTool />;
       
       // Default / Legacy
       case 'Scanner': 
@@ -55,7 +60,9 @@ const DetectionScanner: React.FC = () => {
       onModuleChange={setActiveModule}
     >
       <div className="flex-1 min-h-0 overflow-hidden">
-        {renderContent()}
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><LoadingSpinner /></div>}>
+            {renderContent()}
+        </Suspense>
       </div>
     </StandardPage>
   );

@@ -1,5 +1,4 @@
 
-// Fix: Import types from the central types file
 import { Severity } from '../types';
 import { threatData } from './dataLayer';
 
@@ -13,7 +12,6 @@ export const calculateThreatScore = (
   reputation: number,
   severity: Severity
 ): number => {
-  // Fix: Property 'getScoringConfig' does not exist on type 'DataLayer'. This method is now available.
   const scoringConfig = threatData.getScoringConfig();
   
   const sevScore = scoringConfig.severityValues[severity] || 0;

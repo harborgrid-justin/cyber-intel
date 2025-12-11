@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { threatData } from './dataLayer';
 import { Case } from '../types';
@@ -46,14 +47,11 @@ export const generateDailyBriefing = async (): Promise<string> => {
   }
   
   try {
-    // FIX: Use 'gemini-2.5-flash' for basic text tasks as per guidelines.
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      // FIX: The prompt should be passed in the 'contents' property.
       contents: `Generate a fictional, realistic executive cyber threat summary for today. Focus on ransomware. Max ${config.maxTokensBriefing} words.`,
     });
     
-    // FIX: Access response text via the .text property as per guidelines.
     const text = response.text;
     if (!text) {
         throw new Error("Received empty response text from Gemini API");
@@ -92,14 +90,11 @@ export const generateCaseReport = async (kase: Case, type: string): Promise<stri
   `;
 
   try {
-    // FIX: Use 'gemini-2.5-flash' for basic text tasks as per guidelines.
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      // FIX: The prompt should be passed in the 'contents' property.
       contents: prompt,
     });
     
-    // FIX: Access response text via the .text property as per guidelines.
     const text = response.text;
     if (!text) {
         return "Analysis generation returned empty result.";

@@ -5,6 +5,7 @@ import {
 } from '../types';
 import { Severity } from '../types';
 import { TOKENS } from '../styles/theme';
+export * from './config';
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   id: 'GLOBAL_CONFIG',
@@ -37,14 +38,6 @@ export const MOCK_SCORING_CONFIG: ScoringConfig = {
     [Severity.HIGH]: 80,
     [Severity.CRITICAL]: 100
   }
-};
-
-export const DEFAULT_THEME_CONFIG: ThemeConfig = {
-  id: 'THEME_CONFIG',
-  overrides: {},
-  customCss: '',
-  charts: TOKENS.dark.charts,
-  graph: TOKENS.dark.graph
 };
 
 export const MOCK_NAVIGATION_CONFIG: NavigationConfig = [

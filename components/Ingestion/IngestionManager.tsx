@@ -1,15 +1,10 @@
 
-
-
-import React, { useState, useMemo } from 'react';
-import { getRecentJobs, ingestDataStream } from '../../services/ingestionService';
-import { threatData } from '../../services/dataLayer';
-import { useDataStore } from '../../hooks/useDataStore';
-// Fix: Import types from the central types file
-import { IoCFeed, View } from '../../types';
+import React from 'react';
+import { getRecentJobs } from '../../services/ingestionService';
+import { useIngestionManager } from '../../hooks/modules/useIngestionManager';
+import { IoCFeed } from '../../types';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { StandardPage } from '../Shared/Layouts';
-// Fix: Import UI components from the barrel file
 import { Button, Card, Badge, Grid, CardHeader } from '../Shared/UI';
 import ParsersView from './ParsersView';
 import EnrichmentView from './EnrichmentView';
@@ -17,61 +12,19 @@ import NormalizationView from './NormalizationView';
 import CreateFeedForm from './CreateFeedForm';
 
 const IngestionManager: React.FC = () => {
-  const modules = useMemo(() => threatData.getModulesForView(View.INGESTION), []);
-  const [activeModule, setActiveModule] = useState(modules[0]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [syncingId, setSyncingId] = useState<string | null>(null);
-  const [streamProgress, setStreamProgress] = useState(0);
+  const {
+    modules, activeModule, setActiveModule,
+    isCreating, handleShowCreate, handleCreateCancel, handleCreateSuccess,
+    syncingId, streamProgress, feeds,
+    toggle, handleDelete, handleSync, handleConnectSource,
+  } = useIngestionManager();
   
-  const feeds = useDataStore(() => threatData.getFeeds());
   const jobs = getRecentJobs();
 
-  const toggle = (id: string) => { threatData.toggleFeed(id); };
-  const handleDelete = (id: string) => { threatData.deleteFeed(id); };
-  
-  const handleSync = async (feed: IoCFeed) => {
-    setSyncingId(feed.id);
-    setStreamProgress(0);
-    
-    // Use Streams API for progressive ingestion
-    const stream = ingestDataStream(feed.name, 20); // Ingest 20 items
-    const reader = stream.getReader();
-    let count = 0;
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          threatData.addThreat(value);
-          count++;
-          setStreamProgress(prev => prev + 1); // Trigger UI update per item
-        }
-      }
-    } finally {
-      reader.releaseLock();
-    }
-    
-    feed.lastSync = 'Just now';
-    threatData.feedStore.update(feed);
-    
-    setSyncingId(null);
-    setStreamProgress(0);
-    alert(`Stream Ingested: ${count} new indicators from ${feed.name}`);
-  };
-
-  const handleConnectSource = (sourceName: string) => {
-    if (feeds.some(f => f.name === sourceName)) return alert(`${sourceName} is already connected.`);
-    threatData.addFeed({
-      id: `FEED-${Date.now()}`, name: sourceName, url: `api.connector.${sourceName.toLowerCase()}.local`,
-      type: 'SIEM_CONNECTOR', status: 'ACTIVE', interval: 15, lastSync: 'Just now'
-    });
-  };
-
   return (
-    <StandardPage title="Data Ingestion Hub" subtitle="Connect and Manage Intelligence Sources" actions={<Button onClick={() => setIsCreating(true)}>+ ADD SOURCE</Button>} modules={modules} activeModule={activeModule} onModuleChange={setActiveModule}>
+    <StandardPage title="Data Ingestion Hub" subtitle="Connect and Manage Intelligence Sources" actions={<Button onClick={handleShowCreate}>+ ADD SOURCE</Button>} modules={modules} activeModule={activeModule} onModuleChange={setActiveModule}>
       {isCreating && (
-        <CreateFeedForm onCancel={() => setIsCreating(false)} onSuccess={() => setIsCreating(false)} />
+        <CreateFeedForm onCancel={handleCreateCancel} onSuccess={handleCreateSuccess} />
       )}
 
       {activeModule === 'Status' && (

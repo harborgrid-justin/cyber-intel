@@ -34,7 +34,6 @@ export class OverviewLogic {
 }
 
 export class GeoLogic {
-  // FIX: Change return type to include severity so the caller can use theme tokens for color.
   static generateAttackVectors(threats: Threat[]): { source: {x:number,y:number}, target: {x:number,y:number}, severity: Severity }[] {
     // Visual-only logic can remain on client
     const HQ = { x: 25, y: 15 };

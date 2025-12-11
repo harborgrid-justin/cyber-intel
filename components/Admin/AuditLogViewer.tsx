@@ -1,39 +1,25 @@
 
-
-
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { threatData } from '../../services/dataLayer';
-import { useDataStore } from '../../hooks/useDataStore';
 import { StandardPage } from '../Shared/Layouts';
-// Fix: Import UI components from the barrel file
 import { Button, Card, CardHeader, Badge } from '../Shared/UI';
-// Fix: Import types from the central types file
 import { AuditLog, View } from '../../types';
 import { Icons } from '../Shared/Icons';
-import { AuditLogic } from '../../services/logic/AuditLogic';
 import { SearchFilterBar } from '../Shared/SearchFilterBar';
-import { VirtualList } from '../Shared/VirtualList'; // Import VirtualList
+import { VirtualList } from '../Shared/VirtualList';
+import { useAuditLogViewer } from '../../hooks/modules/useAuditLogViewer';
 
 const AuditLogViewer: React.FC = () => {
   const modules = useMemo(() => threatData.getModulesForView(View.AUDIT), []);
+  // Fix: The original code used useState without importing it.
   const [activeModule, setActiveModule] = useState(modules[0]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [timeFilter, setTimeFilter] = useState('ALL');
 
-  // Use fast deep equal store subscription
-  const logs = useDataStore(() => threatData.getAuditLogs());
-
-  const filteredLogs = useMemo(() => {
-    return AuditLogic.filterLogs(logs, timeFilter, searchTerm);
-  }, [logs, timeFilter, searchTerm]);
-
-  const handleExport = () => {
-    const { url, filename } = threatData.logStore.generateExport();
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-  };
+  const {
+    searchTerm, setSearchTerm,
+    timeFilter, setTimeFilter,
+    filteredLogs,
+    handleExport,
+  } = useAuditLogViewer();
 
   const renderLogRow = (l: AuditLog, index: number) => (
     <div key={l.id} className="flex items-center text-xs p-2 border-b border-slate-800 hover:bg-slate-900/50 h-[40px]">
@@ -83,13 +69,12 @@ const AuditLogViewer: React.FC = () => {
                 <div className="w-24 text-right">Location</div>
             </div>
             
-            {/* Virtualized List Implementation */}
             <div className="flex-1 w-full min-h-0">
                 {filteredLogs.length > 0 ? (
                     <VirtualList 
                         items={filteredLogs}
                         rowHeight={40}
-                        containerHeight={600} // Approximate container height, ideally responsive
+                        containerHeight={600} 
                         renderRow={renderLogRow}
                     />
                 ) : (
