@@ -2,6 +2,7 @@
 import { Threat, ThreatActor, IncidentStatus, Severity } from '../../types';
 import { apiClient } from '../apiClient';
 import { BloomFilter } from '../algorithms/BloomFilter';
+import { threatData } from '../dataLayer';
 
 const threatBloom = new BloomFilter(10000, 0.01);
 
@@ -10,6 +11,15 @@ interface DeduplicationResult { threat: Threat; isDuplicate: boolean; }
 
 export class ThreatLogic {
   static async deduplicateThreat(newThreat: Threat, existingThreats: Threat[]): Promise<DeduplicationResult> { 
+      if (threatData.isOffline) {
+        const dup = existingThreats.find(t => t.indicator === newThreat.indicator && t.type === newThreat.type);
+        if (dup) {
+            const merged = { ...dup, lastSeen: 'Now', confidence: Math.min(100, dup.confidence + 5) };
+            return { threat: merged, isDuplicate: true };
+        }
+        return { threat: newThreat, isDuplicate: false };
+      }
+
       const key = `${newThreat.indicator}:${newThreat.type}`;
       const possiblyExists = threatBloom.test(key);
       if (!possiblyExists) threatBloom.add(key);
@@ -17,6 +27,7 @@ export class ThreatLogic {
       try {
         return await apiClient.post<DeduplicationResult>('/analysis/lifecycle/threats/deduplicate', { threat: newThreat });
       } catch {
+        // Fallback same as offline logic
         const dup = existingThreats.find(t => t.indicator === newThreat.indicator && t.type === newThreat.type);
         if (dup) {
             const merged = { ...dup, lastSeen: 'Now', confidence: Math.min(100, dup.confidence + 5) };
@@ -37,11 +48,13 @@ export class ThreatLogic {
   }
 
   static async calculateAttribution(input: string): Promise<AttributionResult[]> {
+    if (threatData.isOffline) return [];
     try { return await apiClient.post<AttributionResult[]>('/analysis/attribution', { input }); } 
     catch (e) { console.error("Attribution API failed", e); return []; }
   }
 
   static async decayConfidence(threats: Threat[]): Promise<void> { 
+      if (threatData.isOffline) return;
       try { await apiClient.post('/analysis/lifecycle/threats/decay', {}); } 
       catch { console.warn("Backend decay confidence unavailable."); }
   }
@@ -54,16 +67,22 @@ export class ThreatLogic {
   }
 
   static async checkSubnetPattern(threats: Threat[]): Promise<string | null> { 
+      if (threatData.isOffline) return null;
       try { const res = await apiClient.get<{subnet: string | null}>('/analysis/threats/patterns'); return res.subnet; } 
       catch { return null; }
   }
 
   static async checkRansomwareVelocity(threats: Threat[]): Promise<boolean> { 
+      // Local Heuristic
+      const recentHigh = threats.filter(t => t.status === IncidentStatus.NEW && t.score > 80).length;
+      if (threatData.isOffline) return recentHigh > 5;
+      
       try { const res = await apiClient.get<{ransomwareVelocity: boolean}>('/analysis/threats/patterns'); return res.ransomwareVelocity; } 
-      catch { return false; }
+      catch { return recentHigh > 5; }
   }
 
   static async applyGeoBlocking(threat: Threat): Promise<void> { 
+      if (threatData.isOffline) return;
       try { await apiClient.post('/analysis/lifecycle/threats/geoblock', {}); } 
       catch { }
   }

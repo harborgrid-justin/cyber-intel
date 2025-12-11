@@ -103,7 +103,9 @@ export class DataLayer {
 
   setProvider(adapter: DatabaseAdapter) {
     this.adapter = adapter;
-    createStores(adapter);
+    const stores = createStores(adapter);
+    // CRITICAL FIX: Assign new stores to instance so getters/syncManager use the new adapter
+    Object.assign(this, stores);
     window.dispatchEvent(new Event('db-adapter-changed'));
   }
 
