@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const DataList: React.FC<{ items: any[]; renderItem: (item: any, index: number) => React.ReactNode; emptyMessage?: string; className?: string }> = ({ items, renderItem, emptyMessage = 'No Data', className = '' }) => (

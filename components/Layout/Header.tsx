@@ -1,18 +1,26 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { threatData } from '../../services/dataLayer';
-import { useDataStore, useNetworkStatus, useThemeEngine } from '../../hooks';
+import { useDataStore } from '../../hooks/useDataStore';
 import { NotificationBell } from '../Shared/NotificationSystem';
 import { Icons } from '../Shared/Icons';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { useThemeEngine } from '../../hooks/useThemeEngine';
 import { STYLES } from '../../styles/theme';
 
 interface HeaderProps { toggleSidebar: () => void; }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
+  const [user, setUser] = useState(threatData.currentUser);
   const config = useDataStore(() => threatData.getAppConfig());
   const { online } = useNetworkStatus();
   const { theme } = useThemeEngine(); 
+
+  useEffect(() => {
+    const handleUserChange = () => setUser(threatData.currentUser);
+    window.addEventListener('user-update', handleUserChange);
+    return () => window.removeEventListener('user-update', handleUserChange);
+  }, []);
 
   const toggleTheme = () => {
     window.dispatchEvent(new Event('toggle-theme'));

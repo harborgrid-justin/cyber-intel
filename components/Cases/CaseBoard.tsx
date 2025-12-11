@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../../hooks/useDataStore';
@@ -24,7 +25,6 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
 
   const cases = useDataStore(() => threatData.getCases());
   const currentUser = useDataStore(() => threatData.currentUser);
-  const allThreats = useDataStore(() => threatData.getThreats(false));
 
   useEffect(() => {
     if (initialId) {
@@ -43,9 +43,9 @@ const CaseBoard: React.FC<CaseBoardProps> = ({ initialId }) => {
   
   const linkedThreats = useMemo(() => {
     return selectedCase 
-      ? allThreats.filter(t => selectedCase.relatedThreatIds.includes(t.id)) 
+      ? threatData.getThreats(false).filter(t => selectedCase.relatedThreatIds.includes(t.id)) 
       : [];
-  }, [selectedCase, allThreats]);
+  }, [selectedCase]);
 
   const handleReprioritize = () => {
     threatData.reprioritizeCases();

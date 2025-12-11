@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 // Fix: Import types from the central types file
 import { Case } from '../../../types';
@@ -5,7 +6,6 @@ import { Case } from '../../../types';
 import { Card, Button, Input, Badge, CardHeader } from '../../Shared/UI';
 import { threatData } from '../../../services/dataLayer';
 import { Icons } from '../../Shared/Icons';
-import { useDataStore } from '../../../hooks/useDataStore';
 
 interface Props {
   activeCase: Case;
@@ -15,7 +15,7 @@ interface Props {
 
 const CaseLinksView: React.FC<Props> = ({ activeCase, onLink, onUnlink }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const allCases = useDataStore(() => threatData.getCases());
+  const allCases = threatData.getCases();
   
   const linkedCases = useMemo(() => allCases.filter(c => activeCase.linkedCaseIds?.includes(c.id)), [allCases, activeCase.linkedCaseIds]);
 

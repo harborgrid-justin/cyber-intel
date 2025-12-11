@@ -1,120 +1,98 @@
 
-import React from 'react';
-import { Severity, IncidentStatus, View, Threat } from '../../types';
+import React, { useCallback } from 'react';
+import { IncidentStatus, Threat } from '../../types';
 import { getScoreColorClass } from '../../services/scoringEngine';
 import { threatData } from '../../services/dataLayer';
-import { Button, Badge } from '../Shared/UI';
-import { useOptimistic } from '../../hooks/useOptimistic';
+import { Badge, Button } from '../Shared/UI';
 import { Icons } from '../Shared/Icons';
+import { fastDeepEqual } from '../../services/utils/fastDeepEqual';
 
 interface FeedItemProps {
   threat: Threat;
 }
 
-const FeedItem: React.FC<FeedItemProps> = React.memo(({ threat }) => {
-  const { state: status, mutate: updateStatus, isPending } = useOptimistic( threat.status, async (newStatus: IncidentStatus) => { await new Promise(r => setTimeout(r, 800)); threatData.updateStatus(threat.id, newStatus); } );
-
-  const handleActorClick = (e: React.MouseEvent) => {
+const FeedItemComponent: React.FC<FeedItemProps> = ({ threat }) => {
+  // Stable handlers using useCallback to prevent re-renders in parent lists
+  const handlePromote = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!threat.threatActor) return;
-    const actor = threatData.getActors().find(a => a.name === threat.threatActor);
-    if (actor) { window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.ACTORS, id: actor.id } })); }
-  };
+    threatData.updateStatus(threat.id, IncidentStatus.INVESTIGATING);
+  }, [threat.id]);
 
-  const severity = threat.severity.toLowerCase();
-  const scoreColorName = getScoreColorClass(threat.score);
+  const handleArchive = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    threatData.updateStatus(threat.id, IncidentStatus.CLOSED);
+  }, [threat.id]);
 
-  const itemStyle = {
-    '--item-color': `var(--colors-${severity})`,
-    '--item-color-dim': `var(--colors-${severity}Dim)`,
-    '--item-glow': `var(--shadows-glow${severity.charAt(0).toUpperCase() + severity.slice(1)})`,
-    '--score-color': `var(--colors-${scoreColorName})`,
-  } as React.CSSProperties;
+  const scoreColor = getScoreColorClass(threat.score);
+  
+  // Determine text color class based on score logic
+  const scoreTextColor = 
+    scoreColor === 'critical' ? 'text-red-500' : 
+    scoreColor === 'high' ? 'text-orange-500' : 
+    scoreColor === 'medium' ? 'text-yellow-500' : 
+    'text-green-500';
 
   return (
     <div 
-      style={itemStyle}
-      className={`
-        relative group overflow-hidden transition-all duration-300
-        bg-[var(--colors-surfaceDefault)] backdrop-blur-sm border border-[var(--colors-borderDefault)] hover:border-[var(--colors-borderHighlight)]
-        rounded-r-lg border-l-[3px] border-l-[var(--item-color)] ${isPending ? 'opacity-50' : 'opacity-100'}
-        hover:shadow-lg hover:bg-[var(--colors-surfaceHighlight)]
-      `}
+        className="p-3 bg-slate-900/50 border border-slate-800 rounded-lg hover:border-cyan-500/50 transition-colors group flex items-center justify-between gap-4"
+        role="article"
+        aria-label={`Threat ${threat.indicator} - Severity ${threat.severity}`}
     >
-      <div className="p-3 sm:p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        
-        {/* Left: Content */}
-        <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[var(--colors-surfaceRaised)] border border-[var(--colors-borderSubtle)] text-[var(--item-color)]`}>
+      <div className="flex items-center gap-3 overflow-hidden">
+         <div className="p-2 rounded bg-slate-950 border border-slate-800 text-slate-400 shrink-0" aria-hidden="true">
+            {threat.type === 'IP Address' ? <Icons.Globe className="w-4 h-4" /> : 
+             threat.type === 'File Hash' ? <Icons.FileText className="w-4 h-4" /> : 
+             <Icons.AlertTriangle className="w-4 h-4" />}
+         </div>
+         <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+                <span className="font-mono text-sm font-bold text-slate-200 truncate">{threat.indicator}</span>
+                <Badge color={threat.severity === 'CRITICAL' ? 'red' : threat.severity === 'HIGH' ? 'orange' : 'slate'}>
                     {threat.severity}
-                </span>
-                <span className="text-[10px] text-[var(--colors-textSecondary)] font-mono">
-                    {threat.lastSeen}
-                </span>
-                {threat.threatActor !== 'Unknown' && (
-                    <button onClick={handleActorClick} className="flex items-center gap-1 text-[10px] text-[var(--colors-textTertiary)] hover:text-[var(--colors-textPrimary)] transition-colors uppercase tracking-wider font-bold">
-                        <Icons.Users className="w-3 h-3" /> {threat.threatActor}
-                    </button>
-                )}
+                </Badge>
             </div>
-            
-            <div className="flex items-center gap-3">
-                <h4 className={`text-sm md:text-base font-bold text-[var(--colors-textPrimary)] tracking-tight truncate flex items-center gap-2 font-mono`}>
-                    {threat.indicator}
-                </h4>
-                <Badge color="slate" className="hidden sm:inline-flex opacity-70 scale-90">{threat.type}</Badge>
+            <div className="text-xs text-slate-500 truncate flex gap-2">
+                <span>{threat.type}</span>
+                <span>•</span>
+                <span>{threat.source}</span>
+                <span>•</span>
+                <span>{threat.lastSeen}</span>
             </div>
-            
-            <p className="text-xs text-[var(--colors-textSecondary)] mt-1 line-clamp-1 group-hover:text-[var(--colors-textPrimary)] transition-colors">
-                {threat.description} <span className="text-[var(--colors-textTertiary)] mx-1">|</span> <span className="font-mono text-[var(--colors-textTertiary)]">{threat.source}</span>
-            </p>
-        </div>
-
-        {/* Right: Score & Actions */}
-        <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
-            {/* Score Dial */}
-            <div className="flex flex-col items-center justify-center bg-[var(--colors-surfaceRaised)] p-2 rounded border border-[var(--colors-borderSubtle)]">
-                <div className={`text-xl font-black font-mono leading-none text-[var(--score-color)]`}>
-                    {threat.score}
-                </div>
-                <div className="text-[8px] text-[var(--colors-textTertiary)] font-bold uppercase tracking-wider mt-0.5">Risk</div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-row sm:flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all sm:translate-x-4 sm:group-hover:translate-x-0">
-                {status !== IncidentStatus.CLOSED ? (
-                    <>
-                        <button 
-                            onClick={() => updateStatus(IncidentStatus.INVESTIGATING)} 
-                            className="p-1.5 rounded bg-[var(--colors-primaryDim)] text-[var(--colors-primary)] border border-transparent hover:border-[var(--colors-primary)] transition-all"
-                            title="Investigate"
-                            disabled={status === IncidentStatus.INVESTIGATING}
-                        >
-                            <Icons.Search className="w-4 h-4" />
-                        </button>
-                        <button 
-                            onClick={() => updateStatus(IncidentStatus.CLOSED)} 
-                            className="p-1.5 rounded bg-[var(--colors-criticalDim)] text-[var(--colors-critical)] border border-transparent hover:border-[var(--colors-critical)] transition-all"
-                            title="Block / Close"
-                        >
-                            <Icons.Shield className="w-4 h-4" />
-                        </button>
-                    </>
-                ) : (
-                    <span className="text-xs font-bold text-[var(--colors-success)] flex items-center gap-1 bg-[var(--colors-successDim)] px-2 py-1 rounded border border-[var(--colors-success)]/30">
-                        <Icons.CheckCircle className="w-3 h-3" /> SAFE
-                    </span>
-                )}
-            </div>
-        </div>
+         </div>
       </div>
-      
-      {/* Background Pulse Animation for Critical */}
-      {threat.severity === Severity.CRITICAL && (
-          <div className="absolute inset-0 bg-gradient-to-r from-rose-600/5 to-transparent animate-pulse pointer-events-none"></div>
-      )}
+
+      <div className="flex items-center gap-4 shrink-0">
+         <div className="text-right hidden sm:block">
+            <div className={`text-sm font-bold ${scoreTextColor}`}>
+                {threat.score}
+            </div>
+            <div className="text-[9px] text-slate-600 uppercase font-bold">Risk Score</div>
+         </div>
+         
+         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+            <Button 
+                onClick={handlePromote} 
+                variant="secondary" 
+                className="h-8 px-2"
+                aria-label="Promote threat to incident"
+                title="Promote to Incident"
+            >
+                <Icons.Zap className="w-4 h-4" />
+            </Button>
+            <Button 
+                onClick={handleArchive} 
+                variant="text" 
+                className="h-8 px-2 text-slate-500 hover:text-red-400"
+                aria-label="Archive threat"
+                title="Archive Threat"
+            >
+                <Icons.UserX className="w-4 h-4" />
+            </Button>
+         </div>
+      </div>
     </div>
   );
-});
-export default FeedItem;
+};
+
+// Optimized memoization: Only re-render if deep equality check fails on threat prop
+export default React.memo(FeedItemComponent, (prev, next) => fastDeepEqual(prev.threat, next.threat));

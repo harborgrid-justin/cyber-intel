@@ -1,24 +1,24 @@
+
 import React, { useState } from 'react';
 import { Card, Button, Badge, FilterGroup, CardHeader } from '../Shared/UI';
 import ResponsiveTable from '../Shared/ResponsiveTable';
 import { Artifact } from '../../types';
 import { ForensicsLogic } from '../../services/logic/ForensicsLogic';
 import { threatData } from '../../services/dataLayer';
-import { useDataStore } from '../../hooks/useDataStore';
 
 interface EvidenceItem extends Artifact { caseId: string; caseTitle: string; }
 interface Props { artifacts: EvidenceItem[]; handleNavigateCase: (id: string) => void; }
 
 const EvidenceInventory: React.FC<Props> = ({ artifacts, handleNavigateCase }) => {
   const [filterType, setFilterType] = useState('ALL');
-  const allCases = useDataStore(() => threatData.getCases());
   const filtered = filterType === 'ALL' ? artifacts : artifacts.filter(a => a.type === filterType);
   const totalSize = artifacts.reduce((acc, c) => acc + (parseFloat(c.size) || 0), 0);
 
-  const verifyHash = async (artifact: EvidenceItem) => {
+  const verifyHash = async (artifact: Artifact) => {
     const check = await ForensicsLogic.verifyArtifactIntegrity(artifact);
     const newStatus = check.valid ? 'SECURE' : 'COMPROMISED';
-    const parentCase = allCases.find(c => c.id === artifact.caseId);
+    // Find parent case to update artifact
+    const parentCase = threatData.getCases().find(c => c.artifacts.some(a => a.id === artifact.id));
     if (parentCase) {
         const updatedArtifacts = parentCase.artifacts.map(a => a.id === artifact.id ? { ...a, status: newStatus as any } : a);
         threatData.updateCase({ ...parentCase, artifacts: updatedArtifacts });

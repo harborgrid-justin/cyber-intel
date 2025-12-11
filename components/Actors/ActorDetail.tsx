@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo } from 'react';
 import { ThreatActor, View } from '../../types';
 import SubModuleNav from '../Shared/SubModuleNav';
 import { threatData } from '../../services/dataLayer';
 import { DetailViewHeader } from '../Shared/Layouts';
 import { Button, Card, Badge } from '../Shared/UI';
-import { useActorManagement, useDataStore } from '../../hooks';
+import { useActorManagement } from '../../hooks/useActorManagement';
 import { ActorDossierView } from './Views/ActorDossier';
 import { ActorOperationsView } from './Views/ActorOperations';
 import { TechnicalOpsView } from './Views/ActorEditComponents';
@@ -24,16 +25,10 @@ const ActorDetail: React.FC<ActorDetailProps> = ({ actor, onBack, onUpdate }) =>
   const [activeTab, setActiveTab] = useState(modules[0]);
   const { state, setters, actions } = useActorManagement(actor, onUpdate);
   
-  const allReports = useDataStore(() => threatData.getReports());
-  const allThreats = useDataStore(() => threatData.getThreats());
-  const allMalware = useDataStore(() => threatData.getMalwareSamples());
-  const allPcaps = useDataStore(() => threatData.getNetworkCaptures());
-
-  const reports = useMemo(() => allReports.filter(r => r.relatedActorId === actor.id), [allReports, actor.id]);
-  const linkedThreats = useMemo(() => allThreats.filter(t => t.threatActor === actor.name), [allThreats, actor.name]);
-  const malwareSamples = useMemo(() => allMalware.filter(m => m.associatedActor === actor.name), [allMalware, actor.name]);
-  const networkCaps = useMemo(() => allPcaps.filter(p => p.associatedActor === actor.name), [allPcaps, actor.name]);
-
+  const reports = threatData.getReportsByActor(actor.id);
+  const linkedThreats = threatData.getThreatsByActor(actor.name);
+  const malwareSamples = threatData.getMalwareSamples().filter(m => m.associatedActor === actor.name);
+  const networkCaps = threatData.getNetworkCaptures().filter(p => p.associatedActor === actor.name);
 
   // Map hook setters to simpler prop names for sub-components
   const profileActions = { 

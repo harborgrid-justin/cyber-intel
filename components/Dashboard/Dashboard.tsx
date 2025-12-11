@@ -1,38 +1,25 @@
 
-import React, { useEffect, useState, useMemo, useTransition, Suspense } from 'react';
-import { generateDailyBriefing } from '../../services/geminiService';
+import React, { Suspense } from 'react';
 import { StandardPage } from '../Shared/Layouts';
 import { OverviewView } from './Views/OverviewView';
 import { InfraViews } from './Views/InfraViews';
 import { SecurityViews } from './Views/SecurityViews';
 import { HolographicGlobe } from '../Shared/HolographicGlobe';
-import { threatData } from '../../services/dataLayer';
-import { useDataStore } from '../../hooks/useDataStore';
 import { VisibilityGuard } from '../Shared/VisibilityGuard';
 import { PhaseTwoMatrix } from './PhaseTwoMatrix';
-import { View } from '../../types';
 import { LoadingSpinner } from '../Shared/LoadingSpinner';
+import { useDashboardLogic } from '../../hooks/modules/useDashboardLogic';
 
 const Dashboard: React.FC = () => {
-  const modules = useMemo(() => threatData.getModulesForView(View.DASHBOARD), []);
-  const [activeModule, setActiveModule] = useState(modules[0]);
-  const [isPending, startTransition] = useTransition();
-  const [briefing, setBriefing] = useState<string>('DECRYPTING INTELLIGENCE STREAM...');
-  
-  // Optimized selector-based subscriptions
-  const threats = useDataStore(() => threatData.getThreats());
-  const config = useDataStore(() => threatData.getAppConfig());
-
-  useEffect(() => { 
-    generateDailyBriefing().then(setBriefing);
-  }, []);
-
-  const handleModuleChange = (newModule: string) => {
-    // React 18 Concurrency: Mark this update as low priority
-    startTransition(() => {
-        setActiveModule(newModule);
-    });
-  };
+  const { 
+    activeModule, 
+    handleModuleChange, 
+    isPending, 
+    briefing, 
+    threats, 
+    config, 
+    modules 
+  } = useDashboardLogic();
 
   const renderContent = () => {
     switch (activeModule) {
@@ -56,7 +43,11 @@ const Dashboard: React.FC = () => {
         activeModule={activeModule} 
         onModuleChange={handleModuleChange}
     >
-      <div className={`relative flex flex-col ${isPending ? 'opacity-50 grayscale transition-opacity' : 'opacity-100 transition-opacity'}`}>
+      <div 
+        className={`relative flex flex-col ${isPending ? 'opacity-50 grayscale transition-opacity' : 'opacity-100 transition-opacity'}`}
+        role="region"
+        aria-label="Dashboard Content"
+      >
         <Suspense fallback={<div className="flex justify-center items-center h-full min-h-[400px]"><LoadingSpinner /></div>}>
             {renderContent()}
         </Suspense>

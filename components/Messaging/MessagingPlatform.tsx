@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Channel, TeamMessage } from '../../types';
 import { threatData } from '../../services/dataLayer';
@@ -6,6 +7,8 @@ import { MessagingLogic } from '../../services/logic/MessagingLogic';
 import { StandardPage } from '../Shared/Layouts';
 import ChannelList from './ChannelList';
 import ChatInterface, { Message } from '../Shared/ChatInterface';
+import { Input, Button } from '../Shared/UI';
+import Modal from '../Shared/Modal';
 
 const MessagingPlatform: React.FC = () => {
   const [activeChannelId, setActiveChannelId] = useState('C1');
@@ -18,6 +21,10 @@ const MessagingPlatform: React.FC = () => {
   // The getter closure captures activeChannelId, ensuring we only get relevant updates
   const messages = useDataStore(() => threatData.getMessages(activeChannelId));
   
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newChannelName, setNewChannelName] = useState('');
+  const [newChannelType, setNewChannelType] = useState<Channel['type']>('PUBLIC');
+
   const activeChannel = channels.find(c => c.id === activeChannelId);
 
   const handleSendMessage = (text: string) => {
@@ -33,6 +40,20 @@ const MessagingPlatform: React.FC = () => {
     threatData.sendMessage(msg);
   };
 
+  const handleCreateChannel = () => {
+    if (!newChannelName) return;
+    const newChannel: Channel = {
+        id: `C-${Date.now()}`,
+        name: newChannelName.toLowerCase().replace(/\s/g, '-'),
+        type: newChannelType,
+        members: ['ALL']
+    };
+    threatData.createChannel(newChannel);
+    setShowCreateModal(false);
+    setNewChannelName('');
+    setActiveChannelId(newChannel.id);
+  };
+
   // Adapter to convert TeamMessage to ChatInterface Message
   const uiMessages: Message[] = messages.map(m => ({
     id: m.id,
@@ -44,18 +65,43 @@ const MessagingPlatform: React.FC = () => {
 
   return (
     <StandardPage 
-        title="Synapse Chat" 
+        title="Sentinel Chat" 
         subtitle="Secure Internal Communications" 
         modules={[]} 
         activeModule="" 
         onModuleChange={() => {}}
         className="h-full"
     >
+      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Create Channel">
+         <div className="space-y-4">
+            <div>
+                <label className="text-xs text-slate-500 uppercase font-bold">Channel Name</label>
+                <Input value={newChannelName} onChange={e => setNewChannelName(e.target.value)} placeholder="e.g. op-red-storm" />
+            </div>
+            <div>
+                <label className="text-xs text-slate-500 uppercase font-bold">Type</label>
+                <div className="flex gap-2 mt-1">
+                    {['PUBLIC', 'PRIVATE', 'WAR_ROOM'].map(t => (
+                        <button 
+                            key={t}
+                            onClick={() => setNewChannelType(t as any)}
+                            className={`px-3 py-1 rounded text-xs border ${newChannelType === t ? 'bg-cyan-900 border-cyan-500 text-cyan-400' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                        >
+                            {t}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            <Button onClick={handleCreateChannel} className="w-full mt-4">CREATE CHANNEL</Button>
+         </div>
+      </Modal>
+
       <div className="flex flex-1 h-[calc(100vh-180px)] border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
         <ChannelList 
             channels={channels} 
             activeChannelId={activeChannelId} 
             onSelect={setActiveChannelId} 
+            onCreate={() => setShowCreateModal(true)} 
         />
         
         <div className="flex-1 flex flex-col bg-slate-900">

@@ -31,7 +31,7 @@ export interface Case {
     status: 'OPEN' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'CLOSED';
     priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
     assignee: string;
-    createdBy: string;
+    reporter: string;
     created: string;
     relatedThreatIds: string[];
     findings: string;
@@ -46,6 +46,7 @@ export interface Case {
     tlp: string;
     slaBreach?: boolean;
     region?: string;
+    created_by?: string;
     linkedCaseIds?: string[];
 }
 

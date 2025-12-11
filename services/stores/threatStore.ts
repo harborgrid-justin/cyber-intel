@@ -50,7 +50,7 @@ export class ThreatStore extends BaseStore<Threat> {
       t.status = status;
       this.update(t);
       if (status === IncidentStatus.INVESTIGATING && !existingCases.find((c) => c.relatedThreatIds.includes(id))) {
-        onAutoCase({ id: `CASE-${Date.now()}` as CaseId, title: `Investigation: ${t.indicator}`, description: `Auto-generated case for high-priority threat indicator ${t.indicator}.`, status: 'OPEN', priority: 'MEDIUM', assignee: 'System', createdBy: 'System', tasks: [], findings: '', relatedThreatIds: [t.id], created: new Date().toISOString(), notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Auto-Generated'], tlp: 'AMBER' });
+        onAutoCase({ id: `CASE-${Date.now()}` as CaseId, title: `Investigation: ${t.indicator}`, description: `Auto-gen`, status: 'OPEN', priority: 'MEDIUM', assignee: 'System', reporter: 'System', tasks: [], findings: '', relatedThreatIds: [t.id], created: new Date().toISOString(), notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Auto'], tlp: 'AMBER' });
       }
     }
   }

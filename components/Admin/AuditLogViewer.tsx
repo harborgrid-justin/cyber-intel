@@ -1,9 +1,13 @@
 
+
+
 import React, { useState, useMemo } from 'react';
 import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../../hooks/useDataStore';
 import { StandardPage } from '../Shared/Layouts';
+// Fix: Import UI components from the barrel file
 import { Button, Card, CardHeader, Badge } from '../Shared/UI';
+// Fix: Import types from the central types file
 import { AuditLog, View } from '../../types';
 import { Icons } from '../Shared/Icons';
 import { AuditLogic } from '../../services/logic/AuditLogic';
@@ -11,7 +15,7 @@ import { SearchFilterBar } from '../Shared/SearchFilterBar';
 import { VirtualList } from '../Shared/VirtualList'; // Import VirtualList
 
 const AuditLogViewer: React.FC = () => {
-  const modules = useDataStore(() => threatData.getModulesForView(View.AUDIT));
+  const modules = useMemo(() => threatData.getModulesForView(View.AUDIT), []);
   const [activeModule, setActiveModule] = useState(modules[0]);
   const [searchTerm, setSearchTerm] = useState('');
   const [timeFilter, setTimeFilter] = useState('ALL');

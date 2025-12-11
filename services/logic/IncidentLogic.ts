@@ -1,4 +1,3 @@
-
 import { Threat, Case, SystemNode, SystemUser, ChainEvent, Playbook, IncidentStatus, Severity } from '../../types';
 import { apiClient } from '../apiClient';
 
@@ -36,22 +35,8 @@ export class IncidentLogic {
     try {
       return await apiClient.post<{ archived: string[], promoted: string[] }>('/analysis/triage', { threats });
     } catch {
-      // Fallback: Implement business rules
-      const archived: string[] = [];
-      const promoted: string[] = [];
-      threats.forEach(t => {
-          if (t.status === IncidentStatus.NEW) {
-            // Rule: Low confidence noise is archived.
-            if (t.confidence < 60 && t.severity === Severity.LOW) {
-              archived.push(t.id);
-            }
-            // Rule: Critical confidence > 90% is auto-promoted.
-            if (t.severity === Severity.CRITICAL && t.confidence > 90) {
-              promoted.push(t.id);
-            }
-          }
-      });
-      return { archived, promoted };
+      // Fallback
+      return { archived: [], promoted: [] };
     }
   }
 

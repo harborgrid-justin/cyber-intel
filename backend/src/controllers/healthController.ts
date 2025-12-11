@@ -5,6 +5,6 @@ export const checkHealth = (req: Request, res: Response) => {
     status: 'OPERATIONAL',
     timestamp: new Date().toISOString(),
     uptime: (process as any).uptime(),
-    system: 'Synapse Core Backend'
+    system: 'Sentinel Core Backend'
   });
 };

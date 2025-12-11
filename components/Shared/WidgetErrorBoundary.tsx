@@ -1,3 +1,4 @@
+
 import React, { ErrorInfo, ReactNode } from 'react';
 import { Icons } from './Icons';
 import { Button } from './UI';
@@ -12,7 +13,6 @@ interface State {
   error: Error | null;
 }
 
-// FIX: Extended React.Component to make this a valid class component, enabling access to lifecycle methods, state, and props.
 export class WidgetErrorBoundary extends React.Component<Props, State> {
   state: State = { 
     hasError: false, 

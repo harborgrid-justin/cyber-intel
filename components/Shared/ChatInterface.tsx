@@ -1,6 +1,8 @@
+
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from './UI';
-import { useThrottledCallback } from '../../hooks';
+import { useThrottledCallback } from '../../hooks/useThrottle';
 // FIX: Module '"../../styles/theme"' has no exported member 'EXECUTIVE_THEME'. This is now exported.
 // FIX: '"../../styles/theme"' has no exported member named 'tokens'. Did you mean 'TOKENS'?
 import { EXECUTIVE_THEME, TOKENS } from '../../styles/theme';
@@ -68,14 +70,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           return (
             <div key={msg.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-full`}>
                <div className={`flex items-center gap-2 mb-1 px-1 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{msg.senderName || (isUser ? 'OPERATOR' : 'SYNAPSE AI')}</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{msg.senderName || (isUser ? 'OPERATOR' : 'SENTINEL AI')}</span>
                     <span className="text-[9px] text-slate-600 font-mono">{new Date(msg.timestamp).toLocaleTimeString()}</span>
                </div>
                
                <div className={`
                  max-w-[90%] md:max-w-[80%] rounded-lg px-5 py-3 text-sm leading-relaxed shadow-md backdrop-blur-sm border
                  ${isUser 
-                    ? `bg-[var(--colors-brand)] text-white border-blue-500 rounded-tr-none shadow-blue-900/20` 
+                    ? `bg-blue-600 text-white border-blue-500 rounded-tr-none shadow-blue-900/20` 
                     : `bg-slate-900/90 text-slate-200 border-slate-700 rounded-tl-none shadow-black/30 font-mono`
                  }
                `}>
@@ -123,7 +125,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>
         <div className="text-[9px] text-slate-600 mt-2 font-mono flex justify-between px-1">
             <span>SECURE CHANNEL ENCRYPTED [AES-256]</span>
-            <span>SYNAPSE CORE v2.5</span>
+            <span>SENTINEL CORE v2.5</span>
         </div>
       </div>
     </div>

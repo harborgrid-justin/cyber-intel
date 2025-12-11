@@ -8,7 +8,6 @@ import FeedItem from '../Feed/FeedItem';
 import { threatData } from '../../services/dataLayer';
 import { RiskLogic } from '../../services/logic/RiskLogic';
 import CampaignImpact from './Views/CampaignImpact';
-import { useDataStore } from '../../hooks';
 
 export const CampaignBriefingView: React.FC<{ campaign: Campaign }> = ({ campaign }) => {
     return (
@@ -83,26 +82,20 @@ export const CampaignTechnicalView: React.FC<{ campaign: Campaign; threats: Thre
 );
 
 export const CampaignTimeline: React.FC<{ campaign: Campaign }> = ({ campaign }) => {
-  const allCases = useDataStore(() => threatData.getCases());
-  const allReports = useDataStore(() => threatData.getReports());
-  const allActors = useDataStore(() => threatData.getActors());
+  const relatedCases = threatData.getCases().filter(c => c.relatedThreatIds.some(tid => campaign.threatIds.includes(tid)));
+  const relatedReports = threatData.getReports().filter(r => (r.relatedActorId && campaign.actors.includes(threatData.getActors().find(a => a.id === r.relatedActorId)?.name || '')) || (r.relatedCaseId && relatedCases.some(c => c.id === r.relatedCaseId)));
 
-  const timelineItems: TimelineItem[] = useMemo(() => {
-    const relatedCases = allCases.filter(c => c.relatedThreatIds.some(tid => campaign.threatIds.includes(tid)));
-    const relatedReports = allReports.filter(r => (r.relatedActorId && campaign.actors.includes(allActors.find(a => a.id === r.relatedActorId)?.name || '')) || (r.relatedCaseId && relatedCases.some(c => c.id === r.relatedCaseId)));
+  const handleNav = (type: string, id: string) => {
+      if (type === 'CASE') window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.CASES, id } }));
+      if (type === 'REPORT') window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.REPORTS, id } }));
+  };
 
-    const handleNav = (type: 'CASE' | 'REPORT', id: string) => {
-        const view = type === 'CASE' ? View.CASES : View.REPORTS;
-        window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view, id } }));
-    };
-
-    return [
+  const timelineItems: TimelineItem[] = [
       { date: campaign.firstSeen, title: 'Campaign First Observed', type: 'START', id: 'start', description: 'Initial detection vector' },
       ...relatedCases.map(c => ({ date: c.created, title: `Case Opened: ${c.title}`, type: 'CASE', id: c.id, description: c.priority, onClick: () => handleNav('CASE', c.id) })),
       ...relatedReports.map(r => ({ date: r.date, title: `Report: ${r.title}`, type: 'REPORT', id: r.id, description: r.type, onClick: () => handleNav('REPORT', r.id) })),
       { date: campaign.lastSeen, title: 'Last Known Activity', type: 'END', id: 'end', description: 'Latest signal received' }
-    ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [campaign, allCases, allReports, allActors]);
+  ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <Card className="p-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -115,10 +108,8 @@ export const CampaignTimeline: React.FC<{ campaign: Campaign }> = ({ campaign })
 };
 
 export const CampaignAttribution: React.FC<{ actors: string[] }> = ({ actors }) => {
-  const allActors = useDataStore(() => threatData.getActors());
-
   const handleProfile = (name: string) => {
-      const actor = allActors.find(a => a.name === name);
+      const actor = threatData.getActors().find(a => a.name === name);
       if(actor) window.dispatchEvent(new CustomEvent('app-navigation', { detail: { view: View.ACTORS, id: actor.id } }));
       else alert("Actor profile not found in local database.");
   };

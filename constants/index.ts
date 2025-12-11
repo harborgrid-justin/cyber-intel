@@ -1,3 +1,4 @@
+
 export * from './mockData';
 import { 
     AppConfig, AIConfig, ScoringConfig, ThemeConfig, NavigationConfig, View, Permission, Role 
@@ -7,7 +8,7 @@ import { TOKENS } from '../styles/theme';
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   id: 'GLOBAL_CONFIG',
-  appName: 'SYNAPSE',
+  appName: 'SENTINEL',
   subtitle: 'CYBER INTELLIGENCE',
   version: '2.5.0',
   threatLevel: 'ELEVATED (DEFCON 3)',
@@ -96,7 +97,7 @@ export const MOCK_MODULES_CONFIG: Record<View, string[]> = {
     [View.ORCHESTRATOR]: ['Response Topology', 'Deception Ops', 'Segmentation', 'Patch Strategy'],
     [View.VIP_PROTECTION]: [],
     [View.MESSAGING]: [],
-    [View.SYSTEM]: ['Database', 'Users', 'Integrations', 'System Actions', 'Compliance Ops', 'Theme Designer'],
+    [View.SYSTEM]: ['Database', 'Users', 'Integrations', 'Security Policy', 'System Logs', 'Compliance Ops', 'Theme Designer'],
     [View.AUDIT]: ['Overview', 'Authentication', 'Network', 'Data', 'Policy', 'Admin', 'Errors'],
     [View.SETTINGS]: ['Profile', 'Notifications', 'API Keys', 'Integrations', 'System'],
     [View.THEME]: [],

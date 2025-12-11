@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState } from 'react';
 // Fix: Import types from the central types file
 import { IncidentReport, View, Case } from '../../../types';
 import { Button, Card, CardHeader } from '../../Shared/UI';
@@ -6,7 +7,6 @@ import { threatData } from '../../../services/dataLayer';
 import { generateCaseReport } from '../../../services/geminiService';
 import CaseCoordinationView from './CaseCoordinationView';
 import { Icons } from '../../Shared/Icons';
-import { useDataStore } from '../../../hooks/useDataStore';
 
 interface CaseResponseViewProps {
   activeCase: Case;
@@ -16,8 +16,7 @@ interface CaseResponseViewProps {
 }
 
 const CaseResponseView: React.FC<CaseResponseViewProps> = ({ activeCase, onTransfer, onShare, onGenerateReport }) => {
-  const allReports = useDataStore(() => threatData.getReports());
-  const reports = useMemo(() => allReports.filter(r => r.relatedCaseId === activeCase.id), [allReports, activeCase.id]);
+  const reports = threatData.getReportsByCase(activeCase.id);
   const [generating, setGenerating] = useState<string | null>(null);
 
   const handleGenerate = async (type: IncidentReport['type']) => {

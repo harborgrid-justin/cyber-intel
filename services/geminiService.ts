@@ -1,10 +1,9 @@
-
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { threatData } from './dataLayer';
 import { Case } from '../types';
 
 let aiClient: GoogleGenAI | null = null;
-const BRIEFING_CACHE_KEY = 'SYNAPSE_BRIEFING_CACHE';
+const BRIEFING_CACHE_KEY = 'SENTINEL_BRIEFING_CACHE';
 
 const getAiClient = (): GoogleGenAI | null => {
   if (aiClient) return aiClient;

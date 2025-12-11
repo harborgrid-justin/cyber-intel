@@ -4,14 +4,13 @@ import { Card, Badge, Button, CardHeader, Grid } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
 import { threatData } from '../../../services/dataLayer';
 import { IncidentLogic } from '../../../services/logic/IncidentLogic';
-import { useDataStore } from '../../../hooks/useDataStore';
 
 // FIX: Define a type for the enriched artifact to use with the generic component.
 type EvidenceItem = Artifact & { caseTitle: string };
 
 export const IncidentEvidence: React.FC<{ cases: Case[] }> = ({ cases }) => {
   const artifacts: EvidenceItem[] = cases.flatMap(c => c.artifacts.map(a => ({...a, caseTitle: c.title})));
-  const custody = useDataStore(() => threatData.getChainOfCustody());
+  const custody = threatData.getChainOfCustody();
   const chainStatus = IncidentLogic.validateChainOfCustody(custody);
 
   return (

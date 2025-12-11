@@ -7,7 +7,7 @@ import { SeederService } from './services/seeder.service';
 
 const startServer = async () => {
   try {
-    logger.info('🚀 Initializing Synapse Core...');
+    logger.info('🚀 Initializing Sentinel Core...');
 
     // 1. Ensure DB exists (Auto-create)
     await BootstrapUtils.ensureDatabaseExists();
@@ -26,7 +26,7 @@ const startServer = async () => {
     // 5. Start API
     const port = Number(config.port) || 4000;
     app.listen(port, '0.0.0.0', () => {
-      logger.info(`🛡️  Synapse Backend Server running on port ${port}`);
+      logger.info(`🛡️  Sentinel Backend Server running on port ${port}`);
       logger.info(`🔧 Environment: ${config.env}`);
     });
 

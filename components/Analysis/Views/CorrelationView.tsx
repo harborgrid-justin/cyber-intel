@@ -2,10 +2,9 @@
 import React from 'react';
 import { Card, CardHeader, Badge } from '../../Shared/UI';
 import { threatData } from '../../../services/dataLayer';
-import { useDataStore } from '../../../hooks';
 
 export const CorrelationView: React.FC = () => {
-  const threats = useDataStore(() => threatData.getThreats().slice(0, 5));
+  const threats = threatData.getThreats().slice(0, 5);
   
   return (
     <Card className="h-full p-0 overflow-hidden flex flex-col">

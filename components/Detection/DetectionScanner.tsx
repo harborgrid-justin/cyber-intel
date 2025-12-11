@@ -1,17 +1,20 @@
 
+
+
 import React, { useState, useMemo } from 'react';
 import { StandardPage } from '../Shared/Layouts';
+// Fix: Import UI components from the barrel file
 import { Card } from '../Shared/UI';
 import { RuleViews } from './Views/RuleViews';
 import { ForensicViews } from './Views/ForensicViews';
 import { AdvancedViews } from './Views/AdvancedViews';
 import { Icons } from '../Shared/Icons';
 import { threatData } from '../../services/dataLayer';
+// Fix: Import types from the central types file
 import { View } from '../../types';
-import { useDataStore } from '../../hooks';
 
 const DetectionScanner: React.FC = () => {
-  const modules = useDataStore(() => threatData.getModulesForView(View.DETECTION));
+  const modules = useMemo(() => threatData.getModulesForView(View.DETECTION), []);
   const [activeModule, setActiveModule] = useState(modules[0]);
 
   const renderContent = () => {

@@ -6,8 +6,7 @@ import { threatData } from '../../services/dataLayer';
 import { useWarRoom } from '../../hooks/modules/useWarRoom';
 import ChatInterface from '../Shared/ChatInterface';
 import GeoMap from '../Dashboard/GeoMap';
-import { ConfirmLockdownView } from './views/ConfirmLockdownView';
-import { useDataStore } from '../../hooks/useDataStore';
+import Modal from '../Shared/Modal';
 
 interface WarRoomProps { 
   threats: Threat[]; 
@@ -16,7 +15,7 @@ interface WarRoomProps {
 }
 
 const StatusTicker = React.memo(() => {
-  const logs = useDataStore(() => threatData.getAuditLogs().slice(0, 5));
+  const logs = threatData.getAuditLogs().slice(0, 5);
   return (
     <div className="bg-slate-950 border-b border-slate-800 py-1 overflow-hidden whitespace-nowrap flex items-center gap-4 shrink-0">
       <div className="text-[10px] font-bold text-red-500 px-4 animate-pulse">LIVE FEED</div>
@@ -44,8 +43,7 @@ const WarRoom: React.FC<WarRoomProps> = ({ threats, cases, onUpdate }) => {
     metrics
   } = useWarRoom(threats, cases);
 
-  const allUsers = useDataStore(() => threatData.getSystemUsers());
-  const activeResponders = useMemo(() => allUsers.filter(u => u.status === 'Online').length, [allUsers]);
+  const activeResponders = useMemo(() => threatData.getSystemUsers().filter(u => u.status === 'Online').length, []);
 
   const handleLockdown = () => {
     setIsLocked(true);
@@ -66,7 +64,18 @@ const WarRoom: React.FC<WarRoomProps> = ({ threats, cases, onUpdate }) => {
 
   return (
     <div className="flex flex-col h-full bg-slate-950 relative overflow-hidden">
-      {showLockdown && <ConfirmLockdownView onConfirm={handleLockdown} onAbort={() => setShowLockdown(false)} />}
+      <Modal isOpen={showLockdown} onClose={() => setShowLockdown(false)} title="CONFIRM LOCKDOWN">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          </div>
+          <p className="text-slate-300 text-sm">This will sever all external connections and revoke active sessions for non-admin users. This action is logged.</p>
+          <div className="flex gap-2 w-full">
+            <Button onClick={handleLockdown} variant="danger" className="w-full justify-center bg-red-600 hover:bg-red-700 text-white">EXECUTE PROTOCOL</Button>
+            <Button onClick={() => setShowLockdown(false)} variant="secondary" className="w-full justify-center">ABORT</Button>
+          </div>
+        </div>
+      </Modal>
 
       <HeaderContainer className="px-6 py-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

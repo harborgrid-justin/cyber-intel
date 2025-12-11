@@ -5,7 +5,6 @@ import { Button, Card, Badge } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import PlaybookRunner from './PlaybookRunner';
 import { Playbook } from '../../types';
-import { useDataStore } from '../../hooks';
 
 interface WorkflowModalProps {
   isOpen: boolean;
@@ -14,7 +13,7 @@ interface WorkflowModalProps {
 }
 
 const WorkflowModal: React.FC<WorkflowModalProps> = ({ isOpen, onClose, onApply }) => {
-  const playbooks = useDataStore(() => threatData.getPlaybooks());
+  const playbooks = threatData.getPlaybooks();
   const [selectedPlaybook, setSelectedPlaybook] = useState<Playbook | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 

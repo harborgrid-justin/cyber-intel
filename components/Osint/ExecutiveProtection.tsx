@@ -1,20 +1,16 @@
+
 import React, { useMemo } from 'react';
 import { Card, Badge, Grid, ProgressBar } from '../Shared/UI';
 import { threatData } from '../../services/dataLayer';
 import { IntelligenceLogic } from '../../services/logic/IntelligenceLogic';
 import { StandardPage } from '../Shared/Layouts';
 import { VIPProfile } from '../../types';
-import { useDataStore } from '../../hooks/useDataStore';
 
 const ExecutiveProtection: React.FC = () => {
-  const allUsers = useDataStore(() => threatData.getSystemUsers());
-  const breaches = useDataStore(() => threatData.getOsintBreaches());
-  const social = useDataStore(() => threatData.getOsintSocial());
-  const threats = useDataStore(() => threatData.getThreats());
-
-  const users = useMemo(() => {
-    return allUsers.filter(u => u.roleId === 'ROLE-ADMIN' || u.clearance === 'TS/SCI' || u.isVIP);
-  }, [allUsers]);
+  const users = threatData.getSystemUsers().filter(u => u.roleId === 'ROLE-ADMIN' || u.clearance === 'TS/SCI' || u.isVIP);
+  const breaches = threatData.getOsintBreaches();
+  const social = threatData.getOsintSocial();
+  const threats = threatData.getThreats();
 
   const profiles: VIPProfile[] = useMemo(() => {
     return users.map(u => IntelligenceLogic.calculateVIPRisk(u, breaches, social, threats))
