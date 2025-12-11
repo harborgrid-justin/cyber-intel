@@ -1,6 +1,7 @@
 
 import { Threat, Severity } from '../../../types';
 import { apiClient } from '../../apiClient';
+import { threatData } from '../../dataLayer';
 
 interface DefconStatus {
   level: number;
@@ -16,6 +17,9 @@ interface TrendMetrics {
 
 export class OverviewLogic {
   static async calculateDefconLevel(): Promise<DefconStatus> {
+    if (threatData.isOffline) {
+        return { level: 4, label: 'GUARDED (OFFLINE)', color: 'text-green-500' };
+    }
     try {
       return await apiClient.get<DefconStatus>('/analysis/dashboard/defcon');
     } catch {
@@ -24,6 +28,9 @@ export class OverviewLogic {
   }
 
   static async getTrendMetrics(): Promise<TrendMetrics> {
+    if (threatData.isOffline) {
+        return { count: 0, delta: 0, trend: 'DOWN' };
+    }
     try {
       return await apiClient.get<TrendMetrics>('/analysis/dashboard/trends');
     } catch {
@@ -54,6 +61,7 @@ export class GeoLogic {
   }
 
   static async getRegionalRisk(): Promise<[string, number][]> {
+    if (threatData.isOffline) return [];
     try {
       return await apiClient.get<[string, number][]>('/analysis/dashboard/regional-risk');
     } catch {

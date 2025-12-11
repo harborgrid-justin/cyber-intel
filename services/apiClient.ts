@@ -2,6 +2,7 @@
 import { CONFIG } from '../config';
 import { CircuitBreaker } from './utils/CircuitBreaker';
 import { RateLimiter } from './algorithms/LeakyBucket';
+import { Logger } from './logger';
 
 const BASE_URL = 'http://localhost:4000/api/v1';
 const DEFAULT_TIMEOUT = 3000;
@@ -9,21 +10,22 @@ const DEFAULT_TIMEOUT = 3000;
 const circuitBreaker = new CircuitBreaker(5, 10000); 
 const rateLimiter = new RateLimiter(50, 10); 
 
-// Cache for in-flight requests (Deduplication)
 const inflightRequests = new Map<string, Promise<any>>();
 
+export interface ApiOptions extends RequestInit {
+  silent?: boolean;
+}
+
 class ApiClient {
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
     const cacheKey = `${options.method || 'GET'}:${endpoint}:${JSON.stringify(options.body)}`;
 
-    // 1. Deduplication: Return existing promise if request is already in flight
     if (options.method === 'GET' && inflightRequests.has(cacheKey)) {
-        // console.debug(`[API] Deduplicated request for ${endpoint}`);
         return inflightRequests.get(cacheKey) as Promise<T>;
     }
 
     if (!rateLimiter.tryAcquire(1)) {
-        console.warn(`[API] Rate limit exceeded for ${endpoint}, throttling...`);
+        if (!options.silent) Logger.warn(`Rate limit exceeded`, { endpoint });
         throw new Error('Client-side Rate Limit Exceeded');
     }
 
@@ -48,10 +50,12 @@ class ApiClient {
           return (json.data !== undefined ? json.data : json) as T;
         } catch (error: any) {
           clearTimeout(id);
+          if (!options.silent) {
+            Logger.error('API Request Failed', { endpoint, error: error.message });
+          }
           throw error;
         }
     }).finally(() => {
-        // Clean up inflight map
         inflightRequests.delete(cacheKey);
     });
 
@@ -62,12 +66,12 @@ class ApiClient {
     return requestPromise;
   }
 
-  get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
+  get<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
-  post<T>(endpoint: string, body: unknown): Promise<T> {
-    return this.request<T>(endpoint, { method: 'POST', body: JSON.stringify(body) });
+  post<T>(endpoint: string, body: unknown, options: ApiOptions = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) });
   }
 }
 

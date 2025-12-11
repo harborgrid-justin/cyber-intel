@@ -1,31 +1,46 @@
 
-// A lightweight localization engine without heavy library overhead
 type Locale = 'en' | 'es' | 'fr' | 'jp';
 
 const DICTIONARY: Record<Locale, Record<string, string>> = {
   en: {
     'app.title': 'SENTINEL CORE',
+    'nav.dashboard': 'Dashboard',
+    'nav.feed': 'Threat Feed',
+    'nav.analysis': 'Analysis',
+    'nav.cases': 'Case Management',
+    'nav.settings': 'Settings',
     'status.online': 'ONLINE',
-    'status.offline': 'OFFLINE',
-    'threat.critical': 'CRITICAL THREAT DETECTED'
+    'status.offline': 'OFFLINE'
   },
   es: {
     'app.title': 'NÚCLEO CENTINELA',
+    'nav.dashboard': 'Tablero',
+    'nav.feed': 'Amenazas',
+    'nav.analysis': 'Análisis',
+    'nav.cases': 'Casos',
+    'nav.settings': 'Ajustes',
     'status.online': 'EN LÍNEA',
-    'status.offline': 'DESCONECTADO',
-    'threat.critical': 'AMENAZA CRÍTICA DETECTADA'
+    'status.offline': 'DESCONECTADO'
   },
   fr: {
     'app.title': 'NOYAU SENTINELLE',
+    'nav.dashboard': 'Tableau de bord',
+    'nav.feed': 'Flux de menaces',
+    'nav.analysis': 'Analyse',
+    'nav.cases': 'Dossiers',
+    'nav.settings': 'Paramètres',
     'status.online': 'EN LIGNE',
-    'status.offline': 'HORS LIGNE',
-    'threat.critical': 'MENACE CRITIQUE DÉTECTÉE'
+    'status.offline': 'HORS LIGNE'
   },
   jp: {
     'app.title': 'センチネル・コア',
+    'nav.dashboard': 'ダッシュボード',
+    'nav.feed': '脅威フィード',
+    'nav.analysis': '分析',
+    'nav.cases': '事件管理',
+    'nav.settings': '設定',
     'status.online': 'オンライン',
-    'status.offline': 'オフライン',
-    'threat.critical': '重大な脅威を検出'
+    'status.offline': 'オフライン'
   }
 };
 

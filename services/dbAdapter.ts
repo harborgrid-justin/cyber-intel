@@ -54,8 +54,6 @@ export class MockAdapter implements DatabaseAdapter {
 
   execute(action: 'CREATE' | 'UPDATE' | 'DELETE', collection: string, data: Record<string, any>) {
     this.logs.unshift(`[MOCK] ${action} on ${collection}: ${JSON.stringify(data).substring(0, 50)}...`);
-    // In a real mock, we would update the In-Memory arrays in DataLayer directly, 
-    // but BaseStore handles the local state update for us. This is just for logging/persistence simulation.
   }
 
   async query(collection: string): Promise<any[]> {
@@ -123,8 +121,8 @@ export class RemoteAdapter implements DatabaseAdapter {
 
   async connect(_config: DatabaseConfig) {
     try {
-      // Health check
-      await apiClient.get('/health');
+      // Health check with silent=true to avoid error spam during fallback
+      await apiClient.get('/health', { silent: true });
       this.isConnected = true;
       this.logs.unshift(`[API] Connected to Sentinel Core Backend`);
       return true;
@@ -162,7 +160,6 @@ export class RemoteAdapter implements DatabaseAdapter {
       return Array.isArray(result) ? result : (result as any).data || [];
     } catch (e: any) {
       this.logs.unshift(`[API] Query ${collection} - Failed: ${e.message}`);
-      // Important: Throw error here so DataLayer catches it and switches to MockAdapter
       throw e; 
     }
   }

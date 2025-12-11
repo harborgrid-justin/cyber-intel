@@ -2,6 +2,7 @@
 import { apiClient } from '../../apiClient';
 import { CountMinSketch } from '../../algorithms/CountMinSketch';
 import { SystemNode } from '../../../types';
+import { threatData } from '../../dataLayer';
 
 // Probabilistic data structure to track protocol frequency without unbounded memory
 const trafficSketch = new CountMinSketch(0.01, 0.99); // Error 1%, Confidence 99%
@@ -24,11 +25,18 @@ interface CloudSecurityResponse {
 
 export class HealthLogic {
   static async getSystemHealth(cachedNodes: SystemNode[]): Promise<SystemHealthResponse> {
+    if (threatData.isOffline) {
+        return this.getOfflineSimulation(cachedNodes);
+    }
     try {
       // Returns pre-calculated risk and predictions from backend
       return await apiClient.get<SystemHealthResponse>('/analysis/dashboard/system-health');
     } catch {
-      // Robust Offline Simulation using provided node data
+      return this.getOfflineSimulation(cachedNodes);
+    }
+  }
+
+  private static getOfflineSimulation(cachedNodes: SystemNode[]): SystemHealthResponse {
       const nodes = cachedNodes.map(n => ({
           nodeId: n.id,
           name: n.name,
@@ -38,7 +46,6 @@ export class HealthLogic {
           status: n.status
       }));
       return { nodes, systemUptime: 99.98 };
-    }
   }
 
   // Deprecated: Logic moved to backend `DashboardAnalyticsEngine.predictSystemHealth`
@@ -49,15 +56,22 @@ export class HealthLogic {
 
 export class NetworkOpsLogic {
   static async getNetworkAnalytics(): Promise<NetworkAnalyticsResponse> {
+    if (threatData.isOffline) {
+        return this.getOfflineTraffic();
+    }
     try {
       return await apiClient.get<NetworkAnalyticsResponse>('/dashboard/network');
     } catch {
+      return this.getOfflineTraffic();
+    }
+  }
+  
+  private static getOfflineTraffic(): NetworkAnalyticsResponse {
       // Offline Traffic Simulation using Sketch for variation
       trafficSketch.add('HTTPS');
       trafficSketch.add('HTTPS');
       trafficSketch.add('DNS');
       
-      // Use sketch estimates to perturb base values for liveliness
       return { 
           traffic: [
               { protocol: 'HTTPS', volumeMB: 450.5, count: 12000 + trafficSketch.estimate('HTTPS') },
@@ -71,7 +85,6 @@ export class NetworkOpsLogic {
               confidence: 95 
           } 
       };
-    }
   }
 
   // Deprecated: Logic moved to `NetworkEngine`
@@ -86,9 +99,17 @@ export class NetworkOpsLogic {
 
 export class CloudSecLogic {
   static async getCloudSecurity(): Promise<CloudSecurityResponse> {
+    if (threatData.isOffline) {
+        return this.getOfflineCloud();
+    }
     try {
       return await apiClient.get<CloudSecurityResponse>('/analysis/dashboard/cloud-security');
     } catch {
+      return this.getOfflineCloud();
+    }
+  }
+  
+  private static getOfflineCloud(): CloudSecurityResponse {
       return { 
           iamRisks: [
               { resource: 's3-prod-bucket', issue: 'Public Read Access' },
@@ -97,6 +118,5 @@ export class CloudSecLogic {
           misconfigurations: 3, 
           monthlySpend: 12500 
       };
-    }
   }
 }

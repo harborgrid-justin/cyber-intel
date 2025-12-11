@@ -2,6 +2,7 @@
 import { ChainEvent, Malware, AuditLog, Task, Playbook, ThreatActor, Vulnerability, SystemNode, SystemUser, Device, IoCFeed, NistControl } from '../../types';
 import { OsintSocial } from '../../types';
 import { apiClient } from '../apiClient';
+import { threatData } from '../dataLayer';
 
 export class SystemLogic {
   static validateChainOfCustody(history: ChainEvent[], newEvent: ChainEvent) { 
@@ -13,26 +14,35 @@ export class SystemLogic {
   }
 
   static async checkNistCompliance(controls: NistControl[]): Promise<{ score: number, criticalGaps: string[] }> {
+      if (threatData.isOffline) return { score: 0, criticalGaps: [] };
       try { return await apiClient.post('/analysis/compliance/nist', { controls }); } 
       catch { return { score: 0, criticalGaps: [] }; }
   }
 
   static async assessAssetRisk(node: SystemNode): Promise<any> { 
+      if (threatData.isOffline) {
+          let risk = 0; if (node.type === 'Database') risk += 50; if (node.dataSensitivity === 'RESTRICTED') risk += 40; return { riskScore: risk, factors: ['Offline Estimate'] };
+      }
       try { return await apiClient.get(`/analysis/assets/${node.id}/risk`); } 
       catch { let risk = 0; if (node.type === 'Database') risk += 50; if (node.dataSensitivity === 'RESTRICTED') risk += 40; return { riskScore: risk, factors: ['Offline Estimate'] }; }
   }
 
   static async escalateVIPTargets(actor: ThreatActor): Promise<ThreatActor> { 
+      if (threatData.isOffline) {
+          if (actor.targets.includes('Executive')) { return { ...actor, sophistication: 'Advanced' as const }; } return actor;
+      }
       try { const res = await apiClient.post<any>(`/analysis/actors/${actor.id}/escalate-vip`, {}); return res.actor; } 
       catch { if (actor.targets.includes('Executive')) { return { ...actor, sophistication: 'Advanced' as const }; } return actor; }
   }
 
   static async detectImpossibleTravel(): Promise<AuditLog[]> {
+      if (threatData.isOffline) return [];
       try { return await apiClient.get<AuditLog[]>('/analysis/compliance/travel'); } 
       catch { return []; }
   }
 
   static async checkRetentionPolicy(): Promise<void> { 
+      if (threatData.isOffline) return;
       try { await apiClient.post('/analysis/lifecycle/system/retention', {}); } 
       catch { }
   }

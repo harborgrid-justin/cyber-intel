@@ -101,3 +101,10 @@ export interface SlaStatus {
 export interface DecoyRecommendation { nodeId: string; reason: string; score: number; }
 export interface SegmentationResult { blockedCount: number; affectedServices: string[]; }
 export interface LateralPath { path: string[]; risk: number; details: string; }
+
+export interface RiskForecastItem {
+  id: string;
+  day: string;
+  risk: number;
+  label: string;
+}

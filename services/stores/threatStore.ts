@@ -1,4 +1,3 @@
-
 import { Threat, ThreatActor, Case, IncidentStatus, CaseId } from '../../types';
 import { BaseStore } from './baseStore';
 import { ThreatLogic } from '../logic/ThreatLogic';
@@ -47,8 +46,9 @@ export class ThreatStore extends BaseStore<Threat> {
     const res = this.getById(id);
     if (res.success && res.data) {
       const t = res.data;
-      t.status = status;
-      this.update(t);
+      const updatedThreat = { ...t, status: status };
+      this.update(updatedThreat);
+      
       if (status === IncidentStatus.INVESTIGATING && !existingCases.find((c) => c.relatedThreatIds.includes(id))) {
         onAutoCase({ id: `CASE-${Date.now()}` as CaseId, title: `Investigation: ${t.indicator}`, description: `Auto-gen`, status: 'OPEN', priority: 'MEDIUM', assignee: 'System', reporter: 'System', tasks: [], findings: '', relatedThreatIds: [t.id], created: new Date().toISOString(), notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Auto'], tlp: 'AMBER' });
       }
