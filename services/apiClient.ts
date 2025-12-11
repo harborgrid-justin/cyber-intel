@@ -1,10 +1,9 @@
-
 import { CONFIG } from '../config';
 import { CircuitBreaker } from './utils/CircuitBreaker';
 import { RateLimiter } from './algorithms/LeakyBucket';
 import { Logger } from './logger';
 
-const BASE_URL = 'http://localhost:4000/api/v1';
+const BASE_URL = '/api/v1';
 const DEFAULT_TIMEOUT = 3000;
 
 const circuitBreaker = new CircuitBreaker(5, 10000); 

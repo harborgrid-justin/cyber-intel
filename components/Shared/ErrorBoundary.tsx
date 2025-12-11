@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { ErrorInfo, ReactNode } from 'react';
 import { Card, Button } from './UI';
 import { Icons } from './Icons';
 
@@ -12,7 +12,8 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+// FIX: Explicitly extend React.Component to resolve type errors where `this.props` and `this.setState` were not found.
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   // Fix: Refactored state initialization to use a class property initializer.
   state: ErrorBoundaryState = {
     hasError: false,

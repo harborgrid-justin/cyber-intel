@@ -6,29 +6,26 @@ import { AdvancedInterconnect } from '../../services/logic/AdvancedInterconnect'
 import { DeepAnalytics } from '../../services/logic/DeepAnalytics';
 import { Icons } from '../Shared/Icons';
 import { IntegrationMetric } from '../../types';
-// FIX: Changed 'tokens' to 'TOKENS' to match export.
 import { TOKENS } from '../../styles/theme';
 
 // Reusable Cell
 const MatrixCell: React.FC<{ metric: IntegrationMetric }> = ({ metric }) => {
     const IconComponent = Icons[metric.icon as keyof typeof Icons] || Icons.Activity;
     
-    // FIX: Replaced invalid theme object access with CSS variables for colors.
     const getStatusStyle = (status: string) => {
         switch (status) {
-            case 'CRITICAL': return `bg-[var(--color-errorDim)] border-[var(--color-error)] text-[var(--color-error)]`;
-            case 'WARNING': return `bg-[var(--color-warningDim)] border-[var(--color-warning)] text-[var(--color-warning)]`;
-            case 'ACTIVE': return `bg-[var(--color-infoDim)] border-[var(--color-info)] text-[var(--color-info)]`;
-            case 'MITIGATING': return `bg-[var(--color-infoDim)] border-[var(--color-info)] text-[var(--color-info)]`;
-            case 'SECURE': return `bg-[var(--color-successDim)] border-[var(--color-success)] text-[var(--color-success)]`;
+            case 'CRITICAL': return `bg-[var(--colors-errorDim)] border-[var(--colors-error)] text-[var(--colors-error)]`;
+            case 'WARNING': return `bg-[var(--colors-warningDim)] border-[var(--colors-warning)] text-[var(--colors-warning)]`;
+            case 'ACTIVE': return `bg-[var(--colors-infoDim)] border-[var(--colors-info)] text-[var(--colors-info)]`;
+            case 'MITIGATING': return `bg-[var(--colors-infoDim)] border-[var(--colors-info)] text-[var(--colors-info)]`;
+            case 'SECURE': return `bg-[var(--colors-successDim)] border-[var(--colors-success)] text-[var(--colors-success)]`;
             case 'MONITORING': return `bg-purple-900/20 border-purple-500 text-purple-400 border`;
             case 'IDLE': 
             default: 
-                // Ghost style for idle cells
                 return `bg-slate-900/20 border border-dashed border-slate-800/50 text-slate-500 hover:border-slate-600 hover:bg-slate-800/30 hover:text-slate-300`;
         }
     };
-    
+
     const baseClass = getStatusStyle(metric.status);
 
     return (

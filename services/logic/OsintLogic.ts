@@ -1,6 +1,3 @@
-
-
-// Fix: Add missing type imports
 import { OsintDomain, OsintBreach, OsintSocial, OsintGeo, OsintDarkWebItem, GlobalSearchResult, DomainAnalysis, IdentityAnalysis, CredentialExposure, NetworkAnalysis, DarkWebAnalysis } from '../../types';
 import { apiClient } from '../apiClient';
 import { threatData } from '../dataLayer';
@@ -16,8 +13,10 @@ export class OsintLogic {
       const ids = threatData.fullTextSearch.search(query);
       
       ids.forEach(id => {
-          const threat = threatData.threatStore.getById(id);
-          if (threat) results.push({ type: 'THREAT', val: threat });
+          const threatResult = threatData.threatStore.getById(id);
+          if (threatResult.success && threatResult.data) {
+            results.push({ type: 'THREAT', val: threatResult.data });
+          }
       });
 
       const q = query.toLowerCase();
