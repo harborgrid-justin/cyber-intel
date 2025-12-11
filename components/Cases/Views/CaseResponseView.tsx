@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-// Fix: Import types from the central types file
 import { IncidentReport, View, Case } from '../../../types';
 import { Button, Card, CardHeader } from '../../Shared/UI';
 import { threatData } from '../../../services/dataLayer';

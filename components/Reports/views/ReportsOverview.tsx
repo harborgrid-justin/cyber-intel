@@ -1,8 +1,6 @@
 
 import React from 'react';
-// Fix: Import types from the central types file
 import { IncidentReport } from '../../../types';
-// Fix: Import Grid from the correct location
 import { Card, Grid, ProgressBar, Button, CardHeader } from '../../Shared/UI';
 import { Icons } from '../../Shared/Icons';
 
@@ -49,4 +47,3 @@ export const ReportsOverview: React.FC<Props> = ({ reports, onSelect }) => {
         </div>
     );
 };
-    

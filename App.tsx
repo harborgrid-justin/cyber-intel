@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Layout from './components/Layout/Layout';
-import { ErrorBoundary } from './components/Shared/ErrorBoundary';
 import { View } from './types';
 import { threatData } from './services/dataLayer';
 import { Icons } from './components/Shared/Icons';
@@ -114,12 +113,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <ErrorBoundary>
       <Layout currentView={currentView} onNavigate={(view) => bus.emit(EVENTS.NAVIGATE, { view })}>
         {isOffline && <div className="bg-[var(--colors-warningDim)] border-b border-[var(--colors-warning)]/50 text-[var(--colors-warning)] text-[10px] py-1 px-4 text-center font-mono font-bold">⚠ OFFLINE MODE: USING LOCAL CACHE & SIMULATION LOGIC.</div>}
         <Suspense fallback={<LoadingFallback />}>{renderContent()}</Suspense>
       </Layout>
-    </ErrorBoundary>
   );
 };
 export default App;

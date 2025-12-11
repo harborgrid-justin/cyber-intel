@@ -1,6 +1,5 @@
 
 import { DataMapper } from './dataMapper';
-// Fix: Correct import path for types
 import { Threat, Case, ThreatActor, SystemNode, IncidentStatus, Severity } from '../types';
 import { DataStandardizer } from './utils/standardizer';
 import { calculateThreatScore } from './scoringEngine';

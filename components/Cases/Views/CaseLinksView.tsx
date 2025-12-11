@@ -1,8 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-// Fix: Import types from the central types file
 import { Case } from '../../../types';
-// Fix: Correct import path for UI components. The barrel file is UI.tsx, not ui/index.ts.
 import { Card, Button, Input, Badge, CardHeader } from '../../Shared/UI';
 import { threatData } from '../../../services/dataLayer';
 import { Icons } from '../../Shared/Icons';

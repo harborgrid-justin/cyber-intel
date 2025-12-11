@@ -1,6 +1,5 @@
 
 import React from 'react';
-// Fix: Import types from the central types file
 import { IncidentReport } from '../../../types';
 import { Input, Button, Badge, FilterGroup } from '../../Shared/UI';
 import { SectionHeader } from '../../Shared/UI';
@@ -47,4 +46,3 @@ export const ReportList: React.FC<Props> = ({ reports, filteredReports, searchTe
     </div>
   );
 };
-    

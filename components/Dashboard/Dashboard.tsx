@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { StandardPage } from '../Shared/Layouts';
 import { OverviewView } from './Views/OverviewView';
@@ -8,7 +9,6 @@ import { VisibilityGuard } from '../Shared/VisibilityGuard';
 import { PhaseTwoMatrix } from './PhaseTwoMatrix';
 import { LoadingSpinner } from '../Shared/LoadingSpinner';
 import { useDashboardLogic } from '../../hooks/modules/useDashboardLogic';
-import { WidgetErrorBoundary } from '../Shared/WidgetErrorBoundary';
 
 const Dashboard: React.FC = () => {
   const { 
@@ -74,22 +74,20 @@ const Dashboard: React.FC = () => {
         activeModule={activeModule} 
         onModuleChange={handleModuleChange}
     >
-      <WidgetErrorBoundary title={`Dashboard: ${activeModule}`}>
-        <div 
-          className={`relative flex flex-col ${isPending ? 'opacity-50 grayscale transition-opacity' : 'opacity-100 transition-opacity'}`}
-          role="region"
-          aria-label="Dashboard Content"
-        >
-          <Suspense fallback={<div className="flex justify-center items-center h-full min-h-[400px]"><LoadingSpinner /></div>}>
-              {renderContent()}
-          </Suspense>
-          {isPending && (
-              <div className="absolute top-2 right-2">
-                  <LoadingSpinner size="sm" />
-              </div>
-          )}
-        </div>
-      </WidgetErrorBoundary>
+      <div 
+        className={`relative flex flex-col ${isPending ? 'opacity-50 grayscale transition-opacity' : 'opacity-100 transition-opacity'}`}
+        role="region"
+        aria-label="Dashboard Content"
+      >
+        <Suspense fallback={<div className="flex justify-center items-center h-full min-h-[400px]"><LoadingSpinner /></div>}>
+            {renderContent()}
+        </Suspense>
+        {isPending && (
+            <div className="absolute top-2 right-2">
+                <LoadingSpinner size="sm" />
+            </div>
+        )}
+      </div>
     </StandardPage>
   );
 };

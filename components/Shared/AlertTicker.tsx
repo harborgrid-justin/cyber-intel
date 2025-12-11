@@ -2,7 +2,6 @@
 import React from 'react';
 import { Threat, Severity } from '../../types';
 import { Icons } from './Icons';
-// FIX: Changed 'tokens' to 'TOKENS' to match export.
 import { EXECUTIVE_THEME, TOKENS } from '../../styles/theme';
 
 interface AlertTickerProps {
@@ -14,7 +13,6 @@ const AlertTicker: React.FC<AlertTickerProps> = ({ threats }) => {
   if (criticals.length === 0) return null;
 
   return (
-    // FIX: Replaced invalid theme object access with CSS variables for colors.
     <div className={`w-full bg-[var(--colors-errorDim)] border-y border-[var(--colors-error)] overflow-hidden flex items-center h-8 relative group z-40`}>
       <div className={`absolute left-0 z-10 bg-rose-950/90 backdrop-blur px-3 h-full flex items-center text-[10px] font-bold text-rose-400 uppercase tracking-widest border-r border-[var(--colors-error)] shadow-lg`}>
         <Icons.AlertTriangle className="w-3 h-3 mr-2 animate-pulse text-rose-500" />

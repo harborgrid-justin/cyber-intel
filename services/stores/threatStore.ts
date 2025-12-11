@@ -1,3 +1,4 @@
+
 import { Threat, ThreatActor, Case, IncidentStatus, CaseId } from '../../types';
 import { BaseStore } from './baseStore';
 import { ThreatLogic } from '../logic/ThreatLogic';
@@ -18,14 +19,16 @@ export class ThreatStore extends BaseStore<Threat> {
     super.notify();
   }
 
-  getThreats(sortByScore = true): Threat[] {
-    const currentClearance = CONFIG.USER.CLEARANCE;
-    if (this._memoizedThreats && this._lastClearance === currentClearance) return this._memoizedThreats;
-    let safe = this.items.map(t => ThreatLogic.enforceTLP(t, currentClearance));
+  getThreats(sortByScore = true, clearance: string): Threat[] {
+    if (this._memoizedThreats && this._lastClearance === clearance) return this._memoizedThreats;
+    
+    // Use passed clearance, not hardcoded CONFIG
+    let safe = this.items.map(t => ThreatLogic.enforceTLP(t, clearance));
     safe = safe.map(t => ThreatLogic.adjustThresholdsByDefcon(t, CONFIG.APP.THREAT_LEVEL));
     if (sortByScore) safe.sort((a, b) => b.score - a.score);
+    
     this._memoizedThreats = safe;
-    this._lastClearance = currentClearance;
+    this._lastClearance = clearance;
     return safe;
   }
 

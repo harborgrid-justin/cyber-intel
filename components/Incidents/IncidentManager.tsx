@@ -1,6 +1,6 @@
+
 import React from 'react';
 import { useIncidentManager } from '../../hooks/modules/useIncidentManager';
-import { WidgetErrorBoundary } from '../Shared/WidgetErrorBoundary';
 import { StandardPage } from '../Shared/Layouts';
 import { Card } from '../Shared/UI';
 import { LoadingSpinner } from '../Shared/LoadingSpinner';
@@ -64,9 +64,7 @@ const IncidentManager: React.FC = () => {
     >
       <div className="flex-1 overflow-y-auto mt-2 min-h-0">
         <React.Suspense fallback={<div className="h-full flex items-center justify-center"><LoadingSpinner size="lg" /></div>}>
-          <WidgetErrorBoundary title={activeModule}>
             {renderContent()}
-          </WidgetErrorBoundary>
         </React.Suspense>
       </div>
     </StandardPage>

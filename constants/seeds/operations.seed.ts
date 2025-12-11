@@ -1,5 +1,4 @@
-
-import { Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, IncidentReport, ReportSection, VendorFeedItem, EnrichmentModule, ParserRule, NormalizationRule, SegmentationPolicy, Honeytoken, TrafficFlow, OsintDarkWebItem, OsintFileMeta } from '../../types';
+import { Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, IncidentReport, ReportSection, VendorFeedItem, EnrichmentModule, ParserRule, NormalizationRule, SegmentationPolicy, Honeytoken, TrafficFlow } from '../../types';
 
 export const MOCK_PLAYBOOKS: Playbook[] = [ { id: 'pb1', name: 'Phishing Response', description: 'Standard procedure.', tasks: ['Analyze Email', 'Block Domain', 'Reset Creds'], triggerLabel: 'Phishing', riskLevel: 'LOW' } ];
 export const MOCK_AUDIT_LOGS: any[] = [ { id: 'L-1001', action: 'LOGIN_SUCCESS', user: 'admin.connor', timestamp: new Date(Date.now() - 360000).toISOString(), details: 'MFA Verified', location: '10.0.0.5' } ];
@@ -16,5 +15,3 @@ export const MOCK_NORMALIZATION: NormalizationRule[] = [ { id: 'n1', sourceField
 export const MOCK_POLICIES: SegmentationPolicy[] = [ { id: 'pol-1', name: 'Isolate DB', source: '*', destination: 'PROD-DB', port: '5432', action: 'DENY', status: 'ACTIVE' } ];
 export const MOCK_HONEYTOKENS: Honeytoken[] = [ { id: 'h1', name: 'aws_keys.txt', type: 'FILE', location: 'S3-Public', status: 'ACTIVE', effectiveness: 85 } ];
 export const MOCK_TRAFFIC_FLOWS: TrafficFlow[] = [ { id: 'fl-1', source: '192.168.1.5', dest: '10.0.0.50', port: '5432', allowed: true, timestamp: '10:00:01' } ];
-export const MOCK_DARKWEB: OsintDarkWebItem[] = [ { id: 'dw1', source: 'RaidForums', title: 'DB Leak', date: '2023', author: 'God', status: 'Verified', price: '$500' } ];
-export const MOCK_META: OsintFileMeta[] = [ { id: 'meta-1', name: 'invoice.pdf', size: '1MB', type: 'PDF', author: 'Unknown', created: '2023', gps: 'None' } ];

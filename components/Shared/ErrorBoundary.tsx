@@ -13,6 +13,9 @@ interface ErrorBoundaryState {
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  // FIX: Added state property declaration.
+  public state: ErrorBoundaryState;
+  
   // FIX: Initialize state in the constructor for broader compatibility.
   constructor(props: ErrorBoundaryProps) {
     super(props);

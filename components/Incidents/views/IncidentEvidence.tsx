@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Case, Artifact } from '../../../types';
 import { Card, Badge, Button, CardHeader, Grid } from '../../Shared/UI';
@@ -5,7 +6,6 @@ import ResponsiveTable from '../../Shared/ResponsiveTable';
 import { threatData } from '../../../services/dataLayer';
 import { IncidentLogic } from '../../../services/logic/IncidentLogic';
 
-// FIX: Define a type for the enriched artifact to use with the generic component.
 type EvidenceItem = Artifact & { caseTitle: string };
 
 export const IncidentEvidence: React.FC<{ cases: Case[] }> = ({ cases }) => {
@@ -32,7 +32,6 @@ export const IncidentEvidence: React.FC<{ cases: Case[] }> = ({ cases }) => {
 
         <Card className="p-0 overflow-hidden">
             <CardHeader title="Evidence Locker & Analysis" action={<Button variant="secondary" className="text-[10px] py-1">GENERATE HASH REPORT</Button>} />
-            {/* FIX: Explicitly provide the generic type to ResponsiveTable to ensure correct type inference for render props. */}
             <ResponsiveTable<EvidenceItem> data={artifacts} keyExtractor={a => a.id}
                 columns={[
                 { header: 'File Name', render: a => <span className="text-white font-mono text-xs font-bold">{a.name}</span> },

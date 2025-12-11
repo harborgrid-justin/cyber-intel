@@ -11,7 +11,6 @@ import { useAuditLogViewer } from '../../hooks/modules/useAuditLogViewer';
 
 const AuditLogViewer: React.FC = () => {
   const modules = useMemo(() => threatData.getModulesForView(View.AUDIT), []);
-  // Fix: The original code used useState without importing it.
   const [activeModule, setActiveModule] = useState(modules[0]);
 
   const {

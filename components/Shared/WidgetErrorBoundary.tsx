@@ -13,6 +13,9 @@ interface State {
 }
 
 export class WidgetErrorBoundary extends Component<Props, State> {
+  // FIX: Add state property declaration
+  public state: State;
+
   // FIX: Initialize state in the constructor for broader compatibility.
   constructor(props: Props) {
     super(props);

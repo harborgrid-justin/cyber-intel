@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardHeader, Badge, ProgressBar } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
-// Fix: Import types from the central types file.
 import { NistControl } from '../../../types';
 
 interface Props {
@@ -58,4 +57,3 @@ export const ComplianceOps: React.FC<Props> = ({ compliance, controls }) => {
     </div>
   );
 };
-    

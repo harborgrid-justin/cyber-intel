@@ -1,15 +1,15 @@
 
 
 
+
+
 import React, { useState, useEffect } from 'react';
-// Fix: Import UI components from the barrel file
 import { Card, Badge, Grid, CardHeader } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
 import { threatData } from '../../../services/dataLayer';
 import { useDataStore } from '../../../hooks/useDataStore';
 import { OsintLogic } from '../../../services/logic/OsintLogic';
 import { Icons } from '../../Shared/Icons';
-// Fix: Import types from the central types file
 import { OsintGeo, OsintFileMeta, OsintDarkWebItem, NetworkAnalysis, DarkWebAnalysis } from '../../../types';
 import { DarkWebTerminal } from '../DarkWebTerminal';
 
@@ -38,7 +38,6 @@ export const InfrastructureViews = {
       <Card className="flex-1 p-0 overflow-hidden flex flex-col h-full">
          <CardHeader title="Network Infrastructure Analysis" />
          <div className="flex-1 overflow-y-auto">
-            {/* Fix: The generic type for ResponsiveTable needs an 'id' property. EnrichedGeo has it from OsintGeo. */}
             <ResponsiveTable<EnrichedGeo> 
                data={enriched} 
                keyExtractor={i => i.ip}

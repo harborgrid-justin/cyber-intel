@@ -3,7 +3,6 @@ import React from 'react';
 import { useNetworkStatus } from '../../../hooks/useNetworkStatus';
 import { Card } from '../../Shared/UI';
 import { Icons } from '../../Shared/Icons';
-// FIX: Changed 'tokens' to 'TOKENS' to match export.
 import { EXECUTIVE_THEME, TOKENS } from '../../../styles/theme';
 
 export const ConnectionQuality: React.FC = () => {
@@ -12,7 +11,6 @@ export const ConnectionQuality: React.FC = () => {
   return (
     <Card className={`p-4 flex items-center justify-between ${EXECUTIVE_THEME.surfaces.card_base}`}>
       <div className="flex items-center gap-3">
-        {/* FIX: Replaced invalid theme object access with CSS variables for colors. */}
         <div className={`p-2 rounded-full ${online ? 'bg-[var(--colors-successDim)] text-[var(--colors-success)]' : 'bg-[var(--colors-errorDim)] text-[var(--colors-error)]'}`}>
             <Icons.Activity className="w-5 h-5" />
         </div>

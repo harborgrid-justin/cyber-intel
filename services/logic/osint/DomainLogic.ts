@@ -1,4 +1,5 @@
 
+
 import { OsintDomain } from '../../../types';
 import { OsintLogic } from '../OsintLogic';
 

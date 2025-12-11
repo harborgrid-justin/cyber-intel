@@ -1,6 +1,5 @@
 
 import React, { useMemo } from 'react';
-// Fix: Import types from the central types file.
 import { Threat } from '../../types';
 import { TOKENS } from '../../styles/theme';
 

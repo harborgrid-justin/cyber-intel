@@ -38,7 +38,6 @@ export class DataLayer {
   public trafficMetrics = new TimeSeriesStore();
   public threatCache: ReadThroughCache<Threat | null>;
   
-  private _filteredThreats: { data: Threat[], clearance: string, sourceLen: number } | null = null;
   [key: string]: any;
 
   constructor() {
@@ -117,16 +116,9 @@ export class DataLayer {
   }
 
   getThreats(sort = true): Threat[] { 
-    const res = this.threatStore.getAll();
-    const raw = res.success ? (res.data as Threat[]) : [];
     const clearance = this.currentUser?.clearance || 'UNCLASSIFIED';
-    
-    if (this._filteredThreats && this._filteredThreats.sourceLen === raw.length && this._filteredThreats.clearance === clearance) {
-          // Cached
-    }
-    const filtered = AclManager.filter<Threat>(raw, clearance);
-    this._filteredThreats = { data: filtered, clearance, sourceLen: raw.length };
-    return filtered;
+    // Delegate directly to the specialized store method which handles logic and its own memoization.
+    return this.threatStore.getThreats(sort, clearance);
   }
 
   getCases(): Case[] { 

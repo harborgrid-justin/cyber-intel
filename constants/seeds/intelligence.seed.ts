@@ -1,4 +1,3 @@
-
 import { Threat, Case, ThreatActor, Campaign, MitreItem, Severity, IncidentStatus, ThreatId, CaseId, ActorId } from '../../types';
 
 export const MOCK_THREATS: Threat[] = [
@@ -24,13 +23,3 @@ export const MOCK_ACTORS: ThreatActor[] = [
 export const MOCK_CAMPAIGNS: Campaign[] = [ 
   { id: 'CAM-001', name: 'SolarWinds Supply Chain', description: 'Widespread supply chain attack.', status: 'ARCHIVED', objective: 'ESPIONAGE', actors: ['APT-29'], firstSeen: '2020-03-01', lastSeen: '2021-02-28', targetSectors: ['Gov', 'Tech'], targetRegions: ['NA'], threatIds: ['1'], ttps: ['T1195'] } 
 ];
-
-export const MOCK_TACTICS: MitreItem[] = [ { id: 'TA0001', name: 'Initial Access', description: 'The adversary is trying to get into your network.' } ];
-export const MOCK_TECHNIQUES: MitreItem[] = [ 
-    { id: 'T1566', name: 'Phishing', tactic: 'Initial Access', description: 'Adversaries may send phishing messages to gain access to victim systems.' },
-    { id: 'T1003', name: 'OS Credential Dumping', tactic: 'Credential Access', description: 'Adversaries may attempt to dump credentials to obtain account login and credential material.' }
-];
-export const MOCK_SUB_TECHNIQUES: MitreItem[] = [ { id: 'T1566.001', name: 'Spearphishing Attachment', parent: 'T1566', description: 'Phishing with attachment.' } ];
-export const MOCK_GROUPS: MitreItem[] = [ { id: 'G0007', name: 'APT28', aliases: ['Fancy Bear'], description: 'Russian GRU.' } ];
-export const MOCK_SOFTWARE: MitreItem[] = [ { id: 'S0002', name: 'Mimikatz', type: 'Tool', description: 'Credential dumper.' } ];
-export const MOCK_MITIGATIONS: MitreItem[] = [ { id: 'M1050', name: 'Exploit Protection', description: 'Use ASLR and DEP.' } ];

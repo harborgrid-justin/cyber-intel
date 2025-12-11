@@ -1,15 +1,15 @@
 
 
 
-import React, { useState } from 'react';
-// Fix: Import UI components from the barrel file
+
+
+import React, { useState, useCallback } from 'react';
 import { Card, Button, Input, Badge, CardHeader, DataField } from '../../Shared/UI';
 import ResponsiveTable from '../../Shared/ResponsiveTable';
 import { threatData } from '../../../services/dataLayer';
 import { useDataStore } from '../../../hooks/useDataStore';
 import { OsintLogic } from '../../../services/logic/OsintLogic';
 import { Icons } from '../../Shared/Icons';
-// Fix: Import types from the central types file
 import { OsintDomain, GlobalSearchResult, DomainAnalysis } from '../../../types';
 import { useDebounce } from '../../../hooks/useDebounce'; // Hook import
 
@@ -20,6 +20,13 @@ export const SearchViews = {
     const [results, setResults] = useState<any[]>([]);
     const [searching, setSearching] = useState(false);
     
+    const handleSearch = useCallback(async (q: string) => {
+      setSearching(true);
+      const res = await OsintLogic.globalSearch(q);
+      setResults(res);
+      setSearching(false);
+    }, []);
+
     // Auto-search effect on debounce
     React.useEffect(() => {
         if (debouncedQuery.length > 2) {
@@ -27,14 +34,7 @@ export const SearchViews = {
         } else {
             setResults([]);
         }
-    }, [debouncedQuery]);
-
-    const handleSearch = async (q: string) => {
-      setSearching(true);
-      const res = await OsintLogic.globalSearch(q);
-      setResults(res);
-      setSearching(false);
-    };
+    }, [debouncedQuery, handleSearch]);
 
     return (
       <div className="flex flex-col h-full gap-6">

@@ -5,7 +5,6 @@ import { ProfileSettings } from './ProfileSettings';
 import { NotificationSettings } from './NotificationSettings';
 import { APIKeySettings } from './APIKeySettings';
 import { IntegrationsSettings } from './IntegrationsSettings';
-// Fix: Use a default import for SystemSettings as it is exported as default.
 import SystemSettings from './SystemSettings';
 import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../../hooks/useDataStore';

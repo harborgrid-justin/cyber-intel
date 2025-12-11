@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, Badge, CardHeader } from '../../Shared/UI';
 import { VirtualList } from '../../Shared/VirtualList';
-// Fix: Import types from the central types file.
 import { SystemUser } from '../../../types';
 
 interface Props {
@@ -31,4 +30,3 @@ export const UserManagement: React.FC<Props> = ({ users }) => {
     </Card>
   );
 };
-    

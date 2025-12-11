@@ -1,7 +1,6 @@
+
 import React from 'react';
-// Fix: Import types from the central types file
 import { Threat, Case } from '../../../types';
-// Fix: Import UI components from the barrel file
 import { Card, CardHeader, Badge } from '../../Shared/UI';
 import KillChainView from './KillChainView';
 import { InteractiveGraph } from '../../Shared/InteractiveGraph';
