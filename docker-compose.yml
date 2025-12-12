@@ -1,21 +1,67 @@
 version: '3.9'
 
 services:
-  # PostgreSQL 15 Database
+  # ============================================
+  # PostgreSQL 16 - Primary Database
+  # ============================================
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: sentinel-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: sentinel_core
       POSTGRES_USER: sentinel_user
-      POSTGRES_PASSWORD: sentinel_secure_pass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_secure_pass}
       PGDATA: /var/lib/postgresql/data/pgdata
+      # Performance tuning
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.utf8"
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+      - "-c"
+      - "max_worker_processes=4"
+      - "-c"
+      - "max_parallel_workers_per_gather=2"
+      - "-c"
+      - "max_parallel_workers=4"
+      - "-c"
+      - "max_parallel_maintenance_workers=2"
+      - "-c"
+      - "log_statement=all"
+      - "-c"
+      - "log_duration=on"
+      - "-c"
+      - "log_line_prefix=%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h "
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/db/init:/docker-entrypoint-initdb.d
+      - ./backend/src/db/init:/docker-entrypoint-initdb.d:ro
+      - postgres_backups:/backups
+      - ./backend/db-logs:/var/log/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sentinel_user -d sentinel_core"]
       interval: 10s
@@ -24,38 +70,105 @@ services:
       start_period: 30s
     networks:
       - sentinel-network
+    labels:
+      com.sentinel.service: "database"
+      com.sentinel.description: "PostgreSQL 16 primary database"
 
-  # pgAdmin for Database Management
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: sentinel-pgadmin
+  # ============================================
+  # PgBouncer - Connection Pooling
+  # ============================================
+  pgbouncer:
+    image: edoburu/pgbouncer:1.21.0
+    container_name: sentinel-pgbouncer
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@sentinel.local
-      PGADMIN_DEFAULT_PASSWORD: sentinel_admin_pass
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      DATABASE_URL: "postgres://sentinel_user:${POSTGRES_PASSWORD:-sentinel_secure_pass}@postgres:5432/sentinel_core"
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 25
+      MIN_POOL_SIZE: 10
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 3
+      MAX_DB_CONNECTIONS: 100
+      MAX_USER_CONNECTIONS: 100
+      SERVER_IDLE_TIMEOUT: 600
+      SERVER_LIFETIME: 3600
+      SERVER_CONNECT_TIMEOUT: 15
+      QUERY_TIMEOUT: 0
+      CLIENT_IDLE_TIMEOUT: 0
+      IDLE_TRANSACTION_TIMEOUT: 0
+      LOG_CONNECTIONS: 1
+      LOG_DISCONNECTIONS: 1
+      LOG_POOLER_ERRORS: 1
+      STATS_PERIOD: 60
     ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-      - ./backend/src/db/pgadmin-servers.json:/pgadmin4/servers.json
+      - "${PGBOUNCER_PORT:-6432}:5432"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - sentinel-network
+    labels:
+      com.sentinel.service: "connection-pooler"
+      com.sentinel.description: "PgBouncer connection pooling"
 
-  # Redis for Caching & Session Management
+  # ============================================
+  # PostgreSQL Backup Service
+  # ============================================
+  postgres-backup:
+    image: postgres:16-alpine
+    container_name: sentinel-postgres-backup
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: sentinel_core
+      POSTGRES_USER: sentinel_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_secure_pass}
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+      TZ: UTC
+    volumes:
+      - postgres_backups:/backups
+      - ./backend/scripts/db-backup.sh:/backup.sh:ro
+    command: sh -c "chmod +x /backup.sh && crond -f -l 2"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+    labels:
+      com.sentinel.service: "backup"
+      com.sentinel.description: "Automated PostgreSQL backups"
+
+  # ============================================
+  # Redis - Caching & Session Management
+  # ============================================
   redis:
     image: redis:7-alpine
     container_name: sentinel-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass sentinel_redis_pass
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-sentinel_redis_pass}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --tcp-backlog 511
+      --timeout 0
+      --tcp-keepalive 300
+      --maxclients 10000
+      --loglevel notice
+      --logfile ""
+      --databases 16
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
+      - ./backend/redis-logs:/var/log/redis
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
@@ -64,37 +177,95 @@ services:
       start_period: 10s
     networks:
       - sentinel-network
+    labels:
+      com.sentinel.service: "cache"
+      com.sentinel.description: "Redis cache and session store"
 
-  # Redis Commander (Optional - Redis GUI)
+  # ============================================
+  # pgAdmin - Database Management UI
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sentinel-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@sentinel.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-sentinel_admin_pass}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./backend/src/db/pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+    labels:
+      com.sentinel.service: "admin-ui"
+      com.sentinel.description: "pgAdmin database management interface"
+
+  # ============================================
+  # Redis Commander - Redis Management UI
+  # ============================================
   redis-commander:
     image: rediscommander/redis-commander:latest
     container_name: sentinel-redis-commander
     restart: unless-stopped
     environment:
-      REDIS_HOSTS: local:redis:6379:0:sentinel_redis_pass
+      REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-sentinel_redis_pass}
+      HTTP_USER: ${REDIS_COMMANDER_USER:-admin}
+      HTTP_PASSWORD: ${REDIS_COMMANDER_PASSWORD:-sentinel_redis_admin}
     ports:
-      - "8081:8081"
+      - "${REDIS_COMMANDER_PORT:-8081}:8081"
     depends_on:
       redis:
         condition: service_healthy
     networks:
       - sentinel-network
+    labels:
+      com.sentinel.service: "redis-ui"
+      com.sentinel.description: "Redis Commander management interface"
 
+# ============================================
+# Volumes
+# ============================================
 volumes:
   postgres_data:
     driver: local
     name: sentinel_postgres_data
+    labels:
+      com.sentinel.volume: "database"
+  postgres_backups:
+    driver: local
+    name: sentinel_postgres_backups
+    labels:
+      com.sentinel.volume: "backups"
   pgadmin_data:
     driver: local
     name: sentinel_pgadmin_data
+    labels:
+      com.sentinel.volume: "admin"
   redis_data:
     driver: local
     name: sentinel_redis_data
+    labels:
+      com.sentinel.volume: "cache"
 
+# ============================================
+# Networks
+# ============================================
 networks:
   sentinel-network:
     driver: bridge
     name: sentinel-network
     ipam:
+      driver: default
       config:
         - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
+    labels:
+      com.sentinel.network: "main"

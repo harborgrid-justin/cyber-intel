@@ -7,19 +7,81 @@ import { Result, ok, fail, AppError } from '../../types/result';
 import { SystemGuard } from '../core/SystemGuard';
 import { bus, EVENTS } from '../eventBus';
 
+/**
+ * Enhanced loading state for store operations
+ */
+export interface StoreLoadingState {
+  isFetching: boolean;
+  isAdding: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+  operationId?: string;
+}
+
+/**
+ * Cache entry with TTL support
+ */
+interface CacheEntry<T> {
+  data: T[];
+  timestamp: number;
+  ttl?: number;
+}
+
+/**
+ * Base store configuration options
+ */
+export interface BaseStoreConfig {
+  cacheTTL?: number; // Time-to-live in milliseconds
+  enableOptimisticUpdates?: boolean;
+  enableBatchOperations?: boolean;
+  debounceDelay?: number;
+}
+
+/**
+ * Enhanced BaseStore with advanced state management capabilities
+ *
+ * Features:
+ * - Loading states for all async operations
+ * - Advanced caching with TTL
+ * - Optimistic updates support
+ * - Batch operations
+ * - Transaction support
+ * - Cross-store event communication
+ */
 export class BaseStore<T extends { id: string }> {
   protected items: T[] = [];
   private debounceTimer: any = null;
-  private _cache: T[] | null = null;
+  private _cache: CacheEntry<T> | null = null;
+  private _loadingState: StoreLoadingState = {
+    isFetching: false,
+    isAdding: false,
+    isUpdating: false,
+    isDeleting: false
+  };
+  private _lastError: AppError | null = null;
+  protected config: BaseStoreConfig;
 
   constructor(
     protected key: string,
     protected initialData: T[],
     protected adapter: DatabaseAdapter,
-    protected mapper: DataMapper<T> = new IdentityMapper<T>()
+    protected mapper: DataMapper<T> = new IdentityMapper<T>(),
+    config: BaseStoreConfig = {}
   ) {
+    this.config = {
+      cacheTTL: 5 * 60 * 1000, // 5 minutes default
+      enableOptimisticUpdates: true,
+      enableBatchOperations: true,
+      debounceDelay: 250,
+      ...config
+    };
+
     this.items = ScratchPad.load(key) || initialData;
-    this._cache = this.items;
+    this._cache = {
+      data: this.items,
+      timestamp: Date.now(),
+      ttl: this.config.cacheTTL
+    };
 
     const depCheck = SystemGuard.registerDependency(key, 'DatabaseAdapter');
     if (!depCheck.success) {
@@ -38,6 +100,43 @@ export class BaseStore<T extends { id: string }> {
     // Subclasses can override to listen to specific events
   }
 
+  /**
+   * Get current loading state
+   */
+  getLoadingState(): StoreLoadingState {
+    return { ...this._loadingState };
+  }
+
+  /**
+   * Get last error
+   */
+  getLastError(): AppError | null {
+    return this._lastError;
+  }
+
+  /**
+   * Clear last error
+   */
+  clearError(): void {
+    this._lastError = null;
+  }
+
+  /**
+   * Check if cache is valid
+   */
+  private isCacheValid(): boolean {
+    if (!this._cache) return false;
+    if (!this._cache.ttl) return true;
+    return Date.now() - this._cache.timestamp < this._cache.ttl;
+  }
+
+  /**
+   * Invalidate cache
+   */
+  invalidateCache(): void {
+    this._cache = null;
+  }
+
   getAll(): Result<T[]> {
     const memCheck = SystemGuard.checkMemoryHealth();
     if (!memCheck.success) {
@@ -45,8 +144,15 @@ export class BaseStore<T extends { id: string }> {
         this._cache = null; // Force GC eligibility if possible
     }
 
-    if (!this._cache) this._cache = [...this.items];
-    return ok(this._cache);
+    // Check cache validity with TTL
+    if (!this._cache || !this.isCacheValid()) {
+      this._cache = {
+        data: [...this.items],
+        timestamp: Date.now(),
+        ttl: this.config.cacheTTL
+      };
+    }
+    return ok(this._cache.data);
   }
   
   getById(id: string): Result<T | undefined> {

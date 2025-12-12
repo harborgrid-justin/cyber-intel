@@ -57,11 +57,21 @@ export class ActorService {
       if (data.aliases) actor.aliases = data.aliases;
       if (data.evasionTechniques) actor.evasion_techniques = data.evasionTechniques;
       if (data.exploits) actor.exploits = data.exploits;
-      
+
       await actor.save();
       await AuditService.log(userId, 'ACTOR_UPDATED', `Updated profile ${id}`, id);
       return actor;
     }
     return null;
+  }
+
+  static async delete(id: string, userId: string): Promise<boolean> {
+    const actor = await ActorModel.findByPk(id);
+    if (actor) {
+      await actor.destroy();
+      await AuditService.log(userId, 'ACTOR_DELETED', `Deleted actor profile ${id}`, id);
+      return true;
+    }
+    return false;
   }
 }

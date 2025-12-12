@@ -1,5 +1,6 @@
 
 import DataLoader from 'dataloader';
+import { Model } from 'sequelize-typescript';
 import {
   Threat, Case, Actor, Campaign, Asset, Vulnerability,
   Feed, Vendor, AuditLog, Report, Playbook, Artifact,
@@ -10,20 +11,20 @@ import {
 /**
  * Generic batch loader function for any model
  */
-async function batchLoad<T>(
+async function batchLoad<T extends { [key: string]: any }>(
   ids: readonly string[],
-  model: any,
+  model: typeof Model & (new () => T),
   key: string = 'id'
 ): Promise<(T | Error)[]> {
-  const records = await model.findAll({
+  const records = await (model as any).findAll({
     where: {
       [key]: ids as string[]
     }
-  });
+  }) as T[];
 
   const recordMap = new Map<string, T>();
-  records.forEach((record: any) => {
-    recordMap.set(record[key], record);
+  records.forEach((record: T) => {
+    recordMap.set(record[key] as string, record);
   });
 
   return ids.map(id => recordMap.get(id as string) || new Error(`No record found for ${key}: ${id}`));
@@ -120,15 +121,15 @@ export function createLoaders() {
 
     // Relationship DataLoaders
     threatsByCaseLoader: new DataLoader<string, any[]>(
-      async (caseIds) => {
-        const cases = await Case.findAll({
+      async (caseIds: readonly string[]) => {
+        const cases = await (Case as any).findAll({
           where: {
             id: caseIds as string[]
           }
         });
 
         const caseMap = new Map<string, string[]>();
-        cases.forEach((c: any) => {
+        cases.forEach((c: Case) => {
           caseMap.set(c.id, c.related_threat_ids || []);
         });
 
@@ -136,14 +137,14 @@ export function createLoaders() {
           Array.from(caseMap.values()).flat()
         ));
 
-        const threats = await Threat.findAll({
+        const threats = await (Threat as any).findAll({
           where: {
             id: allThreatIds
           }
         });
 
-        const threatMap = new Map<string, any>();
-        threats.forEach((t: any) => {
+        const threatMap = new Map<string, Threat>();
+        threats.forEach((t: Threat) => {
           threatMap.set(t.id, t);
         });
 
@@ -155,13 +156,13 @@ export function createLoaders() {
     ),
 
     campaignsByActorLoader: new DataLoader<string, any[]>(
-      async (actorIds) => {
-        const campaigns = await Campaign.findAll();
+      async (actorIds: readonly string[]) => {
+        const campaigns = await (Campaign as any).findAll();
 
-        const actorCampaignMap = new Map<string, any[]>();
+        const actorCampaignMap = new Map<string, Campaign[]>();
         actorIds.forEach(id => actorCampaignMap.set(id as string, []));
 
-        campaigns.forEach((campaign: any) => {
+        campaigns.forEach((campaign: Campaign) => {
           const actors = campaign.actors || [];
           actors.forEach((actorId: string) => {
             if (actorCampaignMap.has(actorId)) {

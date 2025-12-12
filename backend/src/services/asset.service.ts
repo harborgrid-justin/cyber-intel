@@ -16,6 +16,10 @@ interface CreateAssetInput {
   dataVolumeGB?: number;
 }
 
+interface UpdateAssetInput extends Partial<CreateAssetInput> {
+  status?: string;
+}
+
 export class AssetService {
   static async getAll(): Promise<Asset[]> {
     return await AssetModel.findAll({ order: [['criticality', 'DESC']] });
@@ -43,6 +47,30 @@ export class AssetService {
     return asset;
   }
 
+  static async getById(id: string): Promise<Asset | null> {
+    return await AssetModel.findByPk(id);
+  }
+
+  static async update(id: string, data: UpdateAssetInput, userId: string): Promise<Asset | null> {
+    const asset = await AssetModel.findByPk(id);
+    if (asset) {
+      if (data.name) asset.name = data.name;
+      if (data.type) asset.type = data.type;
+      if (data.ip) asset.ip_address = data.ip;
+      if (data.status) asset.status = data.status;
+      if (data.criticality) asset.criticality = data.criticality;
+      if (data.owner) asset.owner = data.owner;
+      if (data.securityControls) asset.security_controls = data.securityControls;
+      if (data.dataSensitivity) asset.data_sensitivity = data.dataSensitivity;
+      if (data.dataVolumeGB !== undefined) asset.data_volume_gb = data.dataVolumeGB;
+
+      await asset.save();
+      await AuditService.log(userId, 'ASSET_UPDATED', `Updated asset ${id}`, id);
+      return asset;
+    }
+    return null;
+  }
+
   static async updateStatus(id: string, status: string, userId: string): Promise<Asset | null> {
     const asset = await AssetModel.findByPk(id);
     if (asset) {
@@ -52,5 +80,15 @@ export class AssetService {
       return asset;
     }
     return null;
+  }
+
+  static async delete(id: string, userId: string): Promise<boolean> {
+    const asset = await AssetModel.findByPk(id);
+    if (asset) {
+      await asset.destroy();
+      await AuditService.log(userId, 'ASSET_DELETED', `Deleted asset ${id}`, id);
+      return true;
+    }
+    return false;
   }
 }
