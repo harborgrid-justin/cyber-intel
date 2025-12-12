@@ -1476,7 +1476,7 @@ export function getThreatsBySeverity(severity: string) {
   return threatFixtures.filter(t => t.severity === severity);
 }
 
-export function getActiveTh reats() {
+export function getActiveThreats() {
   return threatFixtures.filter(t => t.status === 'active');
 }
 

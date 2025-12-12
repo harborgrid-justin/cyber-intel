@@ -3,6 +3,9 @@
  * Central export file for all Sequelize models
  */
 
+// Sequelize core types and operators
+export { Transaction, Op } from 'sequelize';
+
 // Intelligence models
 export { Threat } from './intelligence';
 export { Case } from './intelligence';

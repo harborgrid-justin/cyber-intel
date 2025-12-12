@@ -182,30 +182,54 @@ export class CaseService {
   ];
 
   static async getAll(filters: CaseFilter, limit: number = 50): Promise<Case[]> {
-    const whereClause: WhereOptions<Case> = {};
-    if (filters.status) whereClause.status = filters.status;
-    if (filters.assignee) whereClause.assignee = filters.assignee;
-    if (filters.priority) whereClause.priority = filters.priority;
-    if (filters.slaBreached !== undefined) whereClause.sla_breach = filters.slaBreached;
+    try {
+      const whereClause: WhereOptions<Case> = {};
+      if (filters.status) whereClause.status = filters.status;
+      if (filters.assignee) whereClause.assignee = filters.assignee;
+      if (filters.priority) whereClause.priority = filters.priority;
+      if (filters.slaBreached !== undefined) whereClause.sla_breach = filters.slaBreached;
 
-    return await CaseModel.findAll({
-      where: whereClause,
-      limit,
-      order: [['createdAt', 'DESC']]
-    });
+      const cases = await CaseModel.findAll({
+        where: whereClause,
+        limit,
+        order: [['createdAt', 'DESC']]
+      });
+
+      // Check SLA for all active cases
+      cases.forEach(caseItem => {
+        if (caseItem.get('status') !== 'CLOSED') {
+          this.checkSLA(caseItem.get('id') as string).catch(err =>
+            console.error(`SLA check failed for ${caseItem.get('id')}:`, err)
+          );
+        }
+      });
+
+      return cases;
+    } catch (error) {
+      console.error('Error fetching cases:', error);
+      throw new Error('Failed to retrieve cases from database');
+    }
   }
 
   static async create(data: CreateCaseInput, userId: string): Promise<Case> {
-    const id = `CASE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+    try {
+      if (!data.title || data.title.trim().length === 0) {
+        throw new Error('Case title is required');
+      }
 
-    let template: CaseTemplate | undefined;
-    let initialTasks: any[] = [];
-    let slaDeadline: Date | undefined;
+      const id = `CASE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
 
-    // Apply template if specified
-    if (data.templateId) {
-      template = this.caseTemplates.find(t => t.id === data.templateId);
-      if (template) {
+      let template: CaseTemplate | undefined;
+      let initialTasks: any[] = [];
+      let slaDeadline: Date | undefined;
+
+      // Apply template if specified
+      if (data.templateId) {
+        template = this.caseTemplates.find(t => t.id === data.templateId);
+        if (!template) {
+          throw new Error(`Template ${data.templateId} not found`);
+        }
+
         initialTasks = template.defaultTasks.map((t, idx) => ({
           id: `TASK-${id}-${idx + 1}`,
           title: t.title,
@@ -219,65 +243,117 @@ export class CaseService {
           slaDeadline = new Date(Date.now() + slaConfig.resolutionTimeHours * 60 * 60 * 1000);
         }
       }
+
+      // Automated assignment
+      const assignee = await this.autoAssign(data, template);
+
+      const newCase = await CaseModel.create({
+        id,
+        title: data.title.trim(),
+        description: data.description?.trim() || '',
+        priority: data.priority || template?.defaultPriority || 'MEDIUM',
+        status: 'OPEN',
+        assignee: assignee || data.assignee || 'Unassigned',
+        created_by: userId,
+        related_threat_ids: [],
+        shared_with: [],
+        timeline: [{
+          id: `TL-${Date.now()}`,
+          date: new Date().toISOString(),
+          title: 'Case Created',
+          type: 'CASE',
+          description: `Case created from ${template ? `template: ${template.name}` : 'manual input'}`
+        }],
+        tasks: initialTasks,
+        sla_breach: false,
+        sla_deadline: slaDeadline?.toISOString(),
+        template_id: data.templateId
+      } as any);
+
+      await AuditService.log(userId, 'CASE_CREATED', `Created case ${id}${template ? ` from template ${template.name}` : ''}`, id);
+
+      // Start SLA monitoring
+      this.checkSLA(id).catch(err => console.error(`Initial SLA check failed for ${id}:`, err));
+
+      return newCase;
+    } catch (error) {
+      console.error('Error creating case:', error);
+      throw error;
     }
-
-    // Automated assignment
-    const assignee = await this.autoAssign(data, template);
-
-    const newCase = await CaseModel.create({
-      id,
-      title: data.title,
-      description: data.description || '',
-      priority: data.priority || template?.defaultPriority || 'MEDIUM',
-      status: 'OPEN',
-      assignee: assignee || data.assignee || 'Unassigned',
-      created_by: userId,
-      related_threat_ids: [],
-      shared_with: [],
-      timeline: [{
-        id: `TL-${Date.now()}`,
-        date: new Date().toISOString(),
-        title: 'Case Created',
-        type: 'CASE',
-        description: `Case created from ${template ? `template: ${template.name}` : 'manual input'}`
-      }],
-      tasks: initialTasks,
-      sla_breach: false,
-      sla_deadline: slaDeadline?.toISOString(),
-      template_id: data.templateId
-    } as any);
-
-    await AuditService.log(userId, 'CASE_CREATED', `Created case ${id}${template ? ` from template ${template.name}` : ''}`, id);
-
-    // Start SLA monitoring
-    this.checkSLA(id);
-
-    return newCase;
   }
 
   static async update(id: string, data: UpdateCaseInput, userId: string): Promise<Case | null> {
-    const kase = await CaseModel.findByPk(id);
-    if (kase) {
+    try {
+      const kase = await CaseModel.findByPk(id);
+      if (!kase) {
+        throw new Error(`Case ${id} not found`);
+      }
+
       const oldStatus = kase.get('status');
+      const oldPriority = kase.get('priority');
+      const oldAssignee = kase.get('assignee');
+
       await kase.update(data);
+
+      const timeline = kase.get('timeline') as any[] || [];
 
       // Add timeline event for status changes
       if (data.status && data.status !== oldStatus) {
-        const timeline = kase.get('timeline') as any[] || [];
         timeline.push({
           id: `TL-${Date.now()}`,
           date: new Date().toISOString(),
           title: `Status changed to ${data.status}`,
           type: 'SYSTEM',
-          description: `Case status updated from ${oldStatus} to ${data.status}`
+          description: `Case status updated from ${oldStatus} to ${data.status} by ${userId}`
         });
+      }
+
+      // Add timeline event for priority changes
+      if (data.priority && data.priority !== oldPriority) {
+        timeline.push({
+          id: `TL-${Date.now() + 1}`,
+          date: new Date().toISOString(),
+          title: `Priority changed to ${data.priority}`,
+          type: 'ALERT',
+          description: `Case priority updated from ${oldPriority} to ${data.priority} by ${userId}`
+        });
+
+        // Recalculate SLA deadline if priority changed
+        const slaConfig = this.slaConfigs.find(s => s.priority === data.priority);
+        if (slaConfig) {
+          const createdAt = new Date(kase.get('created') as string || kase.get('createdAt') as string);
+          const newDeadline = new Date(createdAt.getTime() + slaConfig.resolutionTimeHours * 60 * 60 * 1000);
+          await kase.update({ sla_deadline: newDeadline.toISOString() });
+        }
+      }
+
+      // Add timeline event for assignee changes
+      if (data.assignee && data.assignee !== oldAssignee) {
+        timeline.push({
+          id: `TL-${Date.now() + 2}`,
+          date: new Date().toISOString(),
+          title: `Reassigned to ${data.assignee}`,
+          type: 'SYSTEM',
+          description: `Case reassigned from ${oldAssignee} to ${data.assignee} by ${userId}`
+        });
+      }
+
+      if (timeline.length > (kase.get('timeline') as any[] || []).length) {
         await kase.update({ timeline });
       }
 
       await AuditService.log(userId, 'CASE_UPDATE', `Updated case ${id}`, id);
+
+      // Re-check SLA if case is still open
+      if (data.status !== 'CLOSED') {
+        this.checkSLA(id).catch(err => console.error(`SLA check failed for ${id}:`, err));
+      }
+
       return kase;
+    } catch (error) {
+      console.error('Error updating case:', error);
+      throw error;
     }
-    return null;
   }
 
   // Case Templates
@@ -472,6 +548,226 @@ export class CaseService {
 
     for (const kase of openCases) {
       await this.checkSLA(kase.get('id') as string);
+    }
+  }
+
+  // Add task to case
+  static async addTask(caseId: string, task: { title: string; dependsOn?: string[] }, userId: string): Promise<void> {
+    try {
+      const kase = await CaseModel.findByPk(caseId);
+      if (!kase) throw new Error(`Case ${caseId} not found`);
+
+      const tasks = kase.get('tasks') as any[] || [];
+      const newTask = {
+        id: `TASK-${caseId}-${tasks.length + 1}`,
+        title: task.title,
+        status: 'PENDING',
+        dependsOn: task.dependsOn || []
+      };
+
+      tasks.push(newTask);
+      await kase.update({ tasks });
+
+      await AuditService.log(userId, 'TASK_ADDED', `Added task "${task.title}" to case ${caseId}`, caseId);
+    } catch (error) {
+      console.error('Error adding task:', error);
+      throw error;
+    }
+  }
+
+  // Toggle task status
+  static async toggleTask(caseId: string, taskId: string, userId: string): Promise<void> {
+    try {
+      const kase = await CaseModel.findByPk(caseId);
+      if (!kase) throw new Error(`Case ${caseId} not found`);
+
+      const tasks = kase.get('tasks') as any[] || [];
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) throw new Error(`Task ${taskId} not found`);
+
+      task.status = task.status === 'PENDING' ? 'DONE' : 'PENDING';
+      await kase.update({ tasks });
+
+      await AuditService.log(userId, 'TASK_UPDATED', `Updated task ${taskId} in case ${caseId} to ${task.status}`, caseId);
+    } catch (error) {
+      console.error('Error toggling task:', error);
+      throw error;
+    }
+  }
+
+  // Add note/comment to case
+  static async addNote(caseId: string, content: string, userId: string, isInternal: boolean = false): Promise<void> {
+    try {
+      const kase = await CaseModel.findByPk(caseId);
+      if (!kase) throw new Error(`Case ${caseId} not found`);
+
+      const notes = kase.get('notes') as any[] || [];
+      const newNote = {
+        id: `NOTE-${Date.now()}`,
+        author: userId,
+        date: new Date().toISOString(),
+        content,
+        isInternal
+      };
+
+      notes.unshift(newNote);
+      await kase.update({ notes });
+
+      await AuditService.log(userId, 'NOTE_ADDED', `Added ${isInternal ? 'internal ' : ''}note to case ${caseId}`, caseId);
+    } catch (error) {
+      console.error('Error adding note:', error);
+      throw error;
+    }
+  }
+
+  // Add artifact to case
+  static async addArtifact(caseId: string, artifact: Omit<any, 'id'>, userId: string): Promise<void> {
+    try {
+      const kase = await CaseModel.findByPk(caseId);
+      if (!kase) throw new Error(`Case ${caseId} not found`);
+
+      const artifacts = kase.get('artifacts') as any[] || [];
+      const newArtifact = {
+        ...artifact,
+        id: `ART-${caseId}-${artifacts.length + 1}`,
+        uploadedBy: userId,
+        uploadDate: new Date().toISOString()
+      };
+
+      artifacts.push(newArtifact);
+      await kase.update({ artifacts });
+
+      // Add timeline entry
+      const timeline = kase.get('timeline') as any[] || [];
+      timeline.push({
+        id: `TL-${Date.now()}`,
+        date: new Date().toISOString(),
+        title: 'Evidence Added',
+        type: 'SYSTEM',
+        description: `Added artifact: ${artifact.name}`
+      });
+      await kase.update({ timeline });
+
+      await AuditService.log(userId, 'ARTIFACT_ADDED', `Added artifact ${newArtifact.id} to case ${caseId}`, caseId);
+    } catch (error) {
+      console.error('Error adding artifact:', error);
+      throw error;
+    }
+  }
+
+  // Delete artifact from case
+  static async deleteArtifact(caseId: string, artifactId: string, userId: string): Promise<void> {
+    try {
+      const kase = await CaseModel.findByPk(caseId);
+      if (!kase) throw new Error(`Case ${caseId} not found`);
+
+      const artifacts = (kase.get('artifacts') as any[] || []).filter(a => a.id !== artifactId);
+      await kase.update({ artifacts });
+
+      await AuditService.log(userId, 'ARTIFACT_DELETED', `Deleted artifact ${artifactId} from case ${caseId}`, caseId);
+    } catch (error) {
+      console.error('Error deleting artifact:', error);
+      throw error;
+    }
+  }
+
+  // Get case statistics
+  static async getStatistics(): Promise<any> {
+    try {
+      const allCases = await CaseModel.findAll();
+
+      const stats = {
+        total: allCases.length,
+        byStatus: {
+          open: allCases.filter(c => c.get('status') === 'OPEN').length,
+          in_progress: allCases.filter(c => c.get('status') === 'IN_PROGRESS').length,
+          pending_review: allCases.filter(c => c.get('status') === 'PENDING_REVIEW').length,
+          closed: allCases.filter(c => c.get('status') === 'CLOSED').length
+        },
+        byPriority: {
+          critical: allCases.filter(c => c.get('priority') === 'CRITICAL').length,
+          high: allCases.filter(c => c.get('priority') === 'HIGH').length,
+          medium: allCases.filter(c => c.get('priority') === 'MEDIUM').length,
+          low: allCases.filter(c => c.get('priority') === 'LOW').length
+        },
+        slaBreaches: allCases.filter(c => c.get('sla_breach') === true).length,
+        avgResolutionTime: this.calculateAvgResolutionTime(allCases),
+        totalArtifacts: allCases.reduce((sum, c) => sum + ((c.get('artifacts') as any[] || []).length), 0)
+      };
+
+      return stats;
+    } catch (error) {
+      console.error('Error getting statistics:', error);
+      throw error;
+    }
+  }
+
+  // Helper: Calculate average resolution time
+  private static calculateAvgResolutionTime(cases: Case[]): string {
+    const closedCases = cases.filter(c => c.get('status') === 'CLOSED');
+    if (closedCases.length === 0) return 'N/A';
+
+    const totalHours = closedCases.reduce((sum, c) => {
+      const created = new Date(c.get('created') as string || c.get('createdAt') as string);
+      const updated = new Date(c.get('updated') as string || c.get('updatedAt') as string);
+      return sum + (updated.getTime() - created.getTime()) / (1000 * 60 * 60);
+    }, 0);
+
+    const avgHours = totalHours / closedCases.length;
+    if (avgHours < 24) return `${avgHours.toFixed(1)}h`;
+    return `${(avgHours / 24).toFixed(1)}d`;
+  }
+
+  // Get case by ID
+  static async getById(id: string): Promise<Case | null> {
+    try {
+      const kase = await CaseModel.findByPk(id);
+      if (kase && kase.get('status') !== 'CLOSED') {
+        await this.checkSLA(id).catch(err => console.error(`SLA check failed:`, err));
+      }
+      return kase;
+    } catch (error) {
+      console.error('Error fetching case:', error);
+      throw error;
+    }
+  }
+
+  // Apply playbook to case
+  static async applyPlaybook(caseId: string, playbookId: string, userId: string): Promise<void> {
+    try {
+      const kase = await CaseModel.findByPk(caseId);
+      if (!kase) throw new Error(`Case ${caseId} not found`);
+
+      // In a real implementation, you would fetch the playbook from a playbook service
+      // For now, we'll use the templates
+      const template = this.caseTemplates.find(t => t.id === playbookId);
+      if (!template) throw new Error(`Playbook ${playbookId} not found`);
+
+      const existingTasks = kase.get('tasks') as any[] || [];
+      const newTasks = template.defaultTasks.map((t, idx) => ({
+        id: `TASK-${caseId}-PB-${Date.now()}-${idx}`,
+        title: t.title,
+        status: 'PENDING',
+        dependsOn: t.dependsOn || []
+      }));
+
+      await kase.update({ tasks: [...existingTasks, ...newTasks] });
+
+      // Add timeline entry
+      const timeline = kase.get('timeline') as any[] || [];
+      timeline.push({
+        id: `TL-${Date.now()}`,
+        date: new Date().toISOString(),
+        title: `Playbook Applied: ${template.name}`,
+        type: 'ACTION',
+        description: `Applied playbook ${template.name} adding ${newTasks.length} tasks`
+      });
+      await kase.update({ timeline });
+
+      await AuditService.log(userId, 'PLAYBOOK_APPLIED', `Applied playbook ${template.name} to case ${caseId}`, caseId);
+    } catch (error) {
+      console.error('Error applying playbook:', error);
+      throw error;
     }
   }
 }

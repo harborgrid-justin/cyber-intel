@@ -4,7 +4,25 @@ import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../useDataStore';
 import { ThreatActor, ActorId, View } from '../../types';
 
-export const useActorLibrary = (initialId?: string) => {
+export interface UseActorLibraryResult {
+  modules: string[];
+  libModule: string;
+  setLibModule: (module: string) => void;
+  actors: ThreatActor[];
+  filteredActors: ThreatActor[];
+  selectedActor: ThreatActor | null;
+  isCreating: boolean;
+  onShowCreate: () => void;
+  onBack: () => void;
+  newName: string;
+  setNewName: (name: string) => void;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  handleCreate: () => void;
+  onSelect: (actor: ThreatActor) => void;
+}
+
+export const useActorLibrary = (initialId?: string): UseActorLibraryResult => {
   const modules = useMemo(() => threatData.getModulesForView(View.ACTORS), []);
   const [libModule, setLibModule] = useState(modules[0]);
   

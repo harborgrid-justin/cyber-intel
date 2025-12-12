@@ -11,12 +11,11 @@ const IncidentKanban = React.lazy(() => import('./IncidentKanban'));
 const WarRoom = React.lazy(() => import('./WarRoom'));
 const IncidentTimeline = React.lazy(() => import('./Views/IncidentTimeline'));
 const IncidentAssets = React.lazy(() => import('./Views/IncidentAssets'));
-// TODO: Missing view components - need to be created
-// const IncidentReports = React.lazy(() => import('./Views/IncidentReports'));
-// const IncidentUsers = React.lazy(() => import('./Views/IncidentUsers'));
-// const IncidentPlaybooks = React.lazy(() => import('./Views/IncidentPlaybooks'));
-// const IncidentEvidence = React.lazy(() => import('./Views/IncidentEvidence'));
-// const IncidentNetwork = React.lazy(() => import('./Views/IncidentNetwork'));
+const IncidentReports = React.lazy(() => import('./Views/IncidentReports'));
+const IncidentUsers = React.lazy(() => import('./Views/IncidentUsers'));
+const IncidentPlaybooks = React.lazy(() => import('./Views/IncidentPlaybooks'));
+const IncidentEvidence = React.lazy(() => import('./Views/IncidentEvidence'));
+const IncidentNetwork = React.lazy(() => import('./Views/IncidentNetwork'));
 
 const IncidentManager: React.FC = () => {
   const { 
@@ -36,13 +35,11 @@ const IncidentManager: React.FC = () => {
       case 'War Room': return <WarRoom threats={threats} cases={cases} onUpdate={refresh} />;
       case 'Timeline': return <IncidentTimeline cases={cases} />;
       case 'Assets': return <IncidentAssets />;
-      // TODO: Implement missing views
-      case 'Users':
-      case 'Reports':
-      case 'Playbooks':
-      case 'Evidence':
-      case 'Network':
-        return <div className="p-4">This view is under construction</div>;
+      case 'Reports': return <IncidentReports cases={cases} />;
+      case 'Users': return <IncidentUsers cases={cases} />;
+      case 'Playbooks': return <IncidentPlaybooks cases={cases} onApplyPlaybook={(caseId, playbookId) => { /* handle playbook application */ refresh(); }} />;
+      case 'Evidence': return <IncidentEvidence cases={cases} />;
+      case 'Network': return <IncidentNetwork cases={cases} />;
       default: return <IncidentKanban threats={threats} onUpdate={refresh} />;
     }
   };

@@ -306,4 +306,117 @@ export class BM25 {
     this.k1 = k1;
     this.b = b;
   }
+
+  /**
+   * Multi-field search with field weights
+   * Useful for searching across title, body, tags, etc.
+   */
+  multiFieldSearch(
+    query: string,
+    fields: Array<{ name: string; weight: number }>,
+    topK: number = 10
+  ): BM25SearchResult[] {
+    const results = new Map<string, { score: number; matches: Map<string, number>; metadata?: any }>();
+
+    // Search each field
+    for (const field of fields) {
+      const fieldResults = this.search(query, this.documents.size);
+
+      for (const result of fieldResults) {
+        const existing = results.get(result.docId);
+        const weightedScore = result.score * field.weight;
+
+        if (existing) {
+          existing.score += weightedScore;
+          // Merge matches
+          for (const [term, count] of result.matches.entries()) {
+            existing.matches.set(term, (existing.matches.get(term) || 0) + count);
+          }
+        } else {
+          results.set(result.docId, {
+            score: weightedScore,
+            matches: new Map(result.matches),
+            metadata: result.metadata
+          });
+        }
+      }
+    }
+
+    // Convert to array and sort
+    const finalResults: BM25SearchResult[] = Array.from(results.entries()).map(([docId, data]) => ({
+      docId,
+      score: data.score,
+      matches: data.matches,
+      metadata: data.metadata
+    }));
+
+    finalResults.sort((a, b) => b.score - a.score);
+    return finalResults.slice(0, topK);
+  }
+
+  /**
+   * Query expansion using synonyms
+   */
+  expandQuery(query: string, synonyms: Map<string, string[]>): string {
+    const tokens = this.tokenize(query);
+    const expanded: string[] = [];
+
+    for (const token of tokens) {
+      expanded.push(token);
+      const syns = synonyms.get(token);
+      if (syns) {
+        expanded.push(...syns);
+      }
+    }
+
+    return expanded.join(' ');
+  }
+
+  /**
+   * Get suggestions for misspelled queries
+   */
+  suggestQueries(query: string, maxSuggestions: number = 5): string[] {
+    const queryTokens = this.tokenize(query);
+    const suggestions = new Set<string>();
+
+    // Find similar terms in vocabulary
+    for (const queryToken of queryTokens) {
+      const similar: Array<{ term: string; score: number }> = [];
+
+      for (const term of this.docFreqs.keys()) {
+        if (term === queryToken) continue;
+
+        // Simple edit distance approximation
+        if (Math.abs(term.length - queryToken.length) <= 2) {
+          const commonPrefix = this.commonPrefixLength(term, queryToken);
+          if (commonPrefix >= Math.min(term.length, queryToken.length) - 2) {
+            similar.push({ term, score: commonPrefix });
+          }
+        }
+      }
+
+      similar.sort((a, b) => b.score - a.score);
+      for (const s of similar.slice(0, 3)) {
+        const suggested = query.replace(queryToken, s.term);
+        suggestions.add(suggested);
+      }
+    }
+
+    return Array.from(suggestions).slice(0, maxSuggestions);
+  }
+
+  private commonPrefixLength(s1: string, s2: string): number {
+    let len = 0;
+    const minLen = Math.min(s1.length, s2.length);
+
+    for (let i = 0; i < minLen; i++) {
+      if (s1[i] === s2[i]) {
+        len++;
+      } else {
+        break;
+      }
+    }
+
+    return len;
+  }
 }

@@ -8,15 +8,33 @@ export const listReports = async (req: Request, res: Response) => {
   res.json({ data: reports });
 };
 
+export const getReport = async (req: Request, res: Response) => {
+  const report = await ReportService.getById(req.params.id);
+  if (!report) return res.status(404).json({ error: 'Report not found' });
+  res.json({ data: report });
+};
+
 export const createReport = async (req: Request, res: Response) => {
   const report = await ReportService.create(req.body, req.user!.username);
   res.status(201).json({ data: report });
+};
+
+export const updateReport = async (req: Request, res: Response) => {
+  const report = await ReportService.update(req.params.id, req.body, req.user!.username);
+  if (!report) return res.status(404).json({ error: 'Report not found' });
+  res.json({ data: report });
 };
 
 export const updateReportStatus = async (req: Request, res: Response) => {
   const report = await ReportService.updateStatus(req.params.id, req.body.status, req.user!.username);
   if (!report) return res.status(404).json({ error: 'Report not found' });
   res.json({ data: report });
+};
+
+export const deleteReport = async (req: Request, res: Response) => {
+  const result = await ReportService.delete(req.params.id);
+  if (!result) return res.status(404).json({ error: 'Report not found' });
+  res.status(204).send();
 };
 
 export const generateDraft = async (req: Request, res: Response) => {

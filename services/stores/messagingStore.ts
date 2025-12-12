@@ -3,6 +3,7 @@ import { Channel, TeamMessage } from '../../types';
 import { BaseStore } from './baseStore';
 import { DatabaseAdapter } from '../dbAdapter';
 import { DataMapper } from '../dataMapper';
+import { Result, ok } from '../../types/result';
 
 export class MessagingStore extends BaseStore<Channel> {
   // Store messages separately in memory for now, usually would be a separate table
@@ -13,24 +14,25 @@ export class MessagingStore extends BaseStore<Channel> {
     this.messages = initialMessages;
   }
 
-  getChannels() {
+  getChannels(): Result<Channel[]> {
     return this.getAll();
   }
 
-  getChannel(id: string) {
+  getChannel(id: string): Result<Channel | undefined> {
     return this.getById(id);
   }
 
-  getMessages(channelId: string) {
+  getMessages(channelId: string): TeamMessage[] {
     return this.messages.filter(m => m.channelId === channelId).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }
 
-  sendMessage(msg: TeamMessage) {
+  sendMessage(msg: TeamMessage): Result<void> {
     this.messages.push(msg);
     this.notify();
+    return ok(undefined);
   }
 
-  createChannel(c: Channel) {
-    this.add(c);
+  createChannel(c: Channel): Result<void> {
+    return this.add(c);
   }
 }

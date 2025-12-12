@@ -40,10 +40,20 @@ export * from './useUndo';
 
 // Module specific hooks
 export * from './useThreatFeedLogic';
+export * from './modules/useActorLibrary';
 export * from './modules/useActorManagement';
+export * from './modules/useAuditLogViewer';
 export * from './modules/useBreachSimulation';
+export * from './modules/useCaseBoard';
+export * from './modules/useDashboardLogic';
+export * from './modules/useDatabaseConnection';
 export * from './modules/useEvidenceOperations';
 export * from './modules/useIncidentManager';
+export * from './modules/useIngestionManager';
+export * from './modules/useIntegrationMetrics';
+export * from './modules/useIntelChat';
+export * from './modules/useIoCManagement';
 export * from './modules/useOrchestrator';
+export * from './modules/useReportsLogic';
 export * from './modules/useVulnerabilityIntel';
 export * from './modules/useWarRoom';

@@ -79,3 +79,11 @@ export class SeederService {
     logger.info('   (See system.seed.ts for all users)');
   }
 }
+
+/**
+ * Exported function to run database seeds
+ * @param force - Force reseed even if database is already populated
+ */
+export async function runSeeds(force = false): Promise<void> {
+  return SeederService.seedAll(force);
+}

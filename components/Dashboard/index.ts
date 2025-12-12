@@ -6,6 +6,7 @@
 
 // Core Dashboard
 export { default as Dashboard } from './Dashboard';
+export { default as ChartErrorBoundary } from './ChartErrorBoundary';
 
 // Basic Components
 export { default as StatCard } from './StatCard';
@@ -46,3 +47,4 @@ export { SecurityViews } from './Views/SecurityViews';
 export { default as ClockWidget } from './Widgets/ClockWidget';
 export { default as SystemStatusWidget } from './Widgets/SystemStatusWidget';
 export { default as ConnectionQuality } from './Widgets/ConnectionQuality';
+export { default as AlertsWidget } from './Widgets/AlertsWidget';

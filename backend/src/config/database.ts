@@ -11,14 +11,26 @@ import { logger } from '../utils/logger';
 // Database Configuration with Connection Pooling
 // ============================================
 
-const dbConfig = {
-  dialect: 'postgres' as const,
+// Determine database dialect (SQLite for development without Docker, PostgreSQL for production)
+const useSQLite = process.env.USE_SQLITE === 'true' ||
+  (config.env === 'development' && !process.env.DB_URL);
+
+const dialect = useSQLite ? 'sqlite' : 'postgres';
+
+// Database storage configuration
+const storage = useSQLite
+  ? process.env.SQLITE_STORAGE || './data/sentinel.db'
+  : undefined;
+
+const dbConfig: any = {
+  dialect: dialect as any,
+  storage, // Only used for SQLite
   logging: process.env.ENABLE_QUERY_LOGGING === 'true'
     ? (msg: string) => logger.debug(msg)
     : false,
 
-  // Connection Pool Configuration
-  pool: {
+  // Connection Pool Configuration (PostgreSQL only)
+  pool: useSQLite ? undefined : {
     max: parseInt(process.env.DB_POOL_MAX || '20', 10),
     min: parseInt(process.env.DB_POOL_MIN || '5', 10),
     acquire: parseInt(process.env.DB_POOL_ACQUIRE || '30000', 10),
@@ -38,8 +50,8 @@ const dbConfig = {
     Integration, Channel, Message
   ],
 
-  // SSL Configuration for Production
-  dialectOptions: config.env === 'production' ? {
+  // SSL Configuration for Production (PostgreSQL only)
+  dialectOptions: (!useSQLite && config.env === 'production') ? {
     ssl: {
       require: true,
       rejectUnauthorized: false
@@ -67,20 +79,28 @@ const dbConfig = {
 
   // Define Defaults
   define: {
-    underscored: false,
+    underscored: true, // Enable automatic camelCase to snake_case conversion
     freezeTableName: true,
-    charset: 'utf8mb4',
-    dialectOptions: {
+    charset: useSQLite ? undefined : 'utf8mb4',
+    dialectOptions: useSQLite ? undefined : {
       collate: 'utf8mb4_unicode_ci'
     }
   }
 };
 
 // Initialize Sequelize Instance
-export const sequelize = new Sequelize(
-  config.dbUrl || 'postgresql://sentinel_user:sentinel_secure_pass@localhost:5432/sentinel_core',
-  dbConfig
-);
+export const sequelize = useSQLite
+  ? new Sequelize(dbConfig)
+  : new Sequelize(
+      config.dbUrl || 'postgresql://sentinel_user:sentinel_secure_pass@localhost:5432/sentinel_core',
+      dbConfig
+    );
+
+// Log database mode
+logger.info(`Database mode: ${useSQLite ? 'SQLite (development)' : 'PostgreSQL (production)'}`);
+if (useSQLite) {
+  logger.info(`SQLite storage: ${storage}`);
+}
 
 // ============================================
 // Connection Management with Retry Logic

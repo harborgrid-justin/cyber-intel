@@ -376,4 +376,94 @@ export class FuzzyMatching {
 
     return ngrams;
   }
+
+  /**
+   * Longest Common Subsequence (LCS) length
+   */
+  lcsLength(s1: string, s2: string): number {
+    const m = s1.length;
+    const n = s2.length;
+    const dp: number[][] = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (s1[i - 1] === s2[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+
+    return dp[m][n];
+  }
+
+  /**
+   * LCS-based similarity score
+   */
+  lcsSimilarity(s1: string, s2: string): number {
+    const lcs = this.lcsLength(s1, s2);
+    const maxLen = Math.max(s1.length, s2.length);
+    return maxLen > 0 ? lcs / maxLen : 0;
+  }
+
+  /**
+   * Smith-Waterman local alignment (simplified)
+   */
+  smithWaterman(s1: string, s2: string, match: number = 2, mismatch: number = -1, gap: number = -1): number {
+    const m = s1.length;
+    const n = s2.length;
+    const H: number[][] = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));
+
+    let maxScore = 0;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const matchScore = s1[i - 1] === s2[j - 1] ? match : mismatch;
+        const diag = H[i - 1][j - 1] + matchScore;
+        const up = H[i - 1][j] + gap;
+        const left = H[i][j - 1] + gap;
+
+        H[i][j] = Math.max(0, diag, up, left);
+        maxScore = Math.max(maxScore, H[i][j]);
+      }
+    }
+
+    return maxScore;
+  }
+
+  /**
+   * Optimal String Alignment Distance
+   */
+  osaDistance(s1: string, s2: string): number {
+    const m = s1.length;
+    const n = s2.length;
+
+    if (m === 0) return n;
+    if (n === 0) return m;
+
+    const d: number[][] = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));
+
+    for (let i = 0; i <= m; i++) d[i][0] = i;
+    for (let j = 0; j <= n; j++) d[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+
+        d[i][j] = Math.min(
+          d[i - 1][j] + 1,      // deletion
+          d[i][j - 1] + 1,      // insertion
+          d[i - 1][j - 1] + cost // substitution
+        );
+
+        // Transposition
+        if (i > 1 && j > 1 && s1[i - 1] === s2[j - 2] && s1[i - 2] === s2[j - 1]) {
+          d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + cost);
+        }
+      }
+    }
+
+    return d[m][n];
+  }
 }

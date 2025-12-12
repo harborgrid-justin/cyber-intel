@@ -2,9 +2,29 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../useDataStore';
-import { View, Case } from '../../types';
+import { View, Case, Threat, SystemUser } from '../../types';
 
-export const useCaseBoard = (initialId?: string) => {
+export interface UseCaseBoardResult {
+  boardModules: string[];
+  boardModule: string;
+  setBoardModule: (module: string) => void;
+  activeDetailModule: string;
+  setActiveDetailModule: (module: string) => void;
+  viewMode: 'LIST' | 'KANBAN';
+  setViewMode: (mode: 'LIST' | 'KANBAN') => void;
+  selectedId: string | null;
+  setSelectedId: (id: string | null) => void;
+  isCreating: boolean;
+  setIsCreating: (creating: boolean) => void;
+  cases: Case[];
+  filteredCases: Case[];
+  selectedCase: Case | undefined;
+  linkedThreats: Threat[];
+  handleCreateSubmit: (newCase: Case) => void;
+  handleKanbanDrop: (id: string, newStatus: string) => void;
+}
+
+export const useCaseBoard = (initialId?: string): UseCaseBoardResult => {
   const boardModules = useMemo(() => threatData.getModulesForView(View.CASES), []);
   const [boardModule, setBoardModule] = useState(boardModules[0]);
   const [activeDetailModule, setActiveDetailModule] = useState(boardModules[0]);

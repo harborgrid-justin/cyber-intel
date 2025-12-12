@@ -37,10 +37,12 @@ export const EVENTS = {
   DASHBOARD_UPDATED: 'DASHBOARD_UPDATED'
 };
 
-interface Context {
+export interface Context {
   user?: any;
+  permissions?: string[];
   loaders: Loaders;
   ip?: string;
+  req?: any;
 }
 
 // Helper function to create connection from results
@@ -522,7 +524,10 @@ export const resolvers = {
 
       await threat.update(input);
       await createAuditLog(user?.id || 'system', 'UPDATE_THREAT', id, `Updated threat: ${threat.indicator}`, ip);
+
+      // Publish to both general and specific threat channels
       pubsub.publish(EVENTS.THREAT_UPDATED, { threatUpdated: threat });
+      pubsub.publish(`${EVENTS.THREAT_UPDATED}_${id}`, { threatUpdated: threat });
 
       return threat;
     },
@@ -569,7 +574,10 @@ export const resolvers = {
 
       await caseData.update(input);
       await createAuditLog(user?.id || 'system', 'UPDATE_CASE', id, `Updated case: ${caseData.title}`, ip);
+
+      // Publish to both general and specific case channels
       pubsub.publish(EVENTS.CASE_UPDATED, { caseUpdated: caseData });
+      pubsub.publish(`${EVENTS.CASE_UPDATED}_${id}`, { caseUpdated: caseData });
 
       return caseData;
     },
@@ -774,7 +782,10 @@ export const resolvers = {
 
       await feed.update({ last_sync: new Date() });
       await createAuditLog(user?.id || 'system', 'SYNC_FEED', id, `Synced feed: ${feed.name}`, ip);
+
+      // Publish to both general and specific feed channels
       pubsub.publish(EVENTS.FEED_SYNCED, { feedSynced: feed });
+      pubsub.publish(`${EVENTS.FEED_SYNCED}_${id}`, { feedSynced: feed });
 
       return feed;
     },
@@ -1220,7 +1231,10 @@ export const resolvers = {
       });
 
       await createAuditLog(user?.id || 'system', 'SEND_MESSAGE', message.id, `Sent message to channel ${input.channel_id}`, ip);
-      pubsub.publish(EVENTS.MESSAGE_RECEIVED, { messageReceived: message, channelId: input.channel_id });
+
+      // Publish to both general and channel-specific topics
+      pubsub.publish(EVENTS.MESSAGE_RECEIVED, { messageReceived: message });
+      pubsub.publish(`${EVENTS.MESSAGE_RECEIVED}_${input.channel_id}`, { messageReceived: message });
 
       return message;
     },
@@ -1511,5 +1525,8 @@ export const resolvers = {
     }
   }
 };
+
+// Export as rootResolver for compatibility with different GraphQL server setups
+export const rootResolver = resolvers;
 
 export { pubsub };

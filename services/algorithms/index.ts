@@ -48,3 +48,40 @@ export {
   EnrichmentPipeline,
   EnrichmentStep
 } from './processing/enrichment';
+
+// Threat Intelligence Algorithms
+export {
+  IoCExtractor,
+  IoC,
+  IoCType,
+  ExtractionResult,
+  ExtractionOptions
+} from './threat/ioc_extractor';
+
+export {
+  TTPAnalyzer,
+  TTP,
+  AttackPattern,
+  TTPMatch,
+  AnalysisResult,
+  ThreatProfile,
+  BehaviorInput
+} from './threat/ttp_analyzer';
+
+export {
+  ThreatScorer,
+  ThreatFactors,
+  ThreatScore,
+  ScoreBreakdown,
+  ComponentWeights,
+  ScoringOptions,
+  ThreatEntity
+} from './threat/threat_scorer';
+
+// Enhanced Scoring
+export {
+  ThreatPriority,
+  PriorityFactors,
+  PriorityScore,
+  ThreatContext
+} from './scoring/threat_priority';

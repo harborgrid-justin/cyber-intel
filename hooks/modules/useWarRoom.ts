@@ -5,7 +5,23 @@ import { useWakeLock } from '../useWakeLock';
 import { IncidentLogic } from '../../services/logic/IncidentLogic';
 import { Message } from '../../components/Shared/ChatInterface';
 
-export const useWarRoom = (threats: Threat[], cases: Case[]) => {
+export interface UseWarRoomResult {
+  activeTab: 'STATUS' | 'MAP' | 'COMMS';
+  setActiveTab: (tab: 'STATUS' | 'MAP' | 'COMMS') => void;
+  showLockdown: boolean;
+  setShowLockdown: (show: boolean) => void;
+  isLocked: boolean;
+  setIsLocked: (locked: boolean) => void;
+  currentTime: Date;
+  wakeLockActive: boolean;
+  messages: Message[];
+  handleSendMessage: (text: string) => void;
+  addSystemMessage: (text: string) => void;
+  criticalThreats: Threat[];
+  metrics: any;
+}
+
+export const useWarRoom = (threats: Threat[], cases: Case[]): UseWarRoomResult => {
   const [activeTab, setActiveTab] = useState<'STATUS' | 'MAP' | 'COMMS'>('STATUS');
   const [showLockdown, setShowLockdown] = useState(false);
   const [isLocked, setIsLocked] = useState(false);

@@ -5,7 +5,18 @@ import { useDataStore } from './useDataStore';
 import { useTQL } from './useTQL';
 import { Threat, View } from '../types';
 
-export const useThreatFeedLogic = (initialQuery?: string) => {
+export interface UseThreatFeedLogicResult {
+  modules: string[];
+  activeModule: string;
+  setActiveModule: (module: string) => void;
+  query: string;
+  setQuery: (query: string) => void;
+  filteredThreats: Threat[];
+  graphThreats: Threat[];
+  searchError: string | null;
+}
+
+export const useThreatFeedLogic = (initialQuery?: string): UseThreatFeedLogicResult => {
   const modules = useMemo(() => threatData.getModulesForView(View.FEED), []);
   const [activeModule, setActiveModule] = useState(modules[0]);
   const [query, setQuery] = useState(initialQuery || '');
