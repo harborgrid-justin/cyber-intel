@@ -32,3 +32,25 @@ export const createActor = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Creation Failed' });
   }
 };
+
+export const updateActor = async (req: Request, res: Response) => {
+  try {
+    const actor = await ActorService.update(req.params.id, req.body, req.user!.username);
+    if (!actor) return res.status(404).json({ error: 'Actor not found' });
+    res.json({ data: actor });
+  } catch (err) {
+    logger.error('Update actor failed', err);
+    res.status(500).json({ error: 'Update Failed' });
+  }
+};
+
+export const deleteActor = async (req: Request, res: Response) => {
+  try {
+    const result = await ActorService.delete(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Actor not found' });
+    res.status(204).send();
+  } catch (err) {
+    logger.error('Delete actor failed', err);
+    res.status(500).json({ error: 'Delete Failed' });
+  }
+};

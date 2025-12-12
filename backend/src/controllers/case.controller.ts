@@ -23,6 +23,17 @@ export const listCases = async (req: Request, res: Response) => {
   }
 };
 
+export const getCase = async (req: Request, res: Response) => {
+  try {
+    const caseData = await CaseService.getById(req.params.id);
+    if (!caseData) return res.status(404).json({ error: 'Case not found' });
+    res.json({ data: caseData });
+  } catch (err) {
+    logger.error('Get case error', err);
+    res.status(500).json({ error: 'Internal Error' });
+  }
+};
+
 export const createCase = async (req: Request, res: Response) => {
   try {
     // req.user is guaranteed by auth middleware
@@ -41,6 +52,17 @@ export const updateCase = async (req: Request, res: Response) => {
     res.json({ data: updated });
   } catch (err) {
     res.status(500).json({ error: 'Update failed' });
+  }
+};
+
+export const deleteCase = async (req: Request, res: Response) => {
+  try {
+    const result = await CaseService.delete(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Case not found' });
+    res.status(204).send();
+  } catch (err) {
+    logger.error('Delete case error', err);
+    res.status(500).json({ error: 'Delete failed' });
   }
 };
 

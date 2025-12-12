@@ -9,18 +9,56 @@ import { TOKENS } from '../../styles/theme';
 interface GeoMapProps {
   threats?: Threat[];
   fullScreen?: boolean;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
-const GeoMapContent: React.FC<GeoMapProps> = ({ threats = [], fullScreen = false }) => {
+const GeoMapContent: React.FC<GeoMapProps> = ({ threats = [], fullScreen = false, isLoading = false, error = null }) => {
+  const CHARTS = TOKENS.dark.charts;
   const attacks = useMemo(() => {
-    return GeoLogic.generateAttackVectors(threats).map(atk => {
-        const severity = atk.severity.toLowerCase();
-        return { ...atk, color: `var(--colors-${severity})` };
-    });
+    try {
+      if (!threats || threats.length === 0) return [];
+      return GeoLogic.generateAttackVectors(threats).map(atk => {
+          const severity = atk.severity.toLowerCase();
+          return { ...atk, color: `var(--colors-${severity})` };
+      });
+    } catch (err) {
+      console.error('Error generating attack vectors:', err);
+      return [];
+    }
   }, [threats]);
   const [regionalRisk, setRegionalRisk] = useState<[string, number][]>([]);
 
-  useEffect(() => { if (fullScreen) { GeoLogic.getRegionalRisk().then(setRegionalRisk); } }, [fullScreen]);
+  useEffect(() => {
+    if (fullScreen) {
+      GeoLogic.getRegionalRisk()
+        .then(setRegionalRisk)
+        .catch(err => console.error('Error loading regional risk:', err));
+    }
+  }, [fullScreen]);
+
+  if (isLoading) {
+    return (
+      <Card className={`p-0 relative overflow-hidden bg-slate-950 border-[var(--colors-borderDefault)] ${fullScreen ? 'h-full' : 'h-full'} flex items-center justify-center`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-3" style={{ borderColor: CHARTS.primary }} />
+          <p className="text-sm text-[var(--colors-textSecondary)]">Loading geographic data...</p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className={`p-0 relative overflow-hidden bg-slate-950 border-[var(--colors-borderDefault)] ${fullScreen ? 'h-full' : 'h-full'} flex items-center justify-center`}>
+        <div className="text-center px-4">
+          <div className="text-4xl mb-3">⚠️</div>
+          <p className="text-sm font-bold text-[var(--colors-error)] mb-2">{error}</p>
+          <p className="text-xs text-[var(--colors-textSecondary)]">Unable to load geographic threat data</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className={`p-0 relative overflow-hidden group bg-slate-950 border-[var(--colors-borderDefault)] ${fullScreen ? 'h-full' : 'h-full'}`}>

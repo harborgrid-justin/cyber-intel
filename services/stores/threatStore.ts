@@ -5,6 +5,8 @@ import { ThreatLogic } from '../logic/ThreatLogic';
 import { CONFIG } from '../../config';
 import { DatabaseAdapter } from '../dbAdapter';
 import { DataMapper } from '../dataMapper';
+import { Result, ok, fail, AppError } from '../../types/result';
+import { bus, EVENTS } from '../eventBus';
 
 export class ThreatStore extends BaseStore<Threat> {
   private _memoizedThreats: Threat[] | null = null;
@@ -12,6 +14,14 @@ export class ThreatStore extends BaseStore<Threat> {
 
   constructor(key: string, initialData: Threat[], adapter: DatabaseAdapter, mapper?: DataMapper<Threat>) {
     super(key, initialData, adapter, mapper);
+  }
+
+  protected override initializeEventSubscriptions(): void {
+    // Subscribe to config changes that might affect threat filtering
+    bus.on(EVENTS.CONFIG_UPDATE, () => {
+      this._memoizedThreats = null; // Invalidate cache
+      this.notify();
+    });
   }
 
   protected override notify() {
@@ -36,25 +46,40 @@ export class ThreatStore extends BaseStore<Threat> {
     return this.items.filter(t => t.threatActor?.includes(actorName));
   }
 
-  async addThreat(threat: Threat, actors: ThreatActor[], existingCases: Case[], onAutoCase: (c: Case) => void) {
-    const { threat: proc, isDuplicate } = await ThreatLogic.deduplicateThreat(threat, this.items);
-    if (proc.threatActor === 'Unknown') proc.threatActor = ThreatLogic.autoAttributedActor(proc, actors);
-    const final = ThreatLogic.checkShadowIT(proc); 
-    await ThreatLogic.applyGeoBlocking(final);
-    if (isDuplicate) this.update(final);
-    else this.add(final);
+  async addThreat(threat: Threat, actors: ThreatActor[], existingCases: Case[], onAutoCase: (c: Case) => void): Promise<Result<void>> {
+    try {
+      const { threat: proc, isDuplicate } = await ThreatLogic.deduplicateThreat(threat, this.items);
+      if (proc.threatActor === 'Unknown') proc.threatActor = ThreatLogic.autoAttributedActor(proc, actors);
+      const final = ThreatLogic.checkShadowIT(proc);
+      await ThreatLogic.applyGeoBlocking(final);
+
+      if (isDuplicate) {
+        return this.update(final);
+      } else {
+        return this.add(final);
+      }
+    } catch (e) {
+      return fail(new AppError('Failed to add threat', 'SYSTEM', { originalError: e }));
+    }
   }
 
-  updateStatus(id: string, status: IncidentStatus, existingCases: Case[], onAutoCase: (c: Case) => void) {
-    const res = this.getById(id);
-    if (res.success && res.data) {
-      const t = res.data;
-      const updatedThreat = { ...t, status: status };
-      this.update(updatedThreat);
-      
-      if (status === IncidentStatus.INVESTIGATING && !existingCases.find((c) => c.relatedThreatIds.includes(id))) {
-        onAutoCase({ id: `CASE-${Date.now()}` as CaseId, title: `Investigation: ${t.indicator}`, description: `Auto-gen`, status: 'OPEN', priority: 'MEDIUM', assignee: 'System', reporter: 'System', tasks: [], findings: '', relatedThreatIds: [t.id], created: new Date().toISOString(), notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Auto'], tlp: 'AMBER' });
+  updateStatus(id: string, status: IncidentStatus, existingCases: Case[], onAutoCase: (c: Case) => void): Result<void> {
+    try {
+      const res = this.getById(id);
+      if (res.success && res.data) {
+        const t = res.data;
+        const updatedThreat = { ...t, status: status };
+        const updateResult = this.update(updatedThreat);
+
+        if (status === IncidentStatus.INVESTIGATING && !existingCases.find((c) => c.relatedThreatIds.includes(id))) {
+          onAutoCase({ id: `CASE-${Date.now()}` as CaseId, title: `Investigation: ${t.indicator}`, description: `Auto-gen`, status: 'OPEN', priority: 'MEDIUM', assignee: 'System', reporter: 'System', tasks: [], findings: '', relatedThreatIds: [t.id], created: new Date().toISOString(), notes: [], artifacts: [], timeline: [], agency: 'SENTINEL_CORE', sharingScope: 'INTERNAL', sharedWith: [], labels: ['Auto'], tlp: 'AMBER' });
+        }
+
+        return updateResult;
       }
+      return fail(new AppError('Threat not found', 'VALIDATION'));
+    } catch (e) {
+      return fail(new AppError('Failed to update threat status', 'SYSTEM', { originalError: e }));
     }
   }
 }

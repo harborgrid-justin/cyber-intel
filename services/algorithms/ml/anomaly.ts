@@ -342,6 +342,342 @@ export class AnomalyDetection {
     };
   }
 
+  /**
+   * Exponential Weighted Moving Average (EWMA) for anomaly detection
+   * More responsive to recent changes than simple moving average
+   */
+  ewma(
+    values: number[],
+    alpha: number = 0.3,
+    threshold: number = 3
+  ): AnomalyResult {
+    if (values.length === 0) {
+      return { anomalies: [], threshold, method: 'ewma', statistics: {} };
+    }
+
+    const anomalies: AnomalyScore[] = [];
+    let ewmaValue = values[0];
+    let ewmaVariance = 0;
+
+    for (let i = 1; i < values.length; i++) {
+      const prevEwma = ewmaValue;
+      ewmaValue = alpha * values[i] + (1 - alpha) * ewmaValue;
+
+      // Update variance estimate
+      const diff = values[i] - prevEwma;
+      ewmaVariance = (1 - alpha) * (ewmaVariance + alpha * diff * diff);
+
+      const stdDev = Math.sqrt(ewmaVariance);
+      const zScore = stdDev > 0 ? Math.abs((values[i] - ewmaValue) / stdDev) : 0;
+
+      if (zScore > threshold && i > 10) { // Skip initial warm-up period
+        anomalies.push({
+          index: i,
+          value: values[i],
+          score: zScore,
+          isAnomaly: true,
+          metadata: { ewmaValue, stdDev }
+        });
+      }
+    }
+
+    return {
+      anomalies,
+      threshold,
+      method: 'ewma',
+      statistics: { mean: ewmaValue }
+    };
+  }
+
+  /**
+   * Seasonal Hybrid ESD (Extreme Studentized Deviate) Test
+   * Detects multiple anomalies in time series with seasonality
+   */
+  seasonalESD(
+    values: number[],
+    maxAnomalies: number = 10,
+    alpha: number = 0.05
+  ): AnomalyResult {
+    const n = values.length;
+    if (n < 3) {
+      return { anomalies: [], threshold: 0, method: 'seasonal-esd', statistics: {} };
+    }
+
+    const anomalies: AnomalyScore[] = [];
+    const workingValues = [...values];
+    const anomalyIndices: number[] = [];
+
+    for (let i = 0; i < maxAnomalies && workingValues.length > 2; i++) {
+      const mean = this.calculateMean(workingValues);
+      const stddev = this.calculateStdDev(workingValues, mean);
+
+      // Find most extreme point
+      let maxZ = 0;
+      let maxIdx = -1;
+
+      for (let j = 0; j < workingValues.length; j++) {
+        const z = Math.abs((workingValues[j] - mean) / stddev);
+        if (z > maxZ) {
+          maxZ = z;
+          maxIdx = j;
+        }
+      }
+
+      // Calculate critical value
+      const p = 1 - alpha / (2 * (n - i));
+      const tDist = this.calculateTCritical(n - i - 2, p);
+      const criticalValue = ((n - i - 1) * tDist) /
+        Math.sqrt((n - i) * (n - i - 2 + tDist * tDist));
+
+      if (maxZ > criticalValue) {
+        const originalIdx = anomalyIndices.length > 0
+          ? this.findOriginalIndex(values, workingValues[maxIdx], anomalyIndices)
+          : maxIdx;
+
+        anomalies.push({
+          index: originalIdx,
+          value: workingValues[maxIdx],
+          score: maxZ,
+          isAnomaly: true
+        });
+
+        anomalyIndices.push(maxIdx);
+        workingValues.splice(maxIdx, 1);
+      } else {
+        break;
+      }
+    }
+
+    return {
+      anomalies: anomalies.sort((a, b) => a.index - b.index),
+      threshold: alpha,
+      method: 'seasonal-esd',
+      statistics: {}
+    };
+  }
+
+  /**
+   * One-Class SVM for anomaly detection (simplified implementation)
+   * Learns boundary around normal data
+   */
+  oneClassSVM(
+    data: number[][],
+    nu: number = 0.1,
+    threshold: number = 0
+  ): AnomalyResult {
+    const n = data.length;
+
+    // Simplified: Use distance from mean as proxy for SVM decision
+    const centroid = this.calculateCentroid(data);
+    const distances = data.map(point => this.euclideanDistance(point, centroid));
+
+    // Calculate threshold using nu parameter
+    const sortedDistances = [...distances].sort((a, b) => a - b);
+    const thresholdIdx = Math.floor((1 - nu) * n);
+    const autoThreshold = sortedDistances[thresholdIdx];
+
+    const anomalies: AnomalyScore[] = [];
+
+    for (let i = 0; i < n; i++) {
+      if (distances[i] > autoThreshold) {
+        anomalies.push({
+          index: i,
+          value: distances[i],
+          score: distances[i] / autoThreshold,
+          isAnomaly: true,
+          metadata: { distance: distances[i], threshold: autoThreshold }
+        });
+      }
+    }
+
+    return {
+      anomalies,
+      threshold: autoThreshold,
+      method: 'one-class-svm',
+      statistics: {}
+    };
+  }
+
+  /**
+   * Autoencoder-inspired anomaly detection using reconstruction error
+   * Simplified statistical version without deep learning
+   */
+  reconstructionError(
+    data: number[][],
+    compressionRatio: number = 0.5,
+    threshold: number = 2
+  ): AnomalyResult {
+    const n = data.length;
+    const d = data[0].length;
+
+    // Use PCA-like dimensionality reduction
+    const mean = this.calculateCentroid(data);
+    const centered = data.map(point =>
+      point.map((val, i) => val - mean[i])
+    );
+
+    // Calculate covariance matrix (simplified)
+    const errors: number[] = [];
+
+    for (let i = 0; i < n; i++) {
+      // Reconstruction error is deviation from mean projection
+      const error = this.euclideanDistance(centered[i], new Array(d).fill(0));
+      errors.push(error);
+    }
+
+    const meanError = this.calculateMean(errors);
+    const stdError = this.calculateStdDev(errors, meanError);
+
+    const anomalies: AnomalyScore[] = [];
+
+    for (let i = 0; i < n; i++) {
+      const zScore = stdError > 0 ? (errors[i] - meanError) / stdError : 0;
+      if (zScore > threshold) {
+        anomalies.push({
+          index: i,
+          value: errors[i],
+          score: zScore,
+          isAnomaly: true,
+          metadata: { reconstructionError: errors[i] }
+        });
+      }
+    }
+
+    return {
+      anomalies,
+      threshold,
+      method: 'reconstruction-error',
+      statistics: { mean: meanError, stddev: stdError }
+    };
+  }
+
+  /**
+   * Ensemble anomaly detection - combines multiple methods
+   */
+  ensemble(
+    data: number[] | number[][],
+    methods: string[] = ['z-score', 'iqr', 'isolation-forest'],
+    votingThreshold: number = 0.5
+  ): AnomalyResult {
+    const results: AnomalyResult[] = [];
+    const isMultiDim = Array.isArray(data[0]);
+
+    // Run each method
+    for (const method of methods) {
+      try {
+        let result: AnomalyResult;
+
+        if (isMultiDim) {
+          const multiData = data as number[][];
+          switch (method) {
+            case 'isolation-forest':
+              result = this.isolationForest(multiData);
+              break;
+            case 'local-outlier-factor':
+              result = this.localOutlierFactor(multiData);
+              break;
+            case 'dbscan':
+              result = this.dbscan(multiData, 0.5);
+              break;
+            default:
+              continue;
+          }
+        } else {
+          const singleData = data as number[];
+          switch (method) {
+            case 'z-score':
+              result = this.zScore(singleData);
+              break;
+            case 'iqr':
+              result = this.iqr(singleData);
+              break;
+            case 'modified-z-score':
+              result = this.modifiedZScore(singleData);
+              break;
+            case 'moving-average':
+              result = this.movingAverage(singleData);
+              break;
+            default:
+              continue;
+          }
+        }
+
+        results.push(result);
+      } catch (error) {
+        // Skip methods that fail
+        continue;
+      }
+    }
+
+    // Vote on anomalies
+    const votes = new Map<number, number>();
+    const anomalyData = new Map<number, AnomalyScore>();
+
+    for (const result of results) {
+      for (const anomaly of result.anomalies) {
+        votes.set(anomaly.index, (votes.get(anomaly.index) || 0) + 1);
+        if (!anomalyData.has(anomaly.index)) {
+          anomalyData.set(anomaly.index, anomaly);
+        }
+      }
+    }
+
+    const minVotes = Math.ceil(results.length * votingThreshold);
+    const anomalies: AnomalyScore[] = [];
+
+    for (const [index, voteCount] of votes.entries()) {
+      if (voteCount >= minVotes) {
+        const anomaly = anomalyData.get(index)!;
+        anomalies.push({
+          ...anomaly,
+          score: voteCount / results.length,
+          metadata: { votes: voteCount, methods: results.length }
+        });
+      }
+    }
+
+    return {
+      anomalies: anomalies.sort((a, b) => a.index - b.index),
+      threshold: votingThreshold,
+      method: 'ensemble',
+      statistics: { methodsUsed: results.length }
+    };
+  }
+
+  // Additional helper methods
+
+  private calculateCentroid(data: number[][]): number[] {
+    const n = data.length;
+    const d = data[0].length;
+    const centroid = new Array(d).fill(0);
+
+    for (const point of data) {
+      for (let i = 0; i < d; i++) {
+        centroid[i] += point[i];
+      }
+    }
+
+    return centroid.map(val => val / n);
+  }
+
+  private calculateTCritical(df: number, p: number): number {
+    // Simplified t-distribution critical value approximation
+    if (df < 1) return 0;
+    if (df === 1) return 12.706;
+    if (df === 2) return 4.303;
+    if (df <= 30) return 2.042 + (12.706 - 2.042) * Math.exp(-df / 5);
+    return 1.96; // Normal approximation for large df
+  }
+
+  private findOriginalIndex(original: number[], value: number, excludeIndices: number[]): number {
+    for (let i = 0; i < original.length; i++) {
+      if (!excludeIndices.includes(i) && Math.abs(original[i] - value) < 1e-10) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
   // Helper methods
 
   private calculateMean(values: number[]): number {

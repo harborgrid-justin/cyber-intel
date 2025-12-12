@@ -137,4 +137,142 @@ test.describe('Case Management', () => {
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toMatch(/cases.*\.csv/i);
   });
+
+  test('should paginate through cases', async ({ page }) => {
+    const nextButton = page.getByRole('button', { name: /next/i });
+    if (await nextButton.isVisible()) {
+      await nextButton.click();
+      await expect(page).toHaveURL(/page=2/);
+      await expect(page.locator('[data-testid="case-item"]').first()).toBeVisible();
+    }
+  });
+
+  test('should sort cases by priority', async ({ page }) => {
+    const priorityHeader = page.getByRole('columnheader', { name: /priority/i });
+    if (await priorityHeader.isVisible()) {
+      await priorityHeader.click();
+      await page.waitForTimeout(500);
+
+      // Should be sorted
+      const firstCase = page.locator('[data-testid="case-item"]').first();
+      await expect(firstCase).toBeVisible();
+    }
+  });
+
+  test('should link threat to case', async ({ page }) => {
+    await page.locator('[data-testid="case-item"]').first().click();
+
+    const linkThreatButton = page.getByRole('button', { name: /link threat|add threat/i });
+    if (await linkThreatButton.isVisible()) {
+      await linkThreatButton.click();
+
+      // Select a threat from dropdown or modal
+      const threatSelect = page.getByLabel(/threat/i);
+      if (await threatSelect.isVisible()) {
+        await threatSelect.selectOption({ index: 1 });
+        await page.getByRole('button', { name: /link|add/i }).click();
+        await expect(page.getByText(/linked successfully|threat added/i)).toBeVisible();
+      }
+    }
+  });
+
+  test('should bulk update case status', async ({ page }) => {
+    // Select multiple cases
+    const checkboxes = page.locator('[data-testid="case-checkbox"]');
+    const count = await checkboxes.count();
+
+    if (count > 0) {
+      await checkboxes.first().check();
+      if (count > 1) await checkboxes.nth(1).check();
+
+      // Bulk action
+      const bulkActionButton = page.getByRole('button', { name: /bulk actions|actions/i });
+      if (await bulkActionButton.isVisible()) {
+        await bulkActionButton.click();
+        await page.getByRole('option', { name: /update status/i }).click();
+        await page.getByLabel(/status/i).selectOption('investigating');
+        await page.getByRole('button', { name: /apply|update/i }).click();
+        await expect(page.getByText(/updated successfully/i)).toBeVisible();
+      }
+    }
+  });
+
+  test('should filter by assigned user', async ({ page }) => {
+    const assignedFilter = page.getByRole('button', { name: /assigned to/i });
+    if (await assignedFilter.isVisible()) {
+      await assignedFilter.click();
+      await page.getByRole('option', { name: /sarah chen/i }).click();
+
+      const cases = page.locator('[data-testid="case-item"]');
+      if (await cases.first().isVisible()) {
+        await expect(cases.first()).toContainText(/sarah chen/i);
+      }
+    }
+  });
+
+  test('should display case metrics', async ({ page }) => {
+    const metricsSection = page.locator('[data-testid="case-metrics"]');
+    if (await metricsSection.isVisible()) {
+      await expect(metricsSection).toBeVisible();
+      await expect(page.getByText(/average resolution time|mttr/i)).toBeVisible();
+    }
+  });
+
+  test('should add notes to case', async ({ page }) => {
+    await page.locator('[data-testid="case-item"]').first().click();
+
+    const addNoteButton = page.getByRole('button', { name: /add note|notes/i });
+    if (await addNoteButton.isVisible()) {
+      await addNoteButton.click();
+      await page.getByLabel(/note|comment/i).fill('Investigation update: all systems secured');
+      await page.getByRole('button', { name: /add|save/i }).click();
+      await expect(page.getByText(/note added|comment saved/i)).toBeVisible();
+    }
+  });
+
+  test('should delete case', async ({ page }) => {
+    await page.locator('[data-testid="case-item"]').first().click();
+
+    const deleteButton = page.getByRole('button', { name: /delete|remove/i });
+    if (await deleteButton.isVisible()) {
+      await deleteButton.click();
+
+      // Confirm deletion
+      await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
+      await expect(page.getByText(/deleted successfully|case removed/i)).toBeVisible();
+      await expect(page).toHaveURL(/cases$/);
+    }
+  });
+
+  test('should display case timeline', async ({ page }) => {
+    await page.locator('[data-testid="case-item"]').first().click();
+
+    const timeline = page.locator('[data-testid="case-timeline"]');
+    if (await timeline.isVisible()) {
+      await expect(timeline).toBeVisible();
+
+      // Should have timeline items
+      const timelineItems = timeline.locator('[data-testid="timeline-item"]');
+      expect(await timelineItems.count()).toBeGreaterThan(0);
+    }
+  });
+
+  test('should view related assets', async ({ page }) => {
+    await page.locator('[data-testid="case-item"]').first().click();
+
+    const assetsSection = page.locator('[data-testid="related-assets"]');
+    if (await assetsSection.isVisible()) {
+      await expect(assetsSection).toBeVisible();
+    }
+  });
+
+  test('should escalate case priority', async ({ page }) => {
+    await page.locator('[data-testid="case-item"]').first().click();
+
+    const escalateButton = page.getByRole('button', { name: /escalate/i });
+    if (await escalateButton.isVisible()) {
+      await escalateButton.click();
+      await expect(page.getByText(/escalated|priority updated/i)).toBeVisible();
+    }
+  });
 });

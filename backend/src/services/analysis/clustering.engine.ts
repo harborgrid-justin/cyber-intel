@@ -228,7 +228,7 @@ export class ClusteringEngine {
           case 'severity': return threat.severity;
           case 'source': return threat.source;
           case 'region': return threat.region;
-          case 'actor': return threat.threatActor;
+          case 'actor': return threat.threat_actor;
           default: return 'Unknown';
         }
       }).join('|');
@@ -251,7 +251,7 @@ export class ClusteringEngine {
   ): Promise<ThreatCluster[]> {
     // Sort threats by timestamp
     const sorted = [...threats].sort((a, b) =>
-      new Date(a.lastSeen).getTime() - new Date(b.lastSeen).getTime()
+      new Date(a.last_seen).getTime() - new Date(b.last_seen).getTime()
     );
 
     const clusters: ThreatCluster[] = [];
@@ -259,7 +259,7 @@ export class ClusteringEngine {
     let clusterStart: number | null = null;
 
     sorted.forEach((threat, idx) => {
-      const threatTime = new Date(threat.lastSeen).getTime();
+      const threatTime = new Date(threat.last_seen).getTime();
 
       if (clusterStart === null) {
         clusterStart = threatTime;
@@ -563,7 +563,7 @@ export class ClusteringEngine {
 
   private static calculateTemporalCentroid(threats: Threat[]): Record<string, number> {
     const avgTime = threats.reduce((sum, t) =>
-      sum + new Date(t.lastSeen).getTime(), 0
+      sum + new Date(t.last_seen).getTime(), 0
     ) / threats.length;
 
     return { timestamp: avgTime };

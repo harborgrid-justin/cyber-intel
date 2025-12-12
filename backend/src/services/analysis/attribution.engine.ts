@@ -78,40 +78,11 @@ export class AttributionEngine {
           });
       }
 
-      // 4. Campaign correlation
-      if (actor.campaigns && Array.isArray(actor.campaigns)) {
-        actor.campaigns.forEach(campaign => {
-          if (lowerInput.includes(campaign.toLowerCase())) {
-            const weight = 20;
-            score += weight;
-            matches.push({ type: 'CAMPAIGN', value: campaign, weight });
-            evidenceChain.push({
-              type: 'Campaign Match',
-              description: `Linked to known campaign '${campaign}'`,
-              confidence: 0.8,
-              timestamp: new Date().toISOString()
-            });
-          }
-        });
-      }
+      // 4. Campaign correlation - Actor model doesn't have campaigns property
+      // Campaign linking requires separate Campaign model query
 
-      // 5. Infrastructure pattern matching
-      if (actor.infrastructure && Array.isArray(actor.infrastructure)) {
-        actor.infrastructure.forEach(infra => {
-          const infraValue = typeof infra === 'object' ? infra.value : infra;
-          if (infraValue && lowerInput.includes(infraValue.toLowerCase())) {
-            const weight = 25;
-            score += weight;
-            matches.push({ type: 'INFRA', value: infraValue, weight });
-            evidenceChain.push({
-              type: 'Infrastructure',
-              description: `Matches known infrastructure: ${infraValue}`,
-              confidence: 0.85,
-              timestamp: new Date().toISOString()
-            });
-          }
-        });
-      }
+      // 5. Infrastructure pattern matching - Actor model doesn't have infrastructure property
+      // Infrastructure linking requires separate analysis or extended Actor model
 
       // 6. Exploit correlation
       if (actor.exploits && Array.isArray(actor.exploits)) {
@@ -131,8 +102,8 @@ export class AttributionEngine {
       }
 
       // 7. Evasion technique fingerprinting
-      if (actor.evasionTechniques && Array.isArray(actor.evasionTechniques)) {
-        actor.evasionTechniques.forEach(technique => {
+      if (actor.evasion_techniques && Array.isArray(actor.evasion_techniques)) {
+        actor.evasion_techniques.forEach(technique => {
           if (lowerInput.includes(technique.toLowerCase())) {
             const weight = 12;
             score += weight;
@@ -200,7 +171,7 @@ export class AttributionEngine {
 
     // Temporal pattern analysis
     const threatsByDate = threats.sort((a, b) =>
-      new Date(a.lastSeen).getTime() - new Date(b.lastSeen).getTime()
+      new Date(a.last_seen).getTime() - new Date(b.last_seen).getTime()
     );
 
     // Check for campaign-like clustering
@@ -209,18 +180,8 @@ export class AttributionEngine {
       matchScore += 20;
     }
 
-    // Infrastructure reuse pattern
-    const infrastructureSet = new Set(threats.map(t => t.indicator));
-    if (actor.infrastructure) {
-      const reuseCount = actor.infrastructure.filter(infra =>
-        infrastructureSet.has(typeof infra === 'object' ? infra.value : infra)
-      ).length;
-
-      if (reuseCount > 0) {
-        patterns.push(`Infrastructure reuse: ${reuseCount} matches`);
-        matchScore += reuseCount * 10;
-      }
-    }
+    // Infrastructure reuse pattern - Actor model doesn't have infrastructure property
+    // Infrastructure analysis requires separate modeling
 
     // Target consistency
     const targetRegions = new Set(threats.map(t => t.region).filter(Boolean));
@@ -231,7 +192,7 @@ export class AttributionEngine {
 
     threatsByDate.forEach(threat => {
       timeline.push({
-        date: threat.lastSeen,
+        date: threat.last_seen.toISOString(),
         activity: `${threat.type}: ${threat.indicator}`
       });
     });
@@ -240,6 +201,7 @@ export class AttributionEngine {
   }
 
   // TTP-based attribution using MITRE ATT&CK mapping
+  // Note: Actor model doesn't have ttps property - requires Campaign model or extended Actor model
   static async attributeByTTP(ttpCodes: string[], actors: Actor[]): Promise<AttributionResult[]> {
     const results: AttributionResult[] = [];
 
@@ -248,25 +210,8 @@ export class AttributionEngine {
       const evidenceChain: AttributionEvidence[] = [];
       let score = 0;
 
-      if (!actor.ttps || !Array.isArray(actor.ttps)) continue;
-
-      const actorTTPCodes = actor.ttps.map(t =>
-        typeof t === 'object' && t.code ? t.code : String(t)
-      );
-
-      ttpCodes.forEach(code => {
-        if (actorTTPCodes.includes(code)) {
-          const weight = 30; // High weight for TTP matches
-          score += weight;
-          matches.push({ type: 'TTP', value: code, weight });
-          evidenceChain.push({
-            type: 'TTP Match',
-            description: `Matches TTP ${code}`,
-            confidence: 0.9,
-            timestamp: new Date().toISOString()
-          });
-        }
-      });
+      // Actor model doesn't have ttps - this would need to be linked via Campaign model
+      // For now, returning empty results as this requires schema extension
 
       if (score > 0) {
         const confidence = this.calculateConfidence(matches, evidenceChain);

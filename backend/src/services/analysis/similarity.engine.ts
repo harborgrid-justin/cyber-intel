@@ -31,7 +31,7 @@ export class SimilarityEngine {
     // Calculate different dimensions of similarity
     const indicatorSim = this.indicatorSimilarity(threat1.indicator, threat2.indicator, threat1.type);
     const behavioralSim = this.behavioralSimilarity(threat1, threat2);
-    const temporalSim = this.temporalSimilarity(threat1.lastSeen, threat2.lastSeen);
+    const temporalSim = this.temporalSimilarity(threat1.last_seen.toISOString(), threat2.last_seen.toISOString());
     const contextualSim = this.contextualSimilarity(threat1, threat2);
 
     // Weighted average
@@ -351,11 +351,11 @@ export class SimilarityEngine {
     factors++;
 
     // Threat actor match
-    if (threat1.threatActor && threat2.threatActor) {
-      if (threat1.threatActor === threat2.threatActor) {
+    if (threat1.threat_actor && threat2.threat_actor) {
+      if (threat1.threat_actor === threat2.threat_actor) {
         similarity += 1.0;
       } else {
-        similarity += this.levenshteinSimilarity(threat1.threatActor, threat2.threatActor);
+        similarity += this.levenshteinSimilarity(threat1.threat_actor, threat2.threat_actor);
       }
       factors++;
     }
@@ -420,7 +420,7 @@ export class SimilarityEngine {
     if (threat1.type === threat2.type) shared.push('Same type');
     if (threat1.severity === threat2.severity) shared.push('Same severity');
     if (threat1.source === threat2.source) shared.push('Same source');
-    if (threat1.threatActor === threat2.threatActor) shared.push('Same threat actor');
+    if (threat1.threat_actor === threat2.threat_actor) shared.push('Same threat actor');
     if (threat1.region === threat2.region) shared.push('Same region');
 
     // Check tag overlap
@@ -449,7 +449,7 @@ export class SimilarityEngine {
       threat.severity,
       threat.source,
       threat.description,
-      threat.threatActor,
+      threat.threat_actor,
       threat.region
     ];
 

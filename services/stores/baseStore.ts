@@ -5,25 +5,37 @@ import { DataMapper, IdentityMapper } from '../dataMapper';
 import { fastDeepEqual } from '../utils/fastDeepEqual';
 import { Result, ok, fail, AppError } from '../../types/result';
 import { SystemGuard } from '../core/SystemGuard';
+import { bus, EVENTS } from '../eventBus';
 
 export class BaseStore<T extends { id: string }> {
   protected items: T[] = [];
   private debounceTimer: any = null;
-  private _cache: T[] | null = null; 
+  private _cache: T[] | null = null;
 
   constructor(
-    protected key: string, 
-    protected initialData: T[], 
-    protected adapter: DatabaseAdapter, 
+    protected key: string,
+    protected initialData: T[],
+    protected adapter: DatabaseAdapter,
     protected mapper: DataMapper<T> = new IdentityMapper<T>()
   ) {
     this.items = ScratchPad.load(key) || initialData;
-    this._cache = this.items; 
-    
+    this._cache = this.items;
+
     const depCheck = SystemGuard.registerDependency(key, 'DatabaseAdapter');
     if (!depCheck.success) {
         console.error((depCheck as any).error);
     }
+
+    // Subscribe to cross-store events if needed
+    this.initializeEventSubscriptions();
+  }
+
+  /**
+   * Override this method in subclasses to subscribe to cross-store events
+   */
+  protected initializeEventSubscriptions(): void {
+    // Default: no subscriptions
+    // Subclasses can override to listen to specific events
   }
 
   getAll(): Result<T[]> {
@@ -67,36 +79,76 @@ export class BaseStore<T extends { id: string }> {
 
   // ... (Other methods would follow similar Result pattern)
 
-  add(item: T): void {
-    this.items.unshift(item);
-    this._cache = null;
-    this.sync('CREATE', item);
-  }
+  add(item: T): Result<void> {
+    try {
+      this.items.unshift(item);
+      this._cache = null;
+      this.sync('CREATE', item);
 
-  update(item: T): void {
-    let changed = false;
-    this.items = this.items.map(i => {
-        if (i.id === item.id) {
-            if (!fastDeepEqual(i, item)) {
-                changed = true;
-                return item;
-            }
-        }
-        return i;
-    });
-    
-    if (changed) {
-        this._cache = null; 
-        this.sync('UPDATE', item);
+      // Emit event bus notification for cross-store communication
+      bus.emit(EVENTS.DATA_UPDATE, {
+        storeKey: this.key,
+        action: 'CREATE',
+        itemId: item.id
+      });
+
+      return ok(undefined);
+    } catch (e) {
+      return fail(new AppError('Failed to add item', 'SYSTEM', { originalError: e }));
     }
   }
 
-  delete(id: string): void {
-    const len = this.items.length;
-    this.items = this.items.filter(i => i.id !== id);
-    if (this.items.length !== len) {
-        this._cache = null; 
-        this.sync('DELETE', { id });
+  update(item: T): Result<void> {
+    try {
+      let changed = false;
+      this.items = this.items.map(i => {
+          if (i.id === item.id) {
+              if (!fastDeepEqual(i, item)) {
+                  changed = true;
+                  return item;
+              }
+          }
+          return i;
+      });
+
+      if (changed) {
+          this._cache = null;
+          this.sync('UPDATE', item);
+
+          // Emit event bus notification for cross-store communication
+          bus.emit(EVENTS.DATA_UPDATE, {
+            storeKey: this.key,
+            action: 'UPDATE',
+            itemId: item.id
+          });
+      }
+
+      return ok(undefined);
+    } catch (e) {
+      return fail(new AppError('Failed to update item', 'SYSTEM', { originalError: e }));
+    }
+  }
+
+  delete(id: string): Result<void> {
+    try {
+      const len = this.items.length;
+      this.items = this.items.filter(i => i.id !== id);
+
+      if (this.items.length !== len) {
+          this._cache = null;
+          this.sync('DELETE', { id });
+
+          // Emit event bus notification for cross-store communication
+          bus.emit(EVENTS.DATA_UPDATE, {
+            storeKey: this.key,
+            action: 'DELETE',
+            itemId: id
+          });
+      }
+
+      return ok(undefined);
+    } catch (e) {
+      return fail(new AppError('Failed to delete item', 'SYSTEM', { originalError: e }));
     }
   }
 

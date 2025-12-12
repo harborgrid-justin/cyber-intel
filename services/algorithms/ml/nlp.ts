@@ -392,4 +392,352 @@ export class NLP {
 
     return Math.max(1, count);
   }
+
+  /**
+   * Advanced TF-IDF keyword extraction
+   * Better than simple frequency for document analysis
+   */
+  extractKeywordsTFIDF(
+    documents: string[],
+    docIndex: number,
+    topK: number = 10
+  ): KeywordResult[] {
+    const allTokens = documents.map(doc => this.tokenize(doc, { lowercase: true, removeStopWords: true }));
+    const currentTokens = allTokens[docIndex];
+
+    // Calculate term frequencies for current document
+    const tf = new Map<string, number>();
+    for (const token of currentTokens) {
+      tf.set(token.text, (tf.get(token.text) || 0) + 1);
+    }
+
+    // Calculate document frequencies
+    const df = new Map<string, number>();
+    for (const tokens of allTokens) {
+      const uniqueWords = new Set(tokens.map(t => t.text));
+      for (const word of uniqueWords) {
+        df.set(word, (df.get(word) || 0) + 1);
+      }
+    }
+
+    // Calculate TF-IDF scores
+    const N = documents.length;
+    const keywords: KeywordResult[] = [];
+
+    for (const [word, freq] of tf.entries()) {
+      if (word.length > 2) {
+        const termFreq = freq / currentTokens.length;
+        const docFreq = df.get(word) || 1;
+        const idf = Math.log(N / docFreq);
+        const tfidf = termFreq * idf;
+
+        const positions = currentTokens
+          .filter(t => t.text === word)
+          .map(t => t.position);
+
+        keywords.push({
+          keyword: word,
+          score: tfidf,
+          frequency: freq,
+          positions
+        });
+      }
+    }
+
+    keywords.sort((a, b) => b.score - a.score);
+    return keywords.slice(0, topK);
+  }
+
+  /**
+   * TextRank algorithm for keyword extraction
+   * Graph-based approach for finding important words
+   */
+  textRank(text: string, topK: number = 10, windowSize: number = 5): KeywordResult[] {
+    const tokens = this.tokenize(text, { lowercase: true, removeStopWords: true });
+    const words = tokens.map(t => t.text);
+
+    if (words.length === 0) return [];
+
+    // Build co-occurrence graph
+    const graph = new Map<string, Map<string, number>>();
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      if (!graph.has(word)) {
+        graph.set(word, new Map());
+      }
+
+      const windowEnd = Math.min(i + windowSize, words.length);
+      for (let j = i + 1; j < windowEnd; j++) {
+        const neighbor = words[j];
+        const edges = graph.get(word)!;
+        edges.set(neighbor, (edges.get(neighbor) || 0) + 1);
+
+        if (!graph.has(neighbor)) {
+          graph.set(neighbor, new Map());
+        }
+        const reverseEdges = graph.get(neighbor)!;
+        reverseEdges.set(word, (reverseEdges.get(word) || 0) + 1);
+      }
+    }
+
+    // Run PageRank
+    const scores = new Map<string, number>();
+    for (const word of graph.keys()) {
+      scores.set(word, 1.0);
+    }
+
+    const dampingFactor = 0.85;
+    const iterations = 20;
+
+    for (let iter = 0; iter < iterations; iter++) {
+      const newScores = new Map<string, number>();
+
+      for (const [word, edges] of graph.entries()) {
+        let score = 1 - dampingFactor;
+
+        for (const [neighbor, weight] of edges.entries()) {
+          const neighborEdges = graph.get(neighbor)!;
+          const totalWeight = Array.from(neighborEdges.values()).reduce((a, b) => a + b, 0);
+          score += dampingFactor * (scores.get(neighbor) || 0) * weight / totalWeight;
+        }
+
+        newScores.set(word, score);
+      }
+
+      for (const [word, score] of newScores.entries()) {
+        scores.set(word, score);
+      }
+    }
+
+    // Convert to keywords
+    const keywords: KeywordResult[] = [];
+    const wordFreq = new Map<string, number>();
+    const wordPositions = new Map<string, number[]>();
+
+    for (const token of tokens) {
+      wordFreq.set(token.text, (wordFreq.get(token.text) || 0) + 1);
+      if (!wordPositions.has(token.text)) {
+        wordPositions.set(token.text, []);
+      }
+      wordPositions.get(token.text)!.push(token.position);
+    }
+
+    for (const [word, score] of scores.entries()) {
+      keywords.push({
+        keyword: word,
+        score,
+        frequency: wordFreq.get(word) || 0,
+        positions: wordPositions.get(word) || []
+      });
+    }
+
+    keywords.sort((a, b) => b.score - a.score);
+    return keywords.slice(0, topK);
+  }
+
+  /**
+   * Topic modeling using simplified LDA approach
+   * Extracts main topics from text
+   */
+  extractTopics(
+    documents: string[],
+    numTopics: number = 5,
+    wordsPerTopic: number = 10
+  ): Array<{ topic: number; words: Array<{ word: string; weight: number }> }> {
+    const allTokens = documents.map(doc =>
+      this.tokenize(doc, { lowercase: true, removeStopWords: true })
+    );
+
+    // Build vocabulary
+    const vocab = new Set<string>();
+    for (const tokens of allTokens) {
+      for (const token of tokens) {
+        vocab.set(token.text);
+      }
+    }
+
+    // Calculate term frequencies per document
+    const docTermMatrix: Map<string, number>[] = [];
+
+    for (const tokens of allTokens) {
+      const termFreq = new Map<string, number>();
+      for (const token of tokens) {
+        termFreq.set(token.text, (termFreq.get(token.text) || 0) + 1);
+      }
+      docTermMatrix.push(termFreq);
+    }
+
+    // Simplified topic extraction using clustering
+    // Group words that frequently co-occur
+    const topics: Array<{ topic: number; words: Array<{ word: string; weight: number }> }> = [];
+
+    for (let t = 0; t < numTopics; t++) {
+      const topicWords: Array<{ word: string; weight: number }> = [];
+
+      // Find top words for this topic
+      const wordScores = new Map<string, number>();
+
+      for (const word of vocab) {
+        let score = 0;
+        for (const termFreq of docTermMatrix) {
+          score += termFreq.get(word) || 0;
+        }
+        wordScores.set(word, score);
+      }
+
+      const sortedWords = Array.from(wordScores.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(t * wordsPerTopic, (t + 1) * wordsPerTopic);
+
+      for (const [word, score] of sortedWords) {
+        topicWords.push({ word, weight: score });
+      }
+
+      topics.push({ topic: t, words: topicWords });
+    }
+
+    return topics;
+  }
+
+  /**
+   * Enhanced entity extraction with context and relationships
+   */
+  extractEntitiesAdvanced(text: string): Array<Entity & { context?: string; related?: string[] }> {
+    const baseEntities = this.extractEntities(text);
+    const enhanced = baseEntities.map(entity => {
+      // Extract context window
+      const contextStart = Math.max(0, entity.position - 50);
+      const contextEnd = Math.min(text.length, entity.position + entity.text.length + 50);
+      const context = text.substring(contextStart, contextEnd);
+
+      // Find related entities nearby
+      const related = baseEntities
+        .filter(other =>
+          other !== entity &&
+          Math.abs(other.position - entity.position) < 100
+        )
+        .map(e => e.text)
+        .slice(0, 3);
+
+      return {
+        ...entity,
+        context,
+        related: related.length > 0 ? related : undefined
+      };
+    });
+
+    return enhanced;
+  }
+
+  /**
+   * Language detection (simplified)
+   */
+  detectLanguage(text: string): {
+    language: string;
+    confidence: number;
+  } {
+    const tokens = this.tokenize(text, { lowercase: true });
+
+    // Simple heuristics based on common words
+    const englishWords = new Set(['the', 'is', 'and', 'to', 'of', 'a', 'in', 'that', 'it', 'for']);
+    const spanishWords = new Set(['el', 'la', 'de', 'que', 'y', 'es', 'en', 'los', 'del', 'por']);
+    const frenchWords = new Set(['le', 'de', 'un', 'et', 'est', 'une', 'dans', 'que', 'pour', 'les']);
+
+    let englishCount = 0;
+    let spanishCount = 0;
+    let frenchCount = 0;
+
+    for (const token of tokens.slice(0, 100)) {
+      if (englishWords.has(token.text)) englishCount++;
+      if (spanishWords.has(token.text)) spanishCount++;
+      if (frenchWords.has(token.text)) frenchCount++;
+    }
+
+    const maxCount = Math.max(englishCount, spanishCount, frenchCount);
+    let language = 'unknown';
+    let confidence = 0;
+
+    if (maxCount > 0) {
+      confidence = maxCount / Math.min(100, tokens.length);
+
+      if (maxCount === englishCount) language = 'en';
+      else if (maxCount === spanishCount) language = 'es';
+      else if (maxCount === frenchCount) language = 'fr';
+    }
+
+    return { language, confidence };
+  }
+
+  /**
+   * Text summarization using extractive approach
+   */
+  summarize(text: string, numSentences: number = 3): string[] {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+
+    if (sentences.length <= numSentences) {
+      return sentences.map(s => s.trim());
+    }
+
+    // Score sentences based on keyword importance
+    const allKeywords = this.extractKeywords(text, 20);
+    const keywordSet = new Set(allKeywords.map(k => k.keyword));
+
+    const sentenceScores = sentences.map(sentence => {
+      const tokens = this.tokenize(sentence, { lowercase: true, removeStopWords: true });
+      let score = 0;
+
+      for (const token of tokens) {
+        if (keywordSet.has(token.text)) {
+          score += allKeywords.find(k => k.keyword === token.text)?.score || 0;
+        }
+      }
+
+      return { sentence: sentence.trim(), score: score / Math.max(1, tokens.length) };
+    });
+
+    sentenceScores.sort((a, b) => b.score - a.score);
+    return sentenceScores.slice(0, numSentences).map(s => s.sentence);
+  }
+
+  /**
+   * Question answering (simple pattern matching)
+   */
+  answerQuestion(question: string, context: string): {
+    answer: string | null;
+    confidence: number;
+  } {
+    const questionLower = question.toLowerCase();
+    const sentences = context.split(/[.!?]+/).filter(s => s.trim().length > 0);
+
+    // Extract question keywords
+    const questionTokens = this.tokenize(question, { lowercase: true, removeStopWords: true });
+    const keywords = new Set(questionTokens.map(t => t.text));
+
+    // Find best matching sentence
+    let bestSentence: string | null = null;
+    let bestScore = 0;
+
+    for (const sentence of sentences) {
+      const sentenceTokens = this.tokenize(sentence, { lowercase: true, removeStopWords: true });
+      let matches = 0;
+
+      for (const token of sentenceTokens) {
+        if (keywords.has(token.text)) {
+          matches++;
+        }
+      }
+
+      const score = matches / Math.max(keywords.size, 1);
+      if (score > bestScore) {
+        bestScore = score;
+        bestSentence = sentence.trim();
+      }
+    }
+
+    return {
+      answer: bestSentence,
+      confidence: bestScore
+    };
+  }
 }

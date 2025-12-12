@@ -3,11 +3,26 @@ import { useState, useEffect, useMemo, useCallback, useTransition } from 'react'
 import { generateDailyBriefing } from '../../services/geminiService';
 import { threatData } from '../../services/dataLayer';
 import { useDataStore } from '../useDataStore';
-import { View } from '../../types';
+import { View, Threat, Case, IncidentReport, AppConfig } from '../../types';
 import { OverviewLogic } from '../../services/logic/dashboard/CoreLogic';
 import { useIsMounted } from '../useIsMounted';
 
-export const useDashboardLogic = () => {
+export interface UseDashboardLogicResult {
+  activeModule: string;
+  handleModuleChange: (newModule: string) => void;
+  isPending: boolean;
+  briefing: string;
+  threats: Threat[];
+  cases: Case[];
+  reports: IncidentReport[];
+  config: AppConfig;
+  modules: string[];
+  defcon: { level: number; label: string; color: string };
+  trend: { count: number; delta: number; trend: 'UP' | 'DOWN' };
+  metricsLoading: boolean;
+}
+
+export const useDashboardLogic = (): UseDashboardLogicResult => {
   const [activeModule, setActiveModule] = useState<string>('Overview');
   const [isPending, startTransition] = useTransition();
   const [briefing, setBriefing] = useState<string>('DECRYPTING INTELLIGENCE STREAM...');

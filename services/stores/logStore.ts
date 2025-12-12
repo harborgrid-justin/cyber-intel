@@ -3,13 +3,14 @@ import { AuditLog } from '../../types';
 import { BaseStore } from './baseStore';
 import { DatabaseAdapter } from '../dbAdapter';
 import { DataMapper } from '../dataMapper';
+import { Result } from '../../types/result';
 
 export class LogStore extends BaseStore<AuditLog> {
   constructor(key: string, initialData: AuditLog[], adapter: DatabaseAdapter, mapper?: DataMapper<AuditLog>) {
     super(key, initialData, adapter, mapper);
   }
 
-  log(action: string, user: string, details: string, location?: string) {
+  log(action: string, user: string, details: string, location?: string): Result<void> {
     const entry: AuditLog = {
       id: `LOG-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       action,
@@ -18,7 +19,7 @@ export class LogStore extends BaseStore<AuditLog> {
       details,
       location
     };
-    this.add(entry);
+    return this.add(entry);
   }
 
   generateExport(): { url: string, filename: string } {

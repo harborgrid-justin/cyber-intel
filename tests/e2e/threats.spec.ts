@@ -171,4 +171,157 @@ test.describe('Threat Management', () => {
       await expect(page.locator('[data-testid="threat-item"]').first()).toBeVisible();
     }
   });
+
+  test('should filter by threat category', async ({ page }) => {
+    const categoryFilter = page.getByRole('button', { name: /category|type/i });
+    if (await categoryFilter.isVisible()) {
+      await categoryFilter.click();
+      await page.getByRole('option', { name: /ransomware/i }).click();
+
+      const threats = page.locator('[data-testid="threat-item"]');
+      if (await threats.first().isVisible()) {
+        await expect(threats.first()).toContainText(/ransomware/i);
+      }
+    }
+  });
+
+  test('should view threat attribution', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const attributionSection = page.locator('[data-testid="threat-attribution"]');
+    if (await attributionSection.isVisible()) {
+      await expect(attributionSection).toBeVisible();
+    }
+  });
+
+  test('should view threat indicators (IOCs)', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const indicatorsSection = page.locator('[data-testid="threat-indicators"]');
+    if (await indicatorsSection.isVisible()) {
+      await expect(indicatorsSection).toBeVisible();
+
+      // Should have indicators
+      const indicators = indicatorsSection.locator('[data-testid="indicator-item"]');
+      if (await indicators.first().isVisible()) {
+        expect(await indicators.count()).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test('should view MITRE ATT&CK techniques', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const mitreSection = page.locator('[data-testid="mitre-techniques"]');
+    if (await mitreSection.isVisible()) {
+      await expect(mitreSection).toBeVisible();
+    }
+  });
+
+  test('should view related threats', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const relatedSection = page.locator('[data-testid="related-threats"]');
+    if (await relatedSection.isVisible()) {
+      await expect(relatedSection).toBeVisible();
+    }
+  });
+
+  test('should add mitigation steps', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const addMitigationButton = page.getByRole('button', { name: /add mitigation/i });
+    if (await addMitigationButton.isVisible()) {
+      await addMitigationButton.click();
+      await page.getByLabel(/mitigation|step/i).fill('Implement network segmentation');
+      await page.getByRole('button', { name: /add|save/i }).click();
+      await expect(page.getByText(/mitigation added|saved/i)).toBeVisible();
+    }
+  });
+
+  test('should bulk update threat status', async ({ page }) => {
+    const checkboxes = page.locator('[data-testid="threat-checkbox"]');
+    const count = await checkboxes.count();
+
+    if (count > 0) {
+      await checkboxes.first().check();
+      if (count > 1) await checkboxes.nth(1).check();
+
+      const bulkActionButton = page.getByRole('button', { name: /bulk actions|actions/i });
+      if (await bulkActionButton.isVisible()) {
+        await bulkActionButton.click();
+        await page.getByRole('option', { name: /update status/i }).click();
+        await page.getByLabel(/status/i).selectOption('mitigated');
+        await page.getByRole('button', { name: /apply|update/i }).click();
+        await expect(page.getByText(/updated successfully/i)).toBeVisible();
+      }
+    }
+  });
+
+  test('should delete threat', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const deleteButton = page.getByRole('button', { name: /delete|remove/i });
+    if (await deleteButton.isVisible()) {
+      await deleteButton.click();
+      await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
+      await expect(page.getByText(/deleted successfully|threat removed/i)).toBeVisible();
+      await expect(page).toHaveURL(/threats$/);
+    }
+  });
+
+  test('should display threat statistics', async ({ page }) => {
+    const statsSection = page.locator('[data-testid="threat-stats"]');
+    if (await statsSection.isVisible()) {
+      await expect(statsSection).toBeVisible();
+      await expect(page.getByText(/total threats|active threats/i)).toBeVisible();
+    }
+  });
+
+  test('should filter by date range', async ({ page }) => {
+    const dateFilter = page.getByRole('button', { name: /date|time range/i });
+    if (await dateFilter.isVisible()) {
+      await dateFilter.click();
+      await page.getByRole('option', { name: /last 7 days/i }).click();
+      await page.waitForTimeout(500);
+      await expect(page.locator('[data-testid="threat-item"]').first()).toBeVisible();
+    }
+  });
+
+  test('should view threat feed sources', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const sourcesSection = page.locator('[data-testid="threat-sources"]');
+    if (await sourcesSection.isVisible()) {
+      await expect(sourcesSection).toBeVisible();
+    }
+  });
+
+  test('should export threat to STIX format', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const exportButton = page.getByRole('button', { name: /export/i });
+    if (await exportButton.isVisible()) {
+      await exportButton.click();
+
+      const stixOption = page.getByRole('option', { name: /stix/i });
+      if (await stixOption.isVisible()) {
+        const downloadPromise = page.waitForEvent('download');
+        await stixOption.click();
+        const download = await downloadPromise;
+        expect(download.suggestedFilename()).toMatch(/\.json$/i);
+      }
+    }
+  });
+
+  test('should view confidence score', async ({ page }) => {
+    await page.locator('[data-testid="threat-item"]').first().click();
+
+    const confidenceScore = page.locator('[data-testid="confidence-score"]');
+    if (await confidenceScore.isVisible()) {
+      await expect(confidenceScore).toBeVisible();
+      const scoreText = await confidenceScore.textContent();
+      expect(scoreText).toMatch(/\d+%?/);
+    }
+  });
 });

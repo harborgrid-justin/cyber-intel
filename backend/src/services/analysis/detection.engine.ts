@@ -58,8 +58,8 @@ export class DetectionEngine {
     features.confidence = data.confidence || 0.5;
 
     // Temporal features
-    if (data.lastSeen) {
-      const hoursSinceLastSeen = (Date.now() - new Date(data.lastSeen).getTime()) / (1000 * 60 * 60);
+    if (data.last_seen) {
+      const hoursSinceLastSeen = (Date.now() - new Date(data.last_seen).getTime()) / (1000 * 60 * 60);
       features.recency = Math.max(0, 1 - (hoursSinceLastSeen / 168)); // Decay over a week
     }
 
@@ -320,8 +320,9 @@ export class DetectionEngine {
       });
     }
 
-    // Memory injection detection
-    if (node.os?.includes('Windows')) {
+    // Memory injection detection - Note: Asset model doesn't have os property
+    // Would need to extend Asset model or infer from type
+    if (node.type === 'Server' || node.type === 'Workstation') {
       findings.push(`Possible code injection detected - hollow process technique`);
       processes.push({
         pid: 1234,

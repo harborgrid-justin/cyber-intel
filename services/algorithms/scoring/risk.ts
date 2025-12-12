@@ -256,4 +256,95 @@ export class RiskScoring {
     const total = 6; // Total number of factors
     return 0.5 + (provided / total) * 0.5;
   }
+
+  /**
+   * Calculate risk with attack surface consideration
+   */
+  calculateAttackSurfaceRisk(
+    baseRisk: RiskScore,
+    attackSurface: {
+      exposedPorts: number;
+      publicEndpoints: number;
+      externalDependencies: number;
+      userAccessPoints: number;
+    }
+  ): RiskScore {
+    const surfaceScore =
+      (attackSurface.exposedPorts * 0.3 +
+       attackSurface.publicEndpoints * 0.4 +
+       attackSurface.externalDependencies * 0.2 +
+       attackSurface.userAccessPoints * 0.1) / 10;
+
+    const multiplier = 1 + Math.min(surfaceScore, 0.5);
+    const adjustedScore = Math.min(baseRisk.score * multiplier, 100);
+
+    return {
+      ...baseRisk,
+      score: adjustedScore,
+      level: this.getRiskLevel(adjustedScore),
+      factors: {
+        ...baseRisk.factors,
+        exposure: Math.min(baseRisk.factors.exposure * multiplier, 1.0)
+      }
+    };
+  }
+
+  /**
+   * Calculate risk with regulatory compliance factors
+   */
+  calculateComplianceRisk(
+    baseRisk: RiskScore,
+    compliance: {
+      gdprApplicable: boolean;
+      hipaaApplicable: boolean;
+      pciDssApplicable: boolean;
+      soxApplicable: boolean;
+    }
+  ): RiskScore {
+    let complianceMultiplier = 1.0;
+
+    if (compliance.gdprApplicable) complianceMultiplier += 0.15;
+    if (compliance.hipaaApplicable) complianceMultiplier += 0.20;
+    if (compliance.pciDssApplicable) complianceMultiplier += 0.15;
+    if (compliance.soxApplicable) complianceMultiplier += 0.10;
+
+    const adjustedScore = Math.min(baseRisk.score * complianceMultiplier, 100);
+
+    return {
+      ...baseRisk,
+      score: adjustedScore,
+      level: this.getRiskLevel(adjustedScore)
+    };
+  }
+
+  /**
+   * Calculate dynamic risk based on threat landscape
+   */
+  calculateDynamicRisk(
+    baseRisk: RiskScore,
+    landscape: {
+      recentBreaches: number;
+      activeCampaigns: number;
+      vulnerabilityDisclosures: number;
+      threatActorActivity: number;
+    }
+  ): RiskScore {
+    const landscapeScore =
+      (landscape.recentBreaches * 0.3 +
+       landscape.activeCampaigns * 0.3 +
+       landscape.vulnerabilityDisclosures * 0.2 +
+       landscape.threatActorActivity * 0.2) / 10;
+
+    const adjustedScore = Math.min(baseRisk.score + landscapeScore * 20, 100);
+
+    return {
+      ...baseRisk,
+      score: adjustedScore,
+      level: this.getRiskLevel(adjustedScore),
+      factors: {
+        ...baseRisk.factors,
+        threatLevel: Math.min(baseRisk.factors.threatLevel + landscapeScore, 1.0)
+      }
+    };
+  }
 }

@@ -216,9 +216,9 @@ export class PredictionEngine {
     confidence: number;
     reasoning: string;
   }> {
-    // Analyze actor's historical patterns
-    const ttps = actor.ttps || [];
-    const campaigns = actor.campaigns || [];
+    // Analyze actor's historical patterns - Note: Actor model doesn't have ttps/campaigns properties
+    const ttps: any[] = [];
+    const campaigns: any[] = [];
     const targets = actor.targets || [];
 
     // Find patterns in recent activity
@@ -311,7 +311,7 @@ export class PredictionEngine {
     Object.entries(threatTypes).forEach(([type, threats]) => {
       // Simple trend calculation based on recent vs older threats
       const sortedThreats = threats.sort((a, b) =>
-        new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime()
+        new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime()
       );
 
       const recentCount = sortedThreats.slice(0, Math.floor(threats.length / 2)).length;
@@ -379,7 +379,7 @@ export class PredictionEngine {
   private static identifyEmergingThreats(threats: Threat[]): ThreatPrediction[] {
     const emerging: ThreatPrediction[] = [];
     const recentThreats = threats.filter(t => {
-      const daysAgo = (Date.now() - new Date(t.lastSeen).getTime()) / (1000 * 60 * 60 * 24);
+      const daysAgo = (Date.now() - new Date(t.last_seen).getTime()) / (1000 * 60 * 60 * 24);
       return daysAgo <= 7;
     });
 
@@ -532,7 +532,7 @@ export class PredictionEngine {
   private static identifyEmergingPatterns(threats: Threat[]): string[] {
     const patterns: string[] = [];
     const recentThreats = threats.filter(t => {
-      const daysAgo = (Date.now() - new Date(t.lastSeen).getTime()) / (1000 * 60 * 60 * 24);
+      const daysAgo = (Date.now() - new Date(t.last_seen).getTime()) / (1000 * 60 * 60 * 24);
       return daysAgo <= 7;
     });
 
@@ -583,7 +583,8 @@ export class PredictionEngine {
   }
 
   private static calculatePredictionConfidence(actor: Actor, recentActivity: Threat[]): number {
-    const dataPoints = (actor.ttps?.length || 0) + recentActivity.length;
+    // Actor model doesn't have ttps property
+    const dataPoints = recentActivity.length;
     return Math.min(0.95, 0.5 + (dataPoints * 0.02));
   }
 

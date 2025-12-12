@@ -247,4 +247,119 @@ export class Similarity {
 
     return Array.from(vocab).map(word => freqMap.get(word) || 0);
   }
+
+  /**
+   * MinHash for fast approximate Jaccard similarity
+   */
+  minHash(set: Set<string>, numHashes: number = 100): number[] {
+    const hashes: number[] = [];
+
+    for (let i = 0; i < numHashes; i++) {
+      let minHash = Infinity;
+
+      for (const item of set) {
+        // Simple hash function with seed
+        const hash = this.simpleHash(item, i);
+        minHash = Math.min(minHash, hash);
+      }
+
+      hashes.push(minHash);
+    }
+
+    return hashes;
+  }
+
+  /**
+   * Estimate Jaccard similarity from MinHash signatures
+   */
+  minHashSimilarity(sig1: number[], sig2: number[]): number {
+    if (sig1.length !== sig2.length) return 0;
+
+    let matches = 0;
+    for (let i = 0; i < sig1.length; i++) {
+      if (sig1[i] === sig2[i]) matches++;
+    }
+
+    return matches / sig1.length;
+  }
+
+  /**
+   * Locality Sensitive Hashing (LSH) for similarity search
+   */
+  lshBanding(signature: number[], bands: number, rows: number): string[] {
+    const bandHashes: string[] = [];
+    const rowsPerBand = Math.floor(signature.length / bands);
+
+    for (let b = 0; b < bands; b++) {
+      const start = b * rowsPerBand;
+      const end = Math.min(start + rowsPerBand, signature.length);
+      const band = signature.slice(start, end);
+
+      // Hash the band
+      const bandHash = band.join(',');
+      bandHashes.push(bandHash);
+    }
+
+    return bandHashes;
+  }
+
+  /**
+   * Hamming similarity (for binary vectors)
+   */
+  hammingSimilarity(vec1: number[], vec2: number[]): number {
+    if (vec1.length !== vec2.length) return 0;
+
+    let matches = 0;
+    for (let i = 0; i < vec1.length; i++) {
+      if (vec1[i] === vec2[i]) matches++;
+    }
+
+    return matches / vec1.length;
+  }
+
+  /**
+   * Spearman rank correlation for similarity
+   */
+  spearman(vec1: number[], vec2: number[]): number {
+    if (vec1.length !== vec2.length) return 0;
+
+    const n = vec1.length;
+
+    // Create rank arrays
+    const rank1 = this.getRanks(vec1);
+    const rank2 = this.getRanks(vec2);
+
+    // Calculate difference in ranks
+    let sumSquaredDiff = 0;
+    for (let i = 0; i < n; i++) {
+      const diff = rank1[i] - rank2[i];
+      sumSquaredDiff += diff * diff;
+    }
+
+    // Spearman correlation formula
+    return 1 - (6 * sumSquaredDiff) / (n * (n * n - 1));
+  }
+
+  private getRanks(values: number[]): number[] {
+    const indexed = values.map((val, idx) => ({ val, idx }));
+    indexed.sort((a, b) => b.val - a.val);
+
+    const ranks = new Array(values.length);
+    for (let i = 0; i < indexed.length; i++) {
+      ranks[indexed[i].idx] = i + 1;
+    }
+
+    return ranks;
+  }
+
+  private simpleHash(str: string, seed: number): number {
+    let hash = seed;
+
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+
+    return Math.abs(hash);
+  }
 }
