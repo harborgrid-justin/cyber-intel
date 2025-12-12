@@ -47,7 +47,7 @@ export const SupplyChainGraph: React.FC<Props> = ({ vendors }) => {
                     const y = 50 + radiusY * Math.sin(angle);
                     
                     const isHighRisk = v.riskScore > 75;
-                    const riskColor = isHighRisk ? theme.colors.state.error : v.riskScore > 40 ? theme.colors.state.warning : theme.colors.state.success;
+                    const riskColor = isHighRisk ? theme.colors.alert : v.riskScore > 40 ? theme.colors.secondary : theme.colors.success;
 
                     return (
                         <g key={v.id} className="cursor-pointer hover:opacity-100 opacity-90 transition-opacity group">
@@ -65,7 +65,7 @@ export const SupplyChainGraph: React.FC<Props> = ({ vendors }) => {
                             {v.subcontractors.length > 0 && (
                                 <g>
                                     <line x1={`${x}%`} y1={`${y}%`} x2={`${x + (Math.cos(angle)*12)}%`} y2={`${y + (Math.sin(angle)*12)}%`} stroke={theme.graph.link} strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
-                                    <circle cx={`${x + (Math.cos(angle)*12)}%`} cy={`${y + (Math.sin(angle)*12)}%`} r="6" fill="#0f172a" stroke={theme.colors.border.default} />
+                                    <circle cx={`${x + (Math.cos(angle)*12)}%`} cy={`${y + (Math.sin(angle)*12)}%`} r="6" fill="#0f172a" stroke="#334155" />
                                 </g>
                             )}
                         </g>

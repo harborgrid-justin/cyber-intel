@@ -1,12 +1,12 @@
 
-import { Threat, Case, SystemNode, ThreatActor, AppConfig, Severity, IncidentStatus, AIConfig, ScoringConfig, ThemeConfig, View, IoCFeed, AuditLog, Vulnerability, IncidentReport, SystemUser, Vendor, Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, VendorFeedItem, ScannerStatus, NistControl, ApiKey, PatchStatus, Integration, Channel, TeamMessage, EnrichmentModule, ParserRule, NormalizationRule, SegmentationPolicy, Honeytoken, TrafficFlow, RiskForecastItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, OsintDarkWebItem, OsintFileMeta, MitreItem, ThreatId, CaseId, ActorId, UserId, AssetId, VendorId } from '../types';
+import { Threat, Case, SystemNode, ThreatActor, AppConfig, Severity, IncidentStatus, AIConfig, ScoringConfig, ThemeConfig, View, IoCFeed, AuditLog, Vulnerability, IncidentReport, SystemUser, Vendor, Playbook, ChainEvent, Malware, ForensicJob, Device, Pcap, VendorFeedItem, ScannerStatus, NistControl, ApiKey, PatchStatus, Integration, Channel, TeamMessage, EnrichmentModule, ParserRule, NormalizationRule, SegmentationPolicy, Honeytoken, TrafficFlow, RiskForecastItem, OsintDomain, OsintBreach, OsintGeo, OsintSocial, OsintDarkWebItem, OsintFileMeta, MitreItem, ThreatId, CaseId } from '../types';
 import { createStores } from './stores/storeFactory';
 import { DatabaseAdapter, MockAdapter } from './dbAdapter';
-import { ThreatMapper, CaseMapper, ActorMapper, AssetMapper } from './mappers';
 import { PrefixTrie } from './algorithms/Trie';
-import { MOCK_NAVIGATION_CONFIG, MOCK_MODULES_CONFIG } from '../constants';
+import { MOCK_MODULES_CONFIG } from '../constants';
+import { Result } from '../types/result';
 
-class DataLayer {
+export class DataLayer {
   public adapter: DatabaseAdapter;
   public stores: ReturnType<typeof createStores>;
   
@@ -34,6 +34,10 @@ class DataLayer {
       this.getActors().forEach(a => this.fullTextSearch.insert(a.name, a.id));
   }
 
+  private unwrap<T>(res: Result<T>, fallback: T): T {
+    return res.success ? res.data : fallback;
+  }
+
   // --- Core Getters ---
   
   get threatStore() { return this.stores.threatStore; }
@@ -48,6 +52,7 @@ class DataLayer {
   get userStore() { return this.stores.userStore; }
   get vendorStore() { return this.stores.vendorStore; }
   get messagingStore() { return this.stores.messagingStore; }
+  get deviceStore() { return this.stores.deviceStore; }
   
   // --- Accessors for UI Components (Facade Pattern) ---
 
@@ -56,12 +61,13 @@ class DataLayer {
   }
 
   get currentUser(): SystemUser | undefined {
-      // Mock current user from store (first admin)
-      return this.stores.userStore.getAll().data?.find(u => u.role === 'Administrator') || this.stores.userStore.getAll().data?.[0];
+      const users = this.unwrap(this.stores.userStore.getAll(), []);
+      return users.find(u => u.role === 'Administrator') || users[0];
   }
 
   getAppConfig(): AppConfig {
-      return this.stores.configStore.getAll().data?.[0] as AppConfig;
+      const configs = this.unwrap(this.stores.configStore.getAll(), []);
+      return configs[0] as AppConfig;
   }
   
   updateAppConfig(config: AppConfig) {
@@ -69,15 +75,18 @@ class DataLayer {
   }
 
   getAIConfig(): AIConfig {
-      return this.stores.aiConfigStore.getAll().data?.[0] as AIConfig;
+      const configs = this.unwrap(this.stores.aiConfigStore.getAll(), []);
+      return configs[0] as AIConfig;
   }
 
   getScoringConfig(): ScoringConfig {
-      return this.stores.scoringConfigStore.getAll().data?.[0] as ScoringConfig;
+      const configs = this.unwrap(this.stores.scoringConfigStore.getAll(), []);
+      return configs[0] as ScoringConfig;
   }
 
   getThemeConfig(): ThemeConfig {
-      return this.stores.themeConfigStore.getAll().data?.[0] as ThemeConfig;
+      const configs = this.unwrap(this.stores.themeConfigStore.getAll(), []);
+      return configs[0] as ThemeConfig;
   }
 
   updateThemeConfig(config: ThemeConfig) {
@@ -92,8 +101,6 @@ class DataLayer {
 
   // Intelligence
   getThreats(sortByScore = true): Threat[] {
-      // Access store directly via public method if available or generic getAll
-      // Note: Store methods return Result<T>, we unwrap for UI simplicity here (or handle error)
       const res = this.stores.threatStore.getAll();
       let threats = res.success ? res.data : [];
       if (sortByScore) threats.sort((a, b) => b.score - a.score);
@@ -126,16 +133,15 @@ class DataLayer {
   }
 
   updateStatus(id: string, status: IncidentStatus) {
-      // Simple wrapper, real implementation in store might handle side effects
-      const t = this.stores.threatStore.getById(id).data;
-      if (t) {
-          this.stores.threatStore.update({ ...t, status });
+      const res = this.stores.threatStore.getById(id);
+      if (res.success && res.data) {
+          this.stores.threatStore.update({ ...res.data, status });
       }
   }
 
   // Cases
   getCases(): Case[] {
-      return this.stores.caseStore.getAll().data || [];
+      return this.unwrap(this.stores.caseStore.getAll(), []);
   }
 
   addCase(c: Case) {
@@ -147,8 +153,9 @@ class DataLayer {
   }
 
   createCaseFromThreat(threatId: string) {
-      const threat = this.stores.threatStore.getById(threatId).data;
-      if (threat) {
+      const res = this.stores.threatStore.getById(threatId);
+      if (res.success && res.data) {
+          const threat = res.data;
           const newCase: Case = {
               id: `CASE-${Date.now()}` as CaseId,
               title: `Investigation: ${threat.indicator}`,
@@ -185,53 +192,52 @@ class DataLayer {
   }
   
   transferCase(id: string, agency: string) {
-      const c = this.stores.caseStore.getById(id).data;
-      if(c) this.stores.caseStore.update({...c, agency});
+      const res = this.stores.caseStore.getById(id);
+      if(res.success && res.data) this.stores.caseStore.update({...res.data, agency});
   }
 
   shareCase(id: string, agency: string) {
-      const c = this.stores.caseStore.getById(id).data;
-      if(c && !c.sharedWith.includes(agency)) this.stores.caseStore.update({...c, sharedWith: [...c.sharedWith, agency]});
+      const res = this.stores.caseStore.getById(id);
+      if(res.success && res.data && !res.data.sharedWith.includes(agency)) this.stores.caseStore.update({...res.data, sharedWith: [...res.data.sharedWith, agency]});
   }
   
   addTask(caseId: string, task: any) {
-      const c = this.stores.caseStore.getById(caseId).data;
-      if(c) this.stores.caseStore.update({...c, tasks: [...c.tasks, task]});
+      const res = this.stores.caseStore.getById(caseId);
+      if(res.success && res.data) this.stores.caseStore.update({...res.data, tasks: [...res.data.tasks, task]});
   }
 
   toggleTask(caseId: string, taskId: string) {
-      const c = this.stores.caseStore.getById(caseId).data;
-      if(c) {
-          const tasks = c.tasks.map(t => t.id === taskId ? { ...t, status: t.status === 'DONE' ? 'PENDING' : 'DONE' } : t);
-          this.stores.caseStore.update({ ...c, tasks: tasks as any[] });
+      const res = this.stores.caseStore.getById(caseId);
+      if(res.success && res.data) {
+          const tasks = res.data.tasks.map(t => t.id === taskId ? { ...t, status: t.status === 'DONE' ? 'PENDING' : 'DONE' } : t);
+          this.stores.caseStore.update({ ...res.data, tasks: tasks as any[] });
       }
   }
 
   addArtifact(caseId: string, artifact: any) {
-      const c = this.stores.caseStore.getById(caseId).data;
-      if(c) this.stores.caseStore.update({...c, artifacts: [...c.artifacts, artifact]});
+      const res = this.stores.caseStore.getById(caseId);
+      if(res.success && res.data) this.stores.caseStore.update({...res.data, artifacts: [...res.data.artifacts, artifact]});
   }
 
   deleteArtifact(caseId: string, artifactId: string) {
-      const c = this.stores.caseStore.getById(caseId).data;
-      if(c) this.stores.caseStore.update({...c, artifacts: c.artifacts.filter(a => a.id !== artifactId)});
+      const res = this.stores.caseStore.getById(caseId);
+      if(res.success && res.data) this.stores.caseStore.update({...res.data, artifacts: res.data.artifacts.filter(a => a.id !== artifactId)});
   }
 
   applyPlaybook(caseId: string, playbookId: string) {
-     // Mock logic handled in store usually
      const pb = this.getPlaybooks().find(p => p.id === playbookId);
-     const c = this.stores.caseStore.getById(caseId).data;
-     if(c && pb) {
+     const res = this.stores.caseStore.getById(caseId);
+     if(res.success && res.data && pb) {
          const newTasks = pb.tasks.map((t, i) => ({ id: `task-${Date.now()}-${i}`, title: t, status: 'PENDING' }));
-         this.stores.caseStore.update({ ...c, tasks: [...c.tasks, ...newTasks] as any[] });
+         this.stores.caseStore.update({ ...res.data, tasks: [...res.data.tasks, ...newTasks] as any[] });
      }
   }
 
   addNote(caseId: string, content: string) {
-      const c = this.stores.caseStore.getById(caseId).data;
-      if(c) {
+      const res = this.stores.caseStore.getById(caseId);
+      if(res.success && res.data) {
           const note = { id: `note-${Date.now()}`, author: this.currentUser?.name || 'System', date: new Date().toISOString(), content };
-          this.stores.caseStore.update({ ...c, notes: [note, ...c.notes] });
+          this.stores.caseStore.update({ ...res.data, notes: [note, ...res.data.notes] });
       }
   }
 
@@ -244,7 +250,7 @@ class DataLayer {
   }
 
   // Actors
-  getActors(): ThreatActor[] { return this.stores.actorStore.getAll().data || []; }
+  getActors(): ThreatActor[] { return this.unwrap(this.stores.actorStore.getAll(), []); }
   addActor(a: ThreatActor) { this.stores.actorStore.add(a); }
   deleteActor(id: string) { this.stores.actorStore.delete(id); }
   updateActor(a: ThreatActor) { this.stores.actorStore.update(a); }
@@ -258,104 +264,102 @@ class DataLayer {
   deleteReference(actorId: string, ref: string) { this.stores.actorStore.removeReference(actorId, ref); }
   addHistoryEvent(actorId: string, event: any) { this.stores.actorStore.addHistoryEvent(actorId, event); }
   linkThreatToActor(threatId: string, actorName: string) {
-      // Mock logic: update threat with actor name
-      const t = this.stores.threatStore.getById(threatId).data;
-      if(t) this.stores.threatStore.update({...t, threatActor: actorName});
+      const res = this.stores.threatStore.getById(threatId);
+      if(res.success && res.data) this.stores.threatStore.update({...res.data, threatActor: actorName});
   }
 
   // Campaigns
-  getCampaigns() { return this.stores.campaignStore.getAll().data || []; }
+  getCampaigns() { return this.unwrap(this.stores.campaignStore.getAll(), []); }
   addCampaign(c: any) { this.stores.campaignStore.add(c); }
   deleteCampaign(id: string) { this.stores.campaignStore.delete(id); }
 
   // Infrastructure
-  getSystemNodes(): SystemNode[] { return this.stores.nodeStore.getAll().data || []; }
-  getFeeds(): IoCFeed[] { return this.stores.feedStore.getAll().data || []; }
+  getSystemNodes(): SystemNode[] { return this.unwrap(this.stores.nodeStore.getAll(), []); }
+  getFeeds(): IoCFeed[] { return this.unwrap(this.stores.feedStore.getAll(), []); }
   toggleFeed(id: string) { this.stores.feedStore.toggleStatus(id); }
   deleteFeed(id: string) { this.stores.feedStore.delete(id); }
   addFeed(f: IoCFeed) { this.stores.feedStore.add(f); }
 
-  getVulnerabilities(): Vulnerability[] { return this.stores.vulnStore.getAll().data || []; }
+  getVulnerabilities(): Vulnerability[] { return this.unwrap(this.stores.vulnStore.getAll(), []); }
   updateVulnerabilityStatus(id: string, status: any) { this.stores.vulnStore.updateStatus(id, status); }
   
-  getPatchStatus(): PatchStatus[] { return this.stores.patchStatusStore.getAll().data || []; }
-  getScannerStatus(): ScannerStatus[] { return this.stores.scannerStore.getAll().data || []; }
+  getPatchStatus(): PatchStatus[] { return this.unwrap(this.stores.patchStatusStore.getAll(), []); }
+  getScannerStatus(): ScannerStatus[] { return this.unwrap(this.stores.scannerStore.getAll(), []); }
   updateScannerStatus(status: Partial<ScannerStatus>) { 
-     // Logic to find and update scanner status
      const scanners = this.getScannerStatus();
      if(scanners.length > 0) {
          this.stores.scannerStore.update({ ...scanners[0], ...status });
      }
   }
-  getVendorFeedItems(): VendorFeedItem[] { return this.stores.vendorFeedStore.getAll().data || []; }
+  getVendorFeedItems(): VendorFeedItem[] { return this.unwrap(this.stores.vendorFeedStore.getAll(), []); }
+  addVendorFeedItem(item: VendorFeedItem) { this.stores.vendorFeedStore.add(item); }
   
-  getVendors(): Vendor[] { return this.stores.vendorStore.getAll().data || []; }
+  getVendors(): Vendor[] { return this.unwrap(this.stores.vendorStore.getAll(), []); }
   reassessVendorRisk() { 
-      // Trigger recalculation logic in vendorStore if implemented, or just notify
       window.dispatchEvent(new Event('data-update'));
   }
 
-  getNistControls(): NistControl[] { return this.stores.nistControlStore.getAll().data || []; }
-  getApiKeys(): ApiKey[] { return this.stores.apiKeyStore.getAll().data || []; }
+  getNistControls(): NistControl[] { return this.unwrap(this.stores.nistControlStore.getAll(), []); }
+  getApiKeys(): ApiKey[] { return this.unwrap(this.stores.apiKeyStore.getAll(), []); }
   addApiKey(key: ApiKey) { this.stores.apiKeyStore.add(key); }
-  getIntegrations(): Integration[] { return this.stores.integrationStore.getAll().data || []; }
+  getIntegrations(): Integration[] { return this.unwrap(this.stores.integrationStore.getAll(), []); }
 
   // Operations
-  getAuditLogs(): AuditLog[] { return this.stores.logStore.getAll().data || []; }
-  getReports(): IncidentReport[] { return this.stores.reportStore.getAll().data || []; }
+  getAuditLogs(): AuditLog[] { return this.unwrap(this.stores.logStore.getAll(), []); }
+  getReports(): IncidentReport[] { return this.unwrap(this.stores.reportStore.getAll(), []); }
   addReport(r: IncidentReport) { this.stores.reportStore.add(r); }
   getReportsByCase(id: string) { return this.stores.reportStore.getByCase(id); }
   getReportsByActor(id: string) { return this.stores.reportStore.getByActor(id); }
   
-  getPlaybooks(): Playbook[] { return this.stores.playbookStore.getAll().data || []; }
+  getPlaybooks(): Playbook[] { return this.unwrap(this.stores.playbookStore.getAll(), []); }
   
-  getChainOfCustody(): ChainEvent[] { return this.stores.chainStore.getAll().data || []; }
+  getChainOfCustody(): ChainEvent[] { return this.unwrap(this.stores.chainStore.getAll(), []); }
   addChainEvent(e: ChainEvent) { this.stores.chainStore.add(e); }
   
-  getMalwareSamples(): Malware[] { return this.stores.malwareStore.getAll().data || []; }
-  getForensicJobs(): ForensicJob[] { return this.stores.jobStore.getAll().data || []; }
+  getMalwareSamples(): Malware[] { return this.unwrap(this.stores.malwareStore.getAll(), []); }
+  getForensicJobs(): ForensicJob[] { return this.unwrap(this.stores.jobStore.getAll(), []); }
   addForensicJob(j: ForensicJob) { this.stores.jobStore.add(j); }
   
-  getDevices(): Device[] { return this.stores.deviceStore.getAll().data || []; }
-  getNetworkCaptures(): Pcap[] { return this.stores.pcapStore.getAll().data || []; }
+  getDevices(): Device[] { return this.unwrap(this.stores.deviceStore.getAll(), []); }
+  getNetworkCaptures(): Pcap[] { return this.unwrap(this.stores.pcapStore.getAll(), []); }
 
-  getHoneytokens(): Honeytoken[] { return this.stores.honeytokenStore.getAll().data || []; }
-  getSegmentationPolicies(): SegmentationPolicy[] { return this.stores.policyStore.getAll().data || []; }
+  getHoneytokens(): Honeytoken[] { return this.unwrap(this.stores.honeytokenStore.getAll(), []); }
+  getSegmentationPolicies(): SegmentationPolicy[] { return this.unwrap(this.stores.policyStore.getAll(), []); }
   addSegmentationPolicy(p: SegmentationPolicy) { this.stores.policyStore.add(p); }
-  getTrafficFlows(): TrafficFlow[] { return this.stores.trafficFlowStore.getAll().data || []; }
+  getTrafficFlows(): TrafficFlow[] { return this.unwrap(this.stores.trafficFlowStore.getAll(), []); }
   
   // OSINT
-  getOsintDomains(): OsintDomain[] { return this.stores.osintDomainStore.getAll().data || []; }
-  getOsintBreaches(): OsintBreach[] { return this.stores.osintBreachStore.getAll().data || []; }
-  getOsintGeo(): OsintGeo[] { return this.stores.osintGeoStore.getAll().data || []; }
-  getOsintSocial(): OsintSocial[] { return this.stores.osintSocialStore.getAll().data || []; }
-  getOsintDarkWeb(): OsintDarkWebItem[] { return this.stores.osintDarkWebStore.getAll().data || []; }
-  getOsintMeta(): OsintFileMeta[] { return this.stores.osintMetaStore.getAll().data || []; }
+  getOsintDomains(): OsintDomain[] { return this.unwrap(this.stores.osintDomainStore.getAll(), []); }
+  getOsintBreaches(): OsintBreach[] { return this.unwrap(this.stores.osintBreachStore.getAll(), []); }
+  getOsintGeo(): OsintGeo[] { return this.unwrap(this.stores.osintGeoStore.getAll(), []); }
+  getOsintSocial(): OsintSocial[] { return this.unwrap(this.stores.osintSocialStore.getAll(), []); }
+  getOsintDarkWeb(): OsintDarkWebItem[] { return this.unwrap(this.stores.osintDarkWebStore.getAll(), []); }
+  getOsintMeta(): OsintFileMeta[] { return this.unwrap(this.stores.osintMetaStore.getAll(), []); }
   getDarkWebStream(): string[] { return ["Connecting to TOR...", "Bridge established.", "Scanning marketplaces...", "Hit found on Hydra."]; }
 
   // Knowledge
-  getMitreTactics(): MitreItem[] { return this.stores.mitreTacticStore.getAll().data || []; }
-  getMitreTechniques(): MitreItem[] { return this.stores.mitreTechniqueStore.getAll().data || []; }
-  getMitreSubTechniques(): MitreItem[] { return this.stores.mitreSubStore.getAll().data || []; }
-  getMitreGroups(): MitreItem[] { return this.stores.mitreGroupStore.getAll().data || []; }
-  getMitreSoftware(): MitreItem[] { return this.stores.mitreSoftwareStore.getAll().data || []; }
-  getMitreMitigations(): MitreItem[] { return this.stores.mitreMitigationStore.getAll().data || []; }
+  getMitreTactics(): MitreItem[] { return this.unwrap(this.stores.mitreTacticStore.getAll(), []); }
+  getMitreTechniques(): MitreItem[] { return this.unwrap(this.stores.mitreTechniqueStore.getAll(), []); }
+  getMitreSubTechniques(): MitreItem[] { return this.unwrap(this.stores.mitreSubStore.getAll(), []); }
+  getMitreGroups(): MitreItem[] { return this.unwrap(this.stores.mitreGroupStore.getAll(), []); }
+  getMitreSoftware(): MitreItem[] { return this.unwrap(this.stores.mitreSoftwareStore.getAll(), []); }
+  getMitreMitigations(): MitreItem[] { return this.unwrap(this.stores.mitreMitigationStore.getAll(), []); }
 
   // System
-  getSystemUsers(): SystemUser[] { return this.stores.userStore.getAll().data || []; }
-  getParserRules(): ParserRule[] { return this.stores.parserStore.getAll().data || []; }
+  getSystemUsers(): SystemUser[] { return this.unwrap(this.stores.userStore.getAll(), []); }
+  getParserRules(): ParserRule[] { return this.unwrap(this.stores.parserStore.getAll(), []); }
   updateParserRule(p: ParserRule) { this.stores.parserStore.update(p); }
-  getEnrichmentModules(): EnrichmentModule[] { return this.stores.enrichmentStore.getAll().data || []; }
+  getEnrichmentModules(): EnrichmentModule[] { return this.unwrap(this.stores.enrichmentStore.getAll(), []); }
   toggleEnrichmentModule(id: string) { 
-      const m = this.stores.enrichmentStore.getById(id).data;
-      if(m) this.stores.enrichmentStore.update({ ...m, enabled: !m.enabled });
+      const res = this.stores.enrichmentStore.getById(id);
+      if(res.success && res.data) this.stores.enrichmentStore.update({ ...res.data, enabled: !res.data.enabled });
   }
-  getNormalizationRules(): NormalizationRule[] { return this.stores.normalizationStore.getAll().data || []; }
+  getNormalizationRules(): NormalizationRule[] { return this.unwrap(this.stores.normalizationStore.getAll(), []); }
   
-  getRiskForecast(): RiskForecastItem[] { return this.stores.riskForecastStore.getAll().data || []; }
+  getRiskForecast(): RiskForecastItem[] { return this.unwrap(this.stores.riskForecastStore.getAll(), []); }
   
   // Messaging
-  getChannels(): Channel[] { return this.stores.messagingStore.getChannels().data || []; }
+  getChannels(): Channel[] { return this.unwrap(this.stores.messagingStore.getChannels(), []); }
   getMessages(channelId: string): TeamMessage[] { return this.stores.messagingStore.getMessages(channelId); }
   sendMessage(msg: TeamMessage) { this.stores.messagingStore.sendMessage(msg); }
   createChannel(c: Channel) { this.stores.messagingStore.createChannel(c); }
@@ -368,7 +372,6 @@ class DataLayer {
   getThreatsByActor(name: string) { return this.stores.threatStore.getByActor(name); }
 
   sync(action: string, type: string, data: any) {
-      // Generic sync handler for external triggers
       window.dispatchEvent(new Event('data-update'));
   }
 }

@@ -2,9 +2,15 @@
 import { useState, useEffect } from 'react';
 
 export const usePageVisibility = () => {
-  const [isVisible, setIsVisible] = useState(!document.hidden);
+  // Deterministic initial state
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    // Hydrate state
+    if (typeof document !== 'undefined') {
+        setIsVisible(!document.hidden);
+    }
+
     const handleChange = () => {
       setIsVisible(!document.hidden);
       if (document.hidden) {

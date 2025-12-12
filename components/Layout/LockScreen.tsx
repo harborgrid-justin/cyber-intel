@@ -13,33 +13,19 @@ const LockScreen: React.FC = () => {
   const currentUser = useDataStore(() => threatData.currentUser);
 
   useEffect(() => {
-    let timer: any;
-    const resetTimer = () => {
-      if (!isLocked) {
-        clearTimeout(timer);
-        timer = setTimeout(() => setIsLocked(true), 300000); // 5 min idle
-      }
+    // Login Disabled: Timer logic removed to prevent auto-lock
+    // Event listener kept only for manual lock triggers if explicitly requested
+    const handleManualLock = () => {
+        // Optional: Comment out to completely disable manual locking too
+        // setIsLocked(true); 
     };
 
-    const handleManualLock = () => setIsLocked(true);
-
-    window.addEventListener('mousemove', resetTimer);
-    window.addEventListener('keypress', resetTimer);
     window.addEventListener('lock-screen', handleManualLock);
-    
-    resetTimer();
-
-    return () => {
-      window.removeEventListener('mousemove', resetTimer);
-      window.removeEventListener('keypress', resetTimer);
-      window.removeEventListener('lock-screen', handleManualLock);
-      clearTimeout(timer);
-    };
-  }, [isLocked]);
+    return () => window.removeEventListener('lock-screen', handleManualLock);
+  }, []);
 
   const handleUnlock = (e?: React.FormEvent) => {
     e?.preventDefault();
-    // Simulate auth check
     if (password.length > 0) {
         setIsLocked(false);
         setPassword('');

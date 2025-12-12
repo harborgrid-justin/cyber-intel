@@ -1,3 +1,4 @@
+
 import { OsintDomain, OsintBreach, OsintSocial, OsintGeo, OsintDarkWebItem, GlobalSearchResult, DomainAnalysis, IdentityAnalysis, CredentialExposure, NetworkAnalysis, DarkWebAnalysis } from '../../types';
 import { apiClient } from '../apiClient';
 import { threatData } from '../dataLayer';
@@ -10,7 +11,7 @@ export class OsintLogic {
       return await apiClient.get<GlobalSearchResult[]>(`/search?q=${encodeURIComponent(query)}`);
     } catch (e) {
       const results: GlobalSearchResult[] = [];
-      const ids = threatData.fullTextSearch.search(query);
+      const ids = threatData.fullTextSearch.searchPrefix(query);
       
       ids.forEach(id => {
           const threatResult = threatData.threatStore.getById(id);

@@ -18,9 +18,16 @@ interface ResponsiveTableProps<T> {
 
 // Hook to track window size for conditional rendering
 const useIsMobile = () => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    // Principle 35: Deterministic First Render (Default to desktop/false)
+    const [isMobile, setIsMobile] = useState(false);
+
     useEffect(() => {
+        // Handle hydration/resize
         const handleResize = () => setIsMobile(window.innerWidth < 768);
+        
+        // Set initial value
+        handleResize();
+
         let timeout: any;
         const debouncedHandler = () => {
             clearTimeout(timeout);

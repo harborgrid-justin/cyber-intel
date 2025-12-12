@@ -1,4 +1,5 @@
-import React, { ErrorInfo, ReactNode } from 'react';
+
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Icons } from './Icons';
 import { Button } from './UI';
 
@@ -12,9 +13,8 @@ interface State {
   error: Error | null;
 }
 
-// Fix: Extended React.Component to make `WidgetErrorBoundary` a valid React class component, resolving errors related to missing `this.props` and `this.setState`.
-export class WidgetErrorBoundary extends React.Component<Props, State> {
-  state: State = { 
+export class WidgetErrorBoundary extends Component<Props, State> {
+  public state: State = { 
     hasError: false, 
     error: null 
   };

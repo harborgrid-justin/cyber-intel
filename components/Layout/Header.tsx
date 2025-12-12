@@ -5,7 +5,6 @@ import { useDataStore } from '../../hooks/useDataStore';
 import { NotificationBell } from '../Shared/NotificationSystem';
 import { Icons } from '../Shared/Icons';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
-import { useThemeEngine } from '../../hooks/useThemeEngine';
 import { STYLES } from '../../styles/theme';
 
 interface HeaderProps { toggleSidebar: () => void; }
@@ -14,7 +13,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const [user, setUser] = useState(threatData.currentUser);
   const config = useDataStore(() => threatData.getAppConfig());
   const { online } = useNetworkStatus();
-  const { theme } = useThemeEngine(); 
+  
+  // Theme state is now managed globally, we just toggle it here
+  const theme = document.body.getAttribute('data-theme') || 'dark';
 
   useEffect(() => {
     const handleUserChange = () => setUser(threatData.currentUser);

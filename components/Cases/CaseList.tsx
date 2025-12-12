@@ -1,8 +1,8 @@
-
-import React from 'react';
+import React, { memo } from 'react';
 import { Case } from '../../types';
 import { VirtualList } from '../Shared/VirtualList';
 import { Badge, CardHeader } from '../Shared/UI';
+import { fastDeepEqual } from '../../services/utils/fastDeepEqual';
 
 interface CaseListProps {
   cases: Case[];
@@ -10,18 +10,18 @@ interface CaseListProps {
   onSelect: (id: string) => void;
 }
 
-const CaseList: React.FC<CaseListProps> = ({ cases, selectedId, onSelect }) => {
-  const renderRow = (c: Case) => {
-      const isSelected = selectedId === c.id;
-      return (
+const CaseRow = memo(({ c, isSelected, onSelect }: { c: Case, isSelected: boolean, onSelect: (id: string) => void }) => {
+    return (
         <div 
-            key={c.id} 
             onClick={() => onSelect(c.id)}
             className={`p-4 border-b border-[var(--colors-borderDefault)] cursor-pointer transition-all duration-200 ${
                 isSelected 
                 ? 'bg-[var(--colors-surfaceHighlight)] border-l-4 border-l-[var(--colors-primary)] pl-[calc(1rem-4px)]' 
                 : 'hover:bg-[var(--colors-surfaceHighlight)]/50 border-l-4 border-l-transparent'
             }`}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') onSelect(c.id); }}
         >
           {c.slaBreach && (
             <div className="absolute right-0 top-0 bg-[var(--colors-error)] text-white text-[var(--fontSizes-xs)] font-bold px-1.5 py-0.5 rounded-bl shadow-sm z-10 animate-pulse">SLA BREACH</div>
@@ -38,18 +38,24 @@ const CaseList: React.FC<CaseListProps> = ({ cases, selectedId, onSelect }) => {
             <span className={c.status === 'OPEN' ? 'text-[var(--colors-success)]' : ''}>{c.status.replace('_', ' ')}</span>
           </div>
         </div>
-      );
-  };
+    );
+}, (prev, next) => prev.isSelected === next.isSelected && fastDeepEqual(prev.c, next.c));
+
+const CaseList: React.FC<CaseListProps> = ({ cases, selectedId, onSelect }) => {
+  const renderRow = (c: Case) => (
+      <CaseRow key={c.id} c={c} isSelected={selectedId === c.id} onSelect={onSelect} />
+  );
 
   return (
     <div className="flex-1 flex flex-col bg-[var(--colors-surfaceDefault)] border border-[var(--colors-borderDefault)] rounded-xl overflow-hidden h-full">
       <div className="border-b border-[var(--colors-borderDefault)]">
          <CardHeader title="Active Cases" action={<Badge color="blue">{cases.length}</Badge>} />
       </div>
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0" role="list">
           <VirtualList items={cases} rowHeight={100} containerHeight={600} renderRow={renderRow} />
       </div>
     </div>
   );
 };
+
 export default CaseList;

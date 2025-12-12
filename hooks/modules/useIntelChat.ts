@@ -9,21 +9,32 @@ import { CaseId } from '../../types';
 
 export const useIntelChat = () => {
   const aiConfig = useDataStore(() => threatData.getAIConfig());
-  const [messages, setMessages] = useState<Message[]>([{ 
-    id: '0', 
-    role: 'model', 
-    text: 'Sentinel AI online. How can I assist with your threat hunting today?', 
-    timestamp: Date.now(), 
-    senderName: 'Sentinel AI' 
-  }]);
+  
+  // Deterministic Initial State
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const chatSession = useRef<Chat | null>(null);
 
   useEffect(() => { 
       try {
-        chatSession.current = createAnalysisChat(); 
+        chatSession.current = createAnalysisChat();
+        // Set initial message on mount
+        setMessages([{ 
+          id: '0', 
+          role: 'model', 
+          text: 'Sentinel AI online. How can I assist with your threat hunting today?', 
+          timestamp: Date.now(), 
+          senderName: 'Sentinel AI' 
+        }]);
       } catch (e) {
         console.warn("AI Client init failed, defaulting to offline mode.");
+        setMessages([{ 
+            id: '0', 
+            role: 'model', 
+            text: 'Sentinel AI offline. Running in simulation mode.', 
+            timestamp: Date.now(), 
+            senderName: 'Sentinel AI' 
+        }]);
       }
   }, []);
 

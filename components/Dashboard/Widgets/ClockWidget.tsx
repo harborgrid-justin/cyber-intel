@@ -1,15 +1,30 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../../Shared/UI';
 import { useInterval } from '../../../hooks/useInterval';
 import { EXECUTIVE_THEME, TOKENS } from '../../../styles/theme';
+import { Skeleton } from '../../Shared/Skeleton';
 
 export const ClockWidget: React.FC = () => {
-  const [time, setTime] = useState<Date>(new Date());
+  const [time, setTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setTime(new Date());
+  }, []);
 
   useInterval(() => {
     setTime(new Date());
   }, 1000);
+
+  if (!time) {
+      return (
+        <Card className={`p-4 flex flex-col items-center justify-center ${EXECUTIVE_THEME.surfaces.card_base} border-slate-800 h-full`}>
+            <Skeleton className="w-32 h-8 mb-2" />
+            <Skeleton className="w-full h-px mb-2" />
+            <Skeleton className="w-24 h-3" />
+        </Card>
+      );
+  }
 
   const formattedTime = time.toLocaleTimeString('en-US', { hour12: false });
   const [hours, minutes, seconds] = formattedTime.split(':');

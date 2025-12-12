@@ -20,6 +20,28 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   supportPhone: '555-0199'
 };
 
+export const CONFIG = {
+  APP: {
+    NAME: "SENTINEL",
+    SUBTITLE: "CYBER INTELLIGENCE",
+    VERSION: "2.5.0",
+    THREAT_LEVEL: "ELEVATED (DEFCON 3)",
+  },
+  USER: {
+    NAME: "Oscar Saadein",
+    INITIALS: "OS",
+    CLEARANCE: "TS/SCI",
+  },
+  DATABASE: {
+    POSTGRES: {
+      HOST: 'localhost',
+      USER: 'admin',
+      DB_NAME: 'sentinel_core',
+      PORT: 5432
+    }
+  }
+};
+
 export const MOCK_AI_CONFIG: AIConfig = {
   id: 'AI_CONFIG',
   modelName: 'gemini-2.5-flash',

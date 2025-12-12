@@ -1,16 +1,11 @@
 
 export class AuthService {
   static isAuthenticated(): boolean {
-    return !!localStorage.getItem('sentinel_token');
+    return true; // Login Disabled: Always authenticated as Default User
   }
 
   static login(): Promise<boolean> {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            localStorage.setItem('sentinel_token', 'mock_jwt_token');
-            resolve(true);
-        }, 1000);
-    });
+    return Promise.resolve(true);
   }
 
   static logout() {

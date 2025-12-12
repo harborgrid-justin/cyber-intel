@@ -23,7 +23,7 @@ export const INITIAL_VULNERABILITIES: Vulnerability[] = [
 ];
 
 export const INITIAL_USERS: SystemUser[] = [ 
-  { id: 'U1' as UserId, name: 'Adm. S. Connor', username: 'admin.connor', roleId: 'ROLE-ADMIN', role: 'Administrator', clearance: 'TS/SCI', status: 'Online', isVIP: true, email: 's.connor@sentinel.local', effectivePermissions: ['*:*'] },
+  { id: 'U1' as UserId, name: 'Oscar Saadein', username: 'oscar.saadein', roleId: 'ROLE-ADMIN', role: 'Administrator', clearance: 'TS/SCI', status: 'Online', isVIP: true, email: 'oscar.saadein@sentinel.local', effectivePermissions: ['*:*'] },
   { id: 'U2' as UserId, name: 'J. Doe', username: 'j.doe', roleId: 'ROLE-ANALYST', role: 'Analyst', clearance: 'SECRET', status: 'Busy', email: 'j.doe@sentinel.local', effectivePermissions: ['threat:read', 'case:read'] }
 ];
 

@@ -1,16 +1,22 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, Switch, Badge } from '../Shared/UI';
 import { DesktopNotifier } from '../../services/notifications/DesktopNotifier';
 import { Icons } from '../Shared/Icons';
 
 export const NotificationSettings: React.FC = () => {
-  const [desktopEnabled, setDesktopEnabled] = useState(Notification.permission === 'granted');
+  const [desktopEnabled, setDesktopEnabled] = useState(false);
   const [prefs, setPrefs] = useState({
       security_alerts: { email: true, push: true, slack: true },
       system_updates: { email: false, push: true, slack: false },
       mentions: { email: true, push: true, slack: true }
   });
+
+  useEffect(() => {
+    if ('Notification' in window) {
+        setDesktopEnabled(Notification.permission === 'granted');
+    }
+  }, []);
 
   const handleToggleDesktop = async (val: boolean) => {
     if (val) {
