@@ -87,7 +87,7 @@ export class User extends Model<User> {
   organization_id!: string;
 
   @Column(DataType.STRING)
-  clearance!: string; 
+  clearance!: string;
 
   @Column(DataType.STRING)
   status!: string;
@@ -100,10 +100,53 @@ export class User extends Model<User> {
   is_vip!: boolean;
 
   @Column(DataType.STRING)
-  ad_sid?: string; 
+  ad_sid?: string;
 
   @Column(DataType.DATE)
   last_login!: Date;
+
+  // Authentication fields
+  @Column(DataType.STRING)
+  password_hash?: string;
+
+  @Column(DataType.STRING)
+  refresh_token?: string;
+
+  @Column(DataType.DATE)
+  refresh_token_expires?: Date;
+
+  // Security fields
+  @Default(0)
+  @Column(DataType.INTEGER)
+  failed_login_attempts!: number;
+
+  @Column(DataType.DATE)
+  locked_until?: Date;
+
+  @Column(DataType.STRING)
+  last_login_ip?: string;
+
+  @Column(DataType.STRING)
+  last_login_user_agent?: string;
+
+  // Password reset fields
+  @Column(DataType.STRING)
+  password_reset_token?: string;
+
+  @Column(DataType.DATE)
+  password_reset_expires?: Date;
+
+  // MFA fields
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  mfa_enabled!: boolean;
+
+  @Column(DataType.STRING)
+  mfa_secret?: string;
+
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  mfa_verified!: boolean;
 }
 
 @Table({ tableName: 'integrations', timestamps: false })

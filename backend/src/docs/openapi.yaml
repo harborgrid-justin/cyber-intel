@@ -1,0 +1,864 @@
+openapi: 3.0.3
+info:
+  title: SENTINEL Cyber Intelligence Platform API
+  version: 1.0.0
+  description: |
+    Enterprise-grade Cyber Threat Intelligence API for the SENTINEL platform.
+
+    Features:
+    - Complete CRUD operations for all entities
+    - Advanced filtering, pagination, and search
+    - Bulk operations for efficiency
+    - Data export (CSV, JSON, PDF)
+    - Data import with validation
+    - Real-time analytics and metrics
+    - Webhook and integration management
+    - Comprehensive notification system
+
+  contact:
+    name: API Support
+    email: api@sentinel.io
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Development server
+  - url: https://api.sentinel.io/v1
+    description: Production server
+
+tags:
+  - name: Infrastructure
+    description: Health checks and system metrics
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Threats
+    description: Threat intelligence operations
+  - name: Cases
+    description: Incident case management
+  - name: Actors
+    description: Threat actor tracking
+  - name: Analytics
+    description: Advanced analytics and insights
+  - name: Notifications
+    description: Notification management
+  - name: Webhooks
+    description: Webhook configuration and management
+  - name: Integrations
+    description: Third-party integrations
+  - name: Exports
+    description: Data export functionality
+  - name: Imports
+    description: Data import functionality
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        pages:
+          type: integer
+
+    Threat:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [MALWARE, PHISHING, RANSOMWARE, APT, BOTNET, EXPLOIT, VULNERABILITY, OTHER]
+        name:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [CRITICAL, HIGH, MEDIUM, LOW]
+        status:
+          type: string
+          enum: [ACTIVE, MONITORING, CONTAINED, RESOLVED]
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        reputation:
+          type: integer
+          minimum: 0
+          maximum: 100
+        score:
+          type: number
+        threatActor:
+          type: string
+        campaign:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        indicators:
+          type: array
+          items:
+            type: object
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Case:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [CRITICAL, HIGH, MEDIUM, LOW]
+        priority:
+          type: string
+          enum: [URGENT, HIGH, NORMAL, LOW]
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+        assignedTo:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        relatedThreats:
+          type: array
+          items:
+            type: string
+        relatedAssets:
+          type: array
+          items:
+            type: string
+        resolution:
+          type: string
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ThreatActor:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [APT, CYBERCRIME, HACKTIVIST, INSIDER, NATION_STATE, UNKNOWN]
+        sophistication:
+          type: string
+          enum: [NOVICE, INTERMEDIATE, ADVANCED, EXPERT, STRATEGIC]
+        motivation:
+          type: array
+          items:
+            type: string
+        origin:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, DORMANT, RETIRED]
+        targetSectors:
+          type: array
+          items:
+            type: string
+        targetRegions:
+          type: array
+          items:
+            type: string
+        ttp:
+          type: array
+          items:
+            type: string
+        tools:
+          type: array
+          items:
+            type: string
+        campaigns:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [INFO, WARNING, ALERT, CRITICAL]
+        title:
+          type: string
+        message:
+          type: string
+        recipients:
+          type: array
+          items:
+            type: string
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [EMAIL, SMS, WEBHOOK, IN_APP]
+        priority:
+          type: string
+          enum: [LOW, NORMAL, HIGH, URGENT]
+        status:
+          type: string
+          enum: [PENDING, SENT, READ, DISMISSED, ARCHIVED]
+        category:
+          type: string
+        relatedEntity:
+          type: object
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+        headers:
+          type: object
+        active:
+          type: boolean
+        retryOnFailure:
+          type: boolean
+        maxRetries:
+          type: integer
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+
+    Integration:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [SIEM, SOAR, THREAT_INTEL, VULNERABILITY_SCANNER, EDR, FIREWALL, IDS_IPS, TICKETING, CHAT, EMAIL, CUSTOM]
+        provider:
+          type: string
+        enabled:
+          type: boolean
+        autoSync:
+          type: boolean
+        syncInterval:
+          type: integer
+        features:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        lastSync:
+          type: string
+          format: date-time
+        syncStatus:
+          type: string
+          enum: [SUCCESS, FAILURE, IN_PROGRESS]
+
+paths:
+  /health:
+    get:
+      tags:
+        - Infrastructure
+      summary: Health check
+      description: Check API health status
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+
+  /metrics:
+    get:
+      tags:
+        - Infrastructure
+      summary: Get API metrics
+      description: Retrieve API performance and usage metrics
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /threats:
+    get:
+      tags:
+        - Threats
+      summary: Get all threats
+      description: Retrieve all threats with pagination, filtering, and sorting
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Threats retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Threat'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+    post:
+      tags:
+        - Threats
+      summary: Create a threat
+      description: Create a new threat intelligence entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Threat'
+      responses:
+        '201':
+          description: Threat created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Threat'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+
+  /threats/{id}:
+    get:
+      tags:
+        - Threats
+      summary: Get threat by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Threat retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Threat'
+        '404':
+          description: Threat not found
+
+    put:
+      tags:
+        - Threats
+      summary: Update a threat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Threat'
+      responses:
+        '200':
+          description: Threat updated successfully
+        '404':
+          description: Threat not found
+
+    delete:
+      tags:
+        - Threats
+      summary: Delete a threat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Threat deleted successfully
+        '404':
+          description: Threat not found
+
+  /threats/bulk:
+    post:
+      tags:
+        - Threats
+      summary: Bulk create threats
+      description: Create multiple threats in a single request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                threats:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Threat'
+      responses:
+        '201':
+          description: Threats created successfully
+
+    patch:
+      tags:
+        - Threats
+      summary: Bulk update threats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                updates:
+                  type: object
+      responses:
+        '200':
+          description: Threats updated successfully
+
+    delete:
+      tags:
+        - Threats
+      summary: Bulk delete threats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Threats deleted successfully
+
+  /threats/export:
+    get:
+      tags:
+        - Threats
+      summary: Export threats
+      parameters:
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [json, csv, pdf]
+      responses:
+        '200':
+          description: Threats exported successfully
+
+  /threats/stats:
+    get:
+      tags:
+        - Threats
+      summary: Get threat statistics
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+
+  /analytics/overview:
+    get:
+      tags:
+        - Analytics
+      summary: Get platform overview
+      responses:
+        '200':
+          description: Overview retrieved successfully
+
+  /analytics/trends:
+    get:
+      tags:
+        - Analytics
+      summary: Get trend analytics
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Trends retrieved successfully
+
+  /analytics/threat-landscape:
+    get:
+      tags:
+        - Analytics
+      summary: Get threat landscape
+      responses:
+        '200':
+          description: Threat landscape retrieved successfully
+
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: Get all notifications
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Notifications
+      summary: Create notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      responses:
+        '201':
+          description: Notification created successfully
+
+  /webhooks:
+    get:
+      tags:
+        - Webhooks
+      summary: Get all webhooks
+      responses:
+        '200':
+          description: Webhooks retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+
+    post:
+      tags:
+        - Webhooks
+      summary: Create webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+      responses:
+        '201':
+          description: Webhook created successfully
+
+  /webhooks/{id}/test:
+    post:
+      tags:
+        - Webhooks
+      summary: Test webhook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook test completed
+
+  /integrations:
+    get:
+      tags:
+        - Integrations
+      summary: Get all integrations
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: enabled
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Integrations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Integration'
+
+    post:
+      tags:
+        - Integrations
+      summary: Create integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Integration'
+      responses:
+        '201':
+          description: Integration created successfully
+
+  /integrations/{id}/sync:
+    post:
+      tags:
+        - Integrations
+      summary: Sync integration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullSync:
+                  type: boolean
+      responses:
+        '200':
+          description: Sync initiated
+
+  /integrations/types:
+    get:
+      tags:
+        - Integrations
+      summary: Get integration types
+      responses:
+        '200':
+          description: Integration types retrieved successfully
+
+  /exports/threats:
+    post:
+      tags:
+        - Exports
+      summary: Export threats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum: [json, csv, pdf]
+                filters:
+                  type: object
+      responses:
+        '200':
+          description: Export completed
+
+  /imports/threats:
+    post:
+      tags:
+        - Imports
+      summary: Import threats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Threat'
+                format:
+                  type: string
+                  default: json
+                validate:
+                  type: boolean
+                  default: true
+      responses:
+        '201':
+          description: Import completed
+
+  /imports/templates/{entity}:
+    get:
+      tags:
+        - Imports
+      summary: Get import template
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+      responses:
+        '200':
+          description: Template retrieved successfully

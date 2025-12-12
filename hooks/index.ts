@@ -26,6 +26,18 @@ export * from './useThemeEngine';
 export * from './useThrottle';
 export * from './useTQL';
 export * from './useWakeLock';
+
+// Advanced state management hooks
+export * from './useApi';
+export * from './useRealtime';
+export * from './useInfiniteScroll';
+export * from './useQueryParams';
+export * from './usePagination';
+export * from './useFilters';
+export * from './useSort';
+export * from './useSelection';
+export * from './useUndo';
+
 // Module specific hooks
 export * from './useThreatFeedLogic';
 export * from './modules/useActorManagement';

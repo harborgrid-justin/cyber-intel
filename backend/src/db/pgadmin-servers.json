@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "SENTINEL Core DB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "sentinel_core",
+      "Username": "sentinel_user",
+      "SSLMode": "prefer",
+      "PassFile": "/tmp/pgpassfile"
+    }
+  }
+}

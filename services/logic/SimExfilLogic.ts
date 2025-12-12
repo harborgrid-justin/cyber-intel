@@ -1,8 +1,10 @@
 
-import { SystemNode, ExfilConfig } from '../../types';
+import { SystemNode } from '../../types';
+import { ExfilConfig } from '../../types/simulation';
 import { apiClient } from '../apiClient';
 
-export { ExfilConfig };
+// Re-export for convenience
+export type { ExfilConfig };
 
 export interface ExfilPhysicsResult {
   totalSize: string;
