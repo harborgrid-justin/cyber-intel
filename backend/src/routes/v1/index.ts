@@ -1,6 +1,7 @@
 
 import { Router } from 'express';
 import { checkHealth } from '../../controllers/healthController';
+import authRoutes from './auth.routes';
 import threatRoutes from './threat.routes';
 import caseRoutes from './case.routes';
 import actorRoutes from './actor.routes';
@@ -23,12 +24,30 @@ import aiRoutes from './ai.routes';
 import simulationRoutes from './simulation.routes';
 import analysisRoutes from './analysis.routes';
 import ingestionRoutes from './ingestion.routes';
-import searchRoutes from './search.routes'; // Added
+import searchRoutes from './search.routes';
+// New API endpoints
+import analyticsRoutes from './analytics.routes';
+import notificationsRoutes from './notifications.routes';
+import webhooksRoutes from './webhooks.routes';
+import integrationsRoutes from './integrations.routes';
+import exportsRoutes from './exports.routes';
+import importsRoutes from './imports.routes';
+import { getMetrics } from '../../middleware/metrics.middleware';
+import { requestLogger, errorLogger } from '../../middleware/logging.middleware';
+import { metricsMiddleware } from '../../middleware/metrics.middleware';
 
 const router = Router();
 
+// Apply global middleware
+router.use(requestLogger);
+router.use(metricsMiddleware);
+
 // Infrastructure
 router.get('/health', checkHealth);
+router.get('/metrics', getMetrics); // API metrics endpoint
+
+// Authentication (Public routes - must be before other routes)
+router.use('/auth', authRoutes);
 
 // Core Modules
 router.use('/threats', threatRoutes);
@@ -50,11 +69,22 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/knowledge', knowledgeRoutes);
 router.use('/ingestion', ingestionRoutes);
-router.use('/search', searchRoutes); // Added
+router.use('/search', searchRoutes);
 
 // Advanced Modules
 router.use('/ai', aiRoutes);
 router.use('/simulation', simulationRoutes);
 router.use('/analysis', analysisRoutes);
+
+// New Feature Modules
+router.use('/analytics', analyticsRoutes);
+router.use('/notifications', notificationsRoutes);
+router.use('/webhooks', webhooksRoutes);
+router.use('/integrations', integrationsRoutes);
+router.use('/exports', exportsRoutes);
+router.use('/imports', importsRoutes);
+
+// Error logging middleware (should be last)
+router.use(errorLogger);
 
 export default router;

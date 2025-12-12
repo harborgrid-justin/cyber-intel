@@ -3,6 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 import { RbacEngine } from '../services/security/rbac.engine';
 import { User, Role } from '../models/system';
+import { AuthService } from '../services/auth.service';
+import { AuditService } from '../services/audit.service';
 
 declare global {
   namespace Express {
@@ -13,6 +15,10 @@ declare global {
   }
 }
 
+/**
+ * Authentication Middleware
+ * Verifies JWT token and loads user context with permissions
+ */
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
@@ -20,28 +26,57 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     return res.status(401).json({ error: 'No Authorization header provided' });
   }
 
-  // TODO: Replace with real JWT verification logic
-  // Simulation: "Bearer mock-token" maps to admin
-  if (authHeader.startsWith('Bearer ')) {
-    // In prod, decode JWT to get userId
-    // For demo, we hydrate the mock admin user from the database or create a transient one
-    try {
-        // Mock ID for the seeded admin
-        const userId = 'USR-ADMIN'; 
-        const user = await (User as any).findByPk(userId);
-        
-        if (user) {
-            req.user = user;
-            req.permissions = await RbacEngine.getEffectivePermissions(userId);
-            return next();
-        }
-    } catch (e) {
-        logger.error("Auth Middleware Error", e);
-    }
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Invalid Authorization header format' });
   }
 
-  logger.warn(`Failed auth attempt from ${req.ip}`);
-  return res.status(403).json({ error: 'Invalid Credentials' });
+  try {
+    // Extract token
+    const token = authHeader.substring(7);
+
+    // Verify JWT token
+    const payload = AuthService.verifyAccessToken(token);
+
+    if (!payload) {
+      logger.warn(`[Auth] Invalid or expired token from ${req.ip}`);
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    // Load user from database
+    const user = await (User as any).findByPk(payload.userId, {
+      include: [Role]
+    });
+
+    if (!user) {
+      logger.warn(`[Auth] User ${payload.userId} not found`);
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    // Check user status
+    if (user.status !== 'ACTIVE') {
+      logger.warn(`[Auth] User ${user.username} attempted access with status: ${user.status}`);
+      await AuditService.logAuthEvent(
+        'LOGIN_BLOCKED',
+        user.username,
+        req.ip,
+        `Account status: ${user.status}`
+      );
+      return res.status(403).json({ error: 'Account is not active' });
+    }
+
+    // Load permissions with caching
+    const permissions = await RbacEngine.getEffectivePermissions(user.id);
+
+    // Attach user and permissions to request
+    req.user = user;
+    req.permissions = permissions;
+
+    // Continue to next middleware
+    next();
+  } catch (error: any) {
+    logger.error('[Auth] Authentication error', error);
+    return res.status(401).json({ error: 'Authentication failed' });
+  }
 };
 
 /**

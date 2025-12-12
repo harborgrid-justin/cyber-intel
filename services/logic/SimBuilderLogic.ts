@@ -1,8 +1,10 @@
 
-import { CampaignStep, TTPDef } from '../../types';
+import { TTPDef } from '../../types';
+import { CampaignStep } from '../../types/simulation';
 import { apiClient } from '../apiClient';
 
-export { CampaignStep };
+// Re-export for convenience
+export type { CampaignStep };
 
 // Embedded Library for Offline Mode
 const LOCAL_LIBRARY: TTPDef[] = [

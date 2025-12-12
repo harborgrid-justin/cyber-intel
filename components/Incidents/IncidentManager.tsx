@@ -9,13 +9,14 @@ import { LoadingSpinner } from '../Shared/LoadingSpinner';
 const IncidentTriage = React.lazy(() => import('./IncidentTriage'));
 const IncidentKanban = React.lazy(() => import('./IncidentKanban'));
 const WarRoom = React.lazy(() => import('./WarRoom'));
-const IncidentTimeline = React.lazy(() => import('./views/IncidentTimeline'));
-const IncidentAssets = React.lazy(() => import('./views/IncidentAssets'));
-const IncidentReports = React.lazy(() => import('./views/IncidentReports'));
-const IncidentUsers = React.lazy(() => import('./views/IncidentUsers'));
-const IncidentPlaybooks = React.lazy(() => import('./views/IncidentPlaybooks'));
-const IncidentEvidence = React.lazy(() => import('./views/IncidentEvidence'));
-const IncidentNetwork = React.lazy(() => import('./views/IncidentNetwork'));
+const IncidentTimeline = React.lazy(() => import('./Views/IncidentTimeline'));
+const IncidentAssets = React.lazy(() => import('./Views/IncidentAssets'));
+// TODO: Missing view components - need to be created
+// const IncidentReports = React.lazy(() => import('./Views/IncidentReports'));
+// const IncidentUsers = React.lazy(() => import('./Views/IncidentUsers'));
+// const IncidentPlaybooks = React.lazy(() => import('./Views/IncidentPlaybooks'));
+// const IncidentEvidence = React.lazy(() => import('./Views/IncidentEvidence'));
+// const IncidentNetwork = React.lazy(() => import('./Views/IncidentNetwork'));
 
 const IncidentManager: React.FC = () => {
   const { 
@@ -35,11 +36,13 @@ const IncidentManager: React.FC = () => {
       case 'War Room': return <WarRoom threats={threats} cases={cases} onUpdate={refresh} />;
       case 'Timeline': return <IncidentTimeline cases={cases} />;
       case 'Assets': return <IncidentAssets />;
-      case 'Users': return <IncidentUsers cases={cases} />;
-      case 'Reports': return <IncidentReports />;
-      case 'Playbooks': return <IncidentPlaybooks />;
-      case 'Evidence': return <IncidentEvidence cases={cases} />;
-      case 'Network': return <IncidentNetwork threats={threats} />;
+      // TODO: Implement missing views
+      case 'Users':
+      case 'Reports':
+      case 'Playbooks':
+      case 'Evidence':
+      case 'Network':
+        return <div className="p-4">This view is under construction</div>;
       default: return <IncidentKanban threats={threats} onUpdate={refresh} />;
     }
   };
